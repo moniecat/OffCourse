@@ -14,6 +14,10 @@ A mobile quiz application built with Flutter for iOS and Android. Take quizzes a
 
 https://www.figma.com/design/oU47I97PwnD5V6E885SNVH/MobDev?node-id=18-15&p=f&t=ITqP629MwvMmcyfH-0
 
+## Documentation Link
+
+https://docs.google.com/document/d/13rWXmMMDQLBoMTW0mkLMMnhcuieKCP0Pv3298dU237E/edit?usp=sharing
+
 ## Tech Stack
 
 - **Framework:** Flutter 3.41.1
