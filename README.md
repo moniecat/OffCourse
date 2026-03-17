@@ -20,8 +20,8 @@ https://www.figma.com/design/oU47I97PwnD5V6E885SNVH/MobDev?node-id=18-15&p=f&t=I
 - **Language:** Dart 3.11.0
 
 ## Task List
-Advincula, Monicah D. -	Intro Page / Onboarding	& Authorization
-Dramayo, Llewelyn S. - Home Page / Dashboard	
-Crisologo, Chad C. - Profile	Page (Backend Integration)
-Salimbot, Dimple Lavigne	F. - Modules Page
-Mates, Erina Kyla N. - Quiz Page
+- Advincula, Monicah D. -	Intro Page / Onboarding	& Authorization
+- Dramayo, Llewelyn S. - Home Page / Dashboard	
+- Crisologo, Chad C. - Profile	Page (Backend Integration)
+- Salimbot, Dimple Lavigne	F. - Modules Page
+- Mates, Erina Kyla N. - Quiz Page
