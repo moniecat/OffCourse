@@ -1,5 +1,5 @@
 # OffCourse
-CIS2203N Mobile Development Final Project
+CIS2203N Mobile Development Final Project:
 A mobile quiz application built with Flutter for iOS and Android. Take quizzes across various programs, subjects, and topics with immediate feedback and scoring.
 
 ## Features
