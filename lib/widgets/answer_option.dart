@@ -31,7 +31,6 @@ class AnswerOption extends StatelessWidget {
         borderColor = Colors.red;
         break;
       case AnswerState.idle:
-      default:
         bgColor = Colors.grey[100]!;
         borderColor = Colors.black;
     }

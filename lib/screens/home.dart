@@ -2,9 +2,35 @@ import 'package:flutter/material.dart';
 import '../widgets/quarter_chip.dart';
 import '../widgets/module_card.dart';
 import '../widgets/custom_bottom_nav.dart';
-
-class HomeScreen extends StatelessWidget {
+import '../widgets/menu_drawer.dart';
+ 
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+ 
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+ 
+class _HomeScreenState extends State<HomeScreen> {
+  int _selectedQuarter = 0;
+
+  void _openMenu(BuildContext context) {
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        opaque: false,
+        barrierDismissible: true,
+        barrierColor: Colors.black.withOpacity(0.4),
+        pageBuilder: (_, __, ___) => const MenuDrawer(),
+        transitionsBuilder: (_, animation, __, child) {
+          final slide = Tween<Offset>(
+            begin: const Offset(1, 0),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(parent: animation, curve: Curves.easeInOut));
+          return SlideTransition(position: slide, child: child);
+        },
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,73 +44,84 @@ class HomeScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 10),
-
+ 
               /// HEADER
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
-                  Column(
+                children: [
+                  const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Welcome,", style: TextStyle(fontSize: 18)),
+                      Text(
+                        "Welcome,",
+                        style: TextStyle(fontSize: 16, color: Colors.black54),
+                      ),
                       Text(
                         "Jane Doe",
                         style: TextStyle(
                           fontSize: 28,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                     ],
                   ),
-                  Icon(Icons.menu, size: 28),
+                  GestureDetector(
+                    onTap: () => _openMenu(context),
+                    child: const Icon(Icons.menu, size: 28),
+                  ),
                 ],
               ),
-
+ 
               const SizedBox(height: 20),
-
+ 
               /// QUARTERS
               SizedBox(
                 height: 100,
-                child: ListView(
+                child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   physics: const BouncingScrollPhysics(),
-                  children: const [
-                    QuarterChip(title: "Quarter 1", color: Colors.amber),
-                    SizedBox(width: 12),
-                    QuarterChip(title: "Quarter 2", color: Colors.teal),
-                    SizedBox(width: 12),
-                    QuarterChip(title: "Quarter 3", color: Colors.teal),
-                    SizedBox(width: 12),
-                    QuarterChip(title: "Quarter 4", color: Colors.teal),
-                    SizedBox(width: 12),
-                    QuarterChip(title: "Quarter 5", color: Colors.teal),
-                    SizedBox(width: 12),
-                    QuarterChip(title: "Quarter 6", color: Colors.teal),
-                    SizedBox(width: 12),
-                    QuarterChip(title: "Quarter 7", color: Colors.teal),
-                    SizedBox(width: 12),
-                    QuarterChip(title: "Quarter 8", color: Colors.teal),
-                    SizedBox(width: 12),
-                    QuarterChip(title: "Quarter 9", color: Colors.teal),
-                    SizedBox(width: 12),
-                    QuarterChip(title: "Quarter 10", color: Colors.teal),
-                  ],
+                  itemCount: 10,
+                  separatorBuilder: (_, __) => const SizedBox(width: 12),
+                  itemBuilder: (context, index) {
+                    final isActive = index == _selectedQuarter;
+                    return GestureDetector(
+                      onTap: () => setState(() => _selectedQuarter = index),
+                      child: QuarterChip(
+                        title: "Quarter ${index + 1}",
+                        color: isActive ? Colors.amber : Colors.teal,
+                        isActive: isActive,
+                      ),
+                    );
+                  },
                 ),
               ),
-
+ 
               const SizedBox(height: 20),
-
+ 
               /// MODULE LIST
               Expanded(
-                child: ListView(
-                  children: const [
-                    ModuleCard(title: "Brainstorming", color: Colors.teal),
-                    ModuleCard(title: "Module 2", color: Colors.amber),
-                    ModuleCard(title: "Module 3", color: Colors.teal),
-                    ModuleCard(title: "Module 4", color: Colors.amber),
-                  ],
+                child: ListView.separated(
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: 4,
+                  separatorBuilder: (_, __) => const SizedBox(height: 16),
+                  itemBuilder: (context, index) {
+                    const modules = [
+                      ("Brainstorming", Colors.teal),
+                      ("Module 2", Colors.amber),
+                      ("Module 3", Colors.teal),
+                      ("Module 4", Colors.amber),
+                    ];
+                    final (title, color) = modules[index];
+                    return ModuleCard(
+                      title: title,
+                      color: color,
+                      quarter: _selectedQuarter + 1,
+                    );
+                  },
                 ),
               ),
+ 
+              const SizedBox(height: 8),
             ],
           ),
         ),
@@ -92,3 +129,4 @@ class HomeScreen extends StatelessWidget {
     );
   }
 }
+ 

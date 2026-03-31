@@ -10,7 +10,7 @@ class ModuleCard extends StatelessWidget {
     super.key,
     required this.title,
     required this.color,
-    this.quarter = 1,
+    required this.quarter,
   });
 
   @override
@@ -28,31 +28,84 @@ class ModuleCard extends StatelessWidget {
         );
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.black),
           color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.black, width: 2),
         ),
         child: Column(
           children: [
-            /// TOP IMAGE AREA
+            /// TOP IMAGE / ILLUSTRATION AREA
             Container(
-              height: 120,
+              height: 110,
               decoration: BoxDecoration(
                 color: color,
                 borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(16),
+                  top: Radius.circular(14),
                 ),
               ),
-              child: const Center(
-                child: Icon(Icons.menu_book, size: 50, color: Colors.white),
+              child: Stack(
+                children: [
+                  // Decorative background blobs
+                  Positioned(
+                    left: -20,
+                    top: -10,
+                    child: Container(
+                      width: 100,
+                      height: 90,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.08),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    right: -15,
+                    bottom: -15,
+                    child: Container(
+                      width: 110,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.08),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                  // Main centered icon
+                  Center(
+                    child: Icon(
+                      Icons.menu_book_rounded,
+                      size: 52,
+                      color: Colors.white.withOpacity(0.9),
+                    ),
+                  ),
+                  // Floating star top-right
+                  Positioned(
+                    right: 24,
+                    top: 14,
+                    child: Icon(
+                      Icons.star,
+                      size: 18,
+                      color: Colors.white.withOpacity(0.7),
+                    ),
+                  ),
+                  // Small star bottom-left
+                  Positioned(
+                    left: 20,
+                    bottom: 14,
+                    child: Icon(
+                      Icons.star_border,
+                      size: 14,
+                      color: Colors.white.withOpacity(0.6),
+                    ),
+                  ),
+                ],
               ),
             ),
 
-            /// BOTTOM CONTENT
+            /// BOTTOM CONTENT ROW
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               child: Row(
                 children: [
                   Expanded(
@@ -62,24 +115,31 @@ class ModuleCard extends StatelessWidget {
                         Text(
                           title,
                           style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        const Text("Viewed 1"),
-                        const Text("Best Score 50"),
+                        const SizedBox(height: 3),
+                        const Text(
+                          "Viewed 1",
+                          style: TextStyle(fontSize: 12, color: Colors.black54),
+                        ),
+                        const Text(
+                          "Best Score 50",
+                          style: TextStyle(fontSize: 12, color: Colors.black54),
+                        ),
                       ],
                     ),
                   ),
                   Container(
+                    width: 36,
+                    height: 36,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.black),
+                      border: Border.all(color: Colors.black, width: 2),
                     ),
-                    child: const Padding(
-                      padding: EdgeInsets.all(6),
-                      child: Icon(Icons.arrow_forward),
+                    child: const Center(
+                      child: Icon(Icons.arrow_forward, size: 18),
                     ),
                   ),
                 ],
