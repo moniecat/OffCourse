@@ -78,7 +78,7 @@ class HomeScreen extends StatelessWidget {
               Expanded(
                 child: ListView(
                   children: const [
-                    ModuleCard(title: "Module 1", color: Colors.teal),
+                    ModuleCard(title: "Brainstorming", color: Colors.teal),
                     ModuleCard(title: "Module 2", color: Colors.amber),
                     ModuleCard(title: "Module 3", color: Colors.teal),
                     ModuleCard(title: "Module 4", color: Colors.amber),
