@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "376068711995",
+    "project_id": "offcourse-a54c2",
+    "storage_bucket": "offcourse-a54c2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:376068711995:android:f07b1cfe282db511b6de1e",
+        "android_client_info": {
+          "package_name": "com.example.flutter_application_1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBnykgQxD5qva6usWdmuzsPqktzlkgxsa0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'sign_in.dart'; // Ensure this file exists in your project
+import 'sign_in.dart';
+import 'home.dart';
+import '../services/auth_service.dart';
+import '../services/firestore_service.dart';
+
+final AuthService auth = AuthService();
+final FirestoreService fs = FirestoreService();
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -88,8 +94,35 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   
                   // Sign Up Button with Shadow
                   GestureDetector(
-                    onTap: () {
-                      // Handle Sign Up
+                    onTap: () async {
+                      final name = _nameController.text.trim();
+                      final email = _emailController.text.trim();
+                      final password = _passwordController.text.trim();
+
+                      if (name.isEmpty || email.isEmpty || password.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Please fill in all fields')),
+                        );
+                        return;
+                      }
+
+                      // Create Firebase Auth user
+                      final user = await auth.signUp(email, password);
+
+                      if (user != null) {
+                        // Create Firestore user document
+                        await fs.addUser(user.uid, name, email);
+
+                        // Navigate to HomeScreen (or onboarding)
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => const HomeScreen()),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Sign up failed. Try again.')),
+                        );
+                      }
                     },
                     child: Container(
                       width: double.infinity,

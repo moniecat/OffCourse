@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'sign_up.dart';
-import 'home.dart'; // 1. Added this import
+import 'home.dart';
+import '../services/auth_service.dart';
+import '../services/firestore_service.dart';
+
+final auth = AuthService();
+final fs = FirestoreService();
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -87,12 +92,32 @@ class _SignInScreenState extends State<SignInScreen> {
 
               // Sign In Button
               GestureDetector(
-                onTap: () {
-                  // 2. Navigation logic added here
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const HomeScreen()),
-                  );
+                onTap: () async {
+                  final email = _emailController.text.trim();
+                  final password = _passwordController.text.trim();
+
+                  if (email.isEmpty || password.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please enter email and password')),
+                    );
+                    return;
+                  }
+
+                  final user = await auth.signIn(email, password);
+
+                  if (user != null) {
+                    // Add user to Firestore if not exist
+                    await fs.addUser(user.uid, 'New User', user.email ?? '');
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => const HomeScreen()),
+                    );
+                  } else {
+                    // Sign in failed
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Sign in failed. Check credentials')),
+                    );
+                  }
                 },
                 child: Container(
                   width: double.infinity,
