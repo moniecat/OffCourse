@@ -4,16 +4,37 @@ final db = FirebaseFirestore.instance;
 
 class FirestoreService {
   // --- USERS ---
+
+  /// Creates a user document. Uses merge:true so it won't overwrite
+  /// existing data when called on sign-in for an already-registered user.
   Future<void> addUser(String id, String name, String email) async {
-    await db.collection('users').doc(id).set({
-      'name': name,
-      'email': email,
-      'joinedAt': Timestamp.now(),
-    });
+    await db.collection('users').doc(id).set(
+      {
+        'name': name,
+        'email': email,
+        'joinedAt': Timestamp.now(),
+      },
+      SetOptions(merge: true), // <-- KEY FIX: don't blow away existing data
+    );
   }
 
   Future<DocumentSnapshot> getUser(String id) async {
     return await db.collection('users').doc(id).get();
+  }
+
+  /// Update editable profile fields (name, bio, lrn)
+  Future<void> updateUserProfile(
+      String id, {
+      String? name,
+      String? bio,
+      String? lrn,
+    }) async {
+    final data = <String, dynamic>{};
+    if (name != null) data['name'] = name;
+    if (bio != null) data['bio'] = bio;
+    if (lrn != null) data['lrn'] = lrn;
+    if (data.isEmpty) return;
+    await db.collection('users').doc(id).update(data);
   }
 
   // --- COURSES ---

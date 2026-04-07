@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
 
 class LogoutPage extends StatelessWidget {
   const LogoutPage({super.key});
@@ -22,13 +23,19 @@ class LogoutPage extends StatelessWidget {
             ),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              // Replace with your actual logout logic (clear tokens, etc.)
-              Navigator.of(context).pushNamedAndRemoveUntil(
-                '/login',
-                (route) => false,
-              );
+            onPressed: () async {
+              Navigator.of(context).pop(); // close dialog
+
+              // *** FIX: Actually call Firebase signOut ***
+              await AuthService().signOut();
+
+              // Navigate to login and clear the entire back stack
+              if (context.mounted) {
+                Navigator.of(context).pushNamedAndRemoveUntil(
+                  '/login',
+                  (route) => false,
+                );
+              }
             },
             child: const Text(
               'Log Out',

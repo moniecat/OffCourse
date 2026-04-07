@@ -1,9 +1,12 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/quarter_chip.dart';
 import '../widgets/module_card.dart';
 import '../widgets/custom_bottom_nav.dart';
 import '../widgets/menu_drawer.dart';
+import '../services/auth_service.dart';
+import '../services/firestore_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,6 +17,37 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedQuarter = 0;
+  String _displayName = 'User';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserName();
+  }
+
+  Future<void> _loadUserName() async {
+    final user = AuthService().currentUser;
+    if (user == null) return;
+
+    // First use Firebase Auth display name for a fast load
+    if (user.displayName != null && user.displayName!.isNotEmpty) {
+      setState(() => _displayName = user.displayName!);
+    }
+
+    // Then fetch Firestore to get the most up-to-date name
+    try {
+      final doc = await FirestoreService().getUser(user.uid);
+      if (doc.exists && mounted) {
+        final data = doc.data() as Map<String, dynamic>;
+        final name = data['name'] as String?;
+        if (name != null && name.isNotEmpty) {
+          setState(() => _displayName = name);
+        }
+      }
+    } catch (_) {
+      // If Firestore fails, keep Auth display name
+    }
+  }
 
   void _openMenu(BuildContext context) {
     Navigator.of(context).push(
@@ -51,7 +85,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Text Area (Static)
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -64,7 +97,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       Text(
-                        "Jane Doe",
+                        _displayName,
                         style: GoogleFonts.montserrat(
                           fontSize: 42,
                           fontWeight: FontWeight.w900,
@@ -76,7 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
 
-                  // Custom Two-Bar Menu Icon
+                  // Menu Icon
                   GestureDetector(
                     onTap: () => _openMenu(context),
                     child: Container(
@@ -111,31 +144,29 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
-            ), // Closing Padding for Header
+            ),
 
             const SizedBox(height: 15),
 
             /// QUARTERS LIST
             SizedBox(
-              // 1. Increase height to 140 to give the shadow and text room to breathe
-              height: 130, 
+              height: 130,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10), // Add vertical padding
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 itemCount: 10,
-                separatorBuilder: (_, _) => const SizedBox(width: 8), // Tighten gap slightly
+                separatorBuilder: (_, _) => const SizedBox(width: 8),
                 itemBuilder: (_, index) {
-                  // 2. Remove the extra GestureDetector here (QuarterChip already has one)
                   return QuarterChip(
-                    // 3. Use "Q" prefix to fix horizontal overcrowding
-                    label: "Quarter ${index + 1}", 
+                    label: "Quarter ${index + 1}",
                     isActive: index == _selectedQuarter,
                     onTap: () => setState(() => _selectedQuarter = index),
                   );
                 },
               ),
             ),
+
             /// MODULE LIST
             Expanded(
               child: ListView.separated(

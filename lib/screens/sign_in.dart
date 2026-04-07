@@ -1,12 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'sign_up.dart';
 import 'home.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
-
-final auth = AuthService();
-final fs = FirestoreService();
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -16,8 +14,78 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
+  final _auth = AuthService();
+  final _fs = FirestoreService();
+
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleSignIn() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      _showSnack('Please enter email and password');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final user = await _auth.signIn(email, password);
+
+      if (user != null) {
+        // Use merge:true so we don't overwrite their existing Firestore profile
+        await _fs.addUser(user.uid, user.displayName ?? 'User', user.email ?? '');
+
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      String message;
+      switch (e.code) {
+        case 'user-not-found':
+          message = 'No account found for that email.';
+          break;
+        case 'wrong-password':
+        case 'invalid-credential':
+          message = 'Incorrect email or password.';
+          break;
+        case 'user-disabled':
+          message = 'This account has been disabled.';
+          break;
+        case 'too-many-requests':
+          message = 'Too many attempts. Try again later.';
+          break;
+        default:
+          message = 'Sign in failed: ${e.message}';
+      }
+      if (!mounted) return;
+      _showSnack(message);
+    } catch (e) {
+      if (!mounted) return;
+      _showSnack('An unexpected error occurred.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _showSnack(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,16 +98,11 @@ class _SignInScreenState extends State<SignInScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // LOGO AREA
-              Column(
-                children: [
-                  Image.asset(
-                    'assets/pics/logo2.png',
-                    width: 150,
-                    height: 150,
-                    fit: BoxFit.contain,
-                  ), 
-                ],
+              Image.asset(
+                'assets/pics/logo2.png',
+                width: 150,
+                height: 150,
+                fit: BoxFit.contain,
               ),
               const SizedBox(height: 10),
 
@@ -60,7 +123,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     const SizedBox(height: 12),
                     Text(
                       'Welcome back! Please enter your\ndetails to sign in.',
-                      textAlign: TextAlign.center, // Added for better look
+                      textAlign: TextAlign.center,
                       style: GoogleFonts.montserrat(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
@@ -71,13 +134,14 @@ class _SignInScreenState extends State<SignInScreen> {
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 40),
 
               _buildTextField(
                 controller: _emailController,
                 hintText: 'Email address',
                 icon: Icons.person_outline,
+                keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 20),
 
@@ -87,38 +151,12 @@ class _SignInScreenState extends State<SignInScreen> {
                 icon: Icons.lock_outline,
                 isPassword: true,
               ),
-              
+
               const SizedBox(height: 40),
 
               // Sign In Button
               GestureDetector(
-                onTap: () async {
-                  final email = _emailController.text.trim();
-                  final password = _passwordController.text.trim();
-
-                  if (email.isEmpty || password.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Please enter email and password')),
-                    );
-                    return;
-                  }
-
-                  final user = await auth.signIn(email, password);
-
-                  if (user != null) {
-                    // Add user to Firestore if not exist
-                    await fs.addUser(user.uid, 'New User', user.email ?? '');
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => const HomeScreen()),
-                    );
-                  } else {
-                    // Sign in failed
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Sign in failed. Check credentials')),
-                    );
-                  }
-                },
+                onTap: _isLoading ? null : _handleSignIn,
                 child: Container(
                   width: double.infinity,
                   height: 70,
@@ -134,20 +172,21 @@ class _SignInScreenState extends State<SignInScreen> {
                     ],
                   ),
                   alignment: Alignment.center,
-                  child: Text(
-                    'Sign in',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.black,
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: Colors.black)
+                      : Text(
+                          'Sign in',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.black,
+                          ),
+                        ),
                 ),
               ),
-              
+
               const SizedBox(height: 30),
 
-              // Footer
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -188,10 +227,12 @@ class _SignInScreenState extends State<SignInScreen> {
     required String hintText,
     required IconData icon,
     bool isPassword = false,
+    TextInputType? keyboardType,
   }) {
     return TextField(
       controller: controller,
       obscureText: isPassword,
+      keyboardType: keyboardType,
       style: GoogleFonts.montserrat(fontSize: 18, fontWeight: FontWeight.w700),
       decoration: InputDecoration(
         filled: true,

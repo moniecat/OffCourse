@@ -3,6 +3,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
+  /// Stream of auth state changes — use this to reactively update UI
+  Stream<User?> get authStateChanges => _auth.authStateChanges();
+
+  /// Current signed-in user (null if not logged in)
+  User? get currentUser => _auth.currentUser;
+
   // Sign up with email & password
   Future<User?> signUp(String email, String password) async {
     try {
@@ -13,10 +19,7 @@ class AuthService {
       return credential.user;
     } on FirebaseAuthException catch (e) {
       print('SignUp Error: ${e.code} - ${e.message}');
-      return null;
-    } catch (e) {
-      print('SignUp Unknown Error: $e');
-      return null;
+      rethrow; // rethrow so the UI can show specific error messages
     }
   }
 
@@ -30,10 +33,26 @@ class AuthService {
       return credential.user;
     } on FirebaseAuthException catch (e) {
       print('SignIn Error: ${e.code} - ${e.message}');
-      return null;
-    } catch (e) {
-      print('SignIn Unknown Error: $e');
-      return null;
+      rethrow;
     }
+  }
+
+  // Sign out
+  Future<void> signOut() async {
+    await _auth.signOut();
+  }
+
+  // Change password (requires recent login)
+  Future<void> changePassword(String newPassword) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('Not signed in');
+    await user.updatePassword(newPassword);
+  }
+
+  // Delete account (requires recent login)
+  Future<void> deleteAccount() async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('Not signed in');
+    await user.delete();
   }
 }

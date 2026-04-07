@@ -1,6 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../screens/home.dart'; // Ensure this path is correct
+import '../screens/home.dart';
+import '../services/auth_service.dart';
+import '../services/firestore_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -10,26 +13,87 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // Exact Colors & Thickness
   static const Color brandYellow = Color(0xFFFFC21C);
   static const Color bgWhite = Colors.white;
   static const Color textBlack = Color(0xFF000000);
   static const Color textGrey = Color(0xFF6B6B6B);
-  static const double thickBorder = 3.5; // Main container border
-  static const double elementBorder = 2.5; // Button/Chip border
+  static const double thickBorder = 3.5;
+  static const double elementBorder = 2.5;
 
   late TextEditingController _nameController;
   late TextEditingController _bioController;
   late TextEditingController _lrnController;
   bool _isEditing = false;
+  bool _isLoading = true;
+  bool _isSaving = false;
+
+  final _fs = FirestoreService();
+  User? _user;
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: 'Jane Doe');
-    _bioController = TextEditingController(
-        text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.');
-    _lrnController = TextEditingController(text: '123456789');
+    _nameController = TextEditingController();
+    _bioController = TextEditingController();
+    _lrnController = TextEditingController();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    _user = AuthService().currentUser;
+    if (_user == null) return;
+
+    try {
+      final doc = await _fs.getUser(_user!.uid);
+      if (doc.exists) {
+        final data = doc.data() as Map<String, dynamic>;
+        setState(() {
+          _nameController.text = data['name'] ?? _user!.displayName ?? 'User';
+          _bioController.text = data['bio'] ?? '';
+          _lrnController.text = data['lrn'] ?? '';
+          _isLoading = false;
+        });
+      } else {
+        // Doc doesn't exist yet — fallback to Auth display name
+        setState(() {
+          _nameController.text = _user!.displayName ?? 'User';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _nameController.text = _user?.displayName ?? 'User';
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _saveProfile() async {
+    if (_user == null) return;
+    setState(() => _isSaving = true);
+
+    try {
+      await _fs.updateUserProfile(
+        _user!.uid,
+        name: _nameController.text.trim(),
+        bio: _bioController.text.trim(),
+        lrn: _lrnController.text.trim(),
+      );
+      // Also update Firebase Auth display name
+      await _user!.updateDisplayName(_nameController.text.trim());
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Profile saved!')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to save: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
   @override
@@ -46,12 +110,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final double keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
     final bool isKeyboardOpen = keyboardHeight > 0;
 
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: brandYellow,
+        body: Center(child: CircularProgressIndicator(color: Colors.white)),
+      );
+    }
+
     return Scaffold(
       backgroundColor: brandYellow,
-      resizeToAvoidBottomInset: false, // We handle height manually for the "shrinking" effect
+      resizeToAvoidBottomInset: false,
       body: Column(
         children: [
-          // 1. TOP YELLOW SECTION (Shrinks when keyboard is up)
+          // TOP YELLOW SECTION
           AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             curve: Curves.fastOutSlowIn,
@@ -60,7 +131,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               bottom: false,
               child: Column(
                 children: [
-                  // Back Button remains visible in all states
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                     child: Align(
@@ -74,8 +144,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                   ),
-                  
-                  // Hide Avatar & Progress when typing (middle images in your reference)
+
                   if (!isKeyboardOpen) ...[
                     const Spacer(),
                     Container(
@@ -87,8 +156,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       child: ClipOval(
                         child: Image.network(
-                          'https://api.dicebear.com/7.x/avataaars/png?seed=Jane&hair=long&glasses=round&mouth=smile&backgroundColor=transparent',
+                          'https://api.dicebear.com/7.x/avataaars/png?seed=${Uri.encodeComponent(_nameController.text)}&backgroundColor=transparent',
                           fit: BoxFit.contain,
+                          errorBuilder: (_, __, ___) => const Icon(
+                            Icons.person,
+                            size: 80,
+                            color: Colors.black54,
+                          ),
                         ),
                       ),
                     ),
@@ -101,23 +175,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
 
-          // 2. BOTTOM WHITE SHEET
+          // BOTTOM WHITE SHEET
           Expanded(
             child: AnimatedPadding(
               duration: const Duration(milliseconds: 300),
-              // Pushes the content up so it's visible above the keyboard
               padding: EdgeInsets.only(bottom: keyboardHeight),
               child: Container(
                 width: double.infinity,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: bgWhite,
-                  // Heavy Black Border wrapping the top and sides
-                  border: const Border(
+                  border: Border(
                     top: BorderSide(color: textBlack, width: thickBorder),
                     left: BorderSide(color: textBlack, width: thickBorder),
                     right: BorderSide(color: textBlack, width: thickBorder),
                   ),
-                  borderRadius: const BorderRadius.only(
+                  borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(35),
                     topRight: Radius.circular(35),
                   ),
@@ -144,20 +216,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
 
-                        // Edit Icon
+                        // Edit / Save Icon
                         Align(
                           alignment: Alignment.centerRight,
-                          child: IconButton(
-                            padding: EdgeInsets.zero,
-                            onPressed: () => setState(() => _isEditing = !_isEditing),
-                            icon: Icon(
-                                _isEditing ? Icons.check_circle_outline : Icons.edit_outlined,
-                                color: textBlack,
-                                size: 28),
-                          ),
+                          child: _isSaving
+                              ? const Padding(
+                                  padding: EdgeInsets.all(8.0),
+                                  child: SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  ),
+                                )
+                              : IconButton(
+                                  padding: EdgeInsets.zero,
+                                  onPressed: () async {
+                                    if (_isEditing) await _saveProfile();
+                                    setState(() => _isEditing = !_isEditing);
+                                  },
+                                  icon: Icon(
+                                    _isEditing
+                                        ? Icons.check_circle_outline
+                                        : Icons.edit_outlined,
+                                    color: textBlack,
+                                    size: 28,
+                                  ),
+                                ),
                         ),
 
-                        // Name Row + Status Dot
+                        // Name Row
                         Row(
                           children: [
                             Expanded(
@@ -182,12 +269,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               width: 22,
                               height: 22,
                               decoration: BoxDecoration(
-                                color: _nameController.text == "Name" ? textBlack : brandYellow,
+                                color: brandYellow,
                                 shape: BoxShape.circle,
                                 border: Border.all(color: textBlack, width: 2),
                               ),
                             ),
                           ],
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        // Email (read-only, from Firebase Auth)
+                        Text(
+                          _user?.email ?? '',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 14,
+                            color: textGrey,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
 
                         const SizedBox(height: 15),
@@ -204,15 +303,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             fontWeight: FontWeight.w400,
                           ),
                           decoration: InputDecoration(
-                            border: _isEditing ? const UnderlineInputBorder() : InputBorder.none,
-                            hintText: "Bionote",
+                            border: _isEditing
+                                ? const UnderlineInputBorder()
+                                : InputBorder.none,
+                            hintText: 'Write a short bio...',
                             isDense: true,
                           ),
                         ),
 
                         const SizedBox(height: 30),
 
-                        // Notes Chip
                         _buildChip('Notes'),
 
                         const SizedBox(height: 40),
@@ -241,6 +341,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   isDense: true,
                                   border: InputBorder.none,
                                   contentPadding: EdgeInsets.zero,
+                                  hintText: 'Enter LRN',
                                 ),
                               ),
                             ),
@@ -258,8 +359,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-
-  // --- UI Helpers ---
 
   Widget _buildProgressSection() {
     return Padding(

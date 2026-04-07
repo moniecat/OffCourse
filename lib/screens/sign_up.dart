@@ -1,12 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'sign_in.dart';
 import 'home.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
-
-final AuthService auth = AuthService();
-final FirestoreService fs = FirestoreService();
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -16,9 +14,13 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
+  final _auth = AuthService();
+  final _fs = FirestoreService();
+
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -28,17 +30,80 @@ class _SignUpScreenState extends State<SignUpScreen> {
     super.dispose();
   }
 
+  Future<void> _handleSignUp() async {
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (name.isEmpty || email.isEmpty || password.isEmpty) {
+      _showSnack('Please fill in all fields');
+      return;
+    }
+
+    if (password.length < 6) {
+      _showSnack('Password must be at least 6 characters');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final user = await _auth.signUp(email, password);
+
+      if (user != null) {
+        // Update display name in Firebase Auth
+        await user.updateDisplayName(name);
+
+        // Create Firestore user document with full name
+        await _fs.addUser(user.uid, name, email);
+
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      String message;
+      switch (e.code) {
+        case 'email-already-in-use':
+          message = 'An account already exists for that email.';
+          break;
+        case 'invalid-email':
+          message = 'The email address is not valid.';
+          break;
+        case 'weak-password':
+          message = 'Password is too weak. Use at least 6 characters.';
+          break;
+        case 'operation-not-allowed':
+          message = 'Email/password accounts are not enabled.';
+          break;
+        default:
+          message = 'Sign up failed: ${e.message}';
+      }
+      if (!mounted) return;
+      _showSnack(message);
+    } catch (e) {
+      if (!mounted) return;
+      _showSnack('An unexpected error occurred.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _showSnack(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: Row(
         children: [
-          // Left blue accent border
-          Container(
-            width: 6,
-            color: Colors.white,
-          ),
+          Container(width: 6, color: Colors.white),
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 30),
@@ -50,7 +115,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     'Sign up',
                     style: GoogleFonts.montserrat(
                       fontSize: 48,
-                      fontWeight: FontWeight.w900, // Extra Bold
+                      fontWeight: FontWeight.w900,
                       color: Colors.black,
                       letterSpacing: -1,
                     ),
@@ -66,24 +131,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                   ),
                   const SizedBox(height: 45),
-                  
-                  // Full Name Field
+
                   _buildTextField(
                     controller: _nameController,
                     hintText: 'Full Name',
                     icon: Icons.person_outline,
                   ),
                   const SizedBox(height: 20),
-                  
-                  // Email Field
+
                   _buildTextField(
                     controller: _emailController,
                     hintText: 'Email address',
                     icon: Icons.mail_outline,
+                    keyboardType: TextInputType.emailAddress,
                   ),
                   const SizedBox(height: 20),
-                  
-                  // Password Field (Icon only hint)
+
                   _buildTextField(
                     controller: _passwordController,
                     hintText: 'Password',
@@ -91,39 +154,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     isPassword: true,
                   ),
                   const SizedBox(height: 40),
-                  
-                  // Sign Up Button with Shadow
+
+                  // Sign Up Button
                   GestureDetector(
-                    onTap: () async {
-                      final name = _nameController.text.trim();
-                      final email = _emailController.text.trim();
-                      final password = _passwordController.text.trim();
-
-                      if (name.isEmpty || email.isEmpty || password.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Please fill in all fields')),
-                        );
-                        return;
-                      }
-
-                      // Create Firebase Auth user
-                      final user = await auth.signUp(email, password);
-
-                      if (user != null) {
-                        // Create Firestore user document
-                        await fs.addUser(user.uid, name, email);
-
-                        // Navigate to HomeScreen (or onboarding)
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => const HomeScreen()),
-                        );
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Sign up failed. Try again.')),
-                        );
-                      }
-                    },
+                    onTap: _isLoading ? null : _handleSignUp,
                     child: Container(
                       width: double.infinity,
                       height: 68,
@@ -134,24 +168,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         boxShadow: const [
                           BoxShadow(
                             color: Colors.black,
-                            offset: Offset(0, 5), // Drop shadow effect
+                            offset: Offset(0, 5),
                           )
                         ],
                       ),
                       alignment: Alignment.center,
-                      child: Text(
-                        'Sign up',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.black,
-                        ),
-                      ),
+                      child: _isLoading
+                          ? const CircularProgressIndicator(color: Colors.black)
+                          : Text(
+                              'Sign up',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.black,
+                              ),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 35),
-                  
-                  // Footer Navigation
+
                   Row(
                     children: [
                       Text(
@@ -174,7 +209,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           style: GoogleFonts.montserrat(
                             fontSize: 14,
                             fontWeight: FontWeight.w800,
-                            color: Colors.teal, // Orange color from image
+                            color: Colors.teal,
                           ),
                         ),
                       ),
@@ -195,10 +230,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
     required String hintText,
     required IconData icon,
     bool isPassword = false,
+    TextInputType? keyboardType,
   }) {
     return TextField(
       controller: controller,
       obscureText: isPassword,
+      keyboardType: keyboardType,
       cursorColor: Colors.black,
       style: GoogleFonts.montserrat(
         fontSize: 18,
