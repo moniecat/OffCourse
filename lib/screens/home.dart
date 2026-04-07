@@ -1,92 +1,165 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../widgets/quarter_chip.dart';
 import '../widgets/module_card.dart';
 import '../widgets/custom_bottom_nav.dart';
+import '../widgets/menu_drawer.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int _selectedQuarter = 0;
+
+  void _openMenu(BuildContext context) {
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        opaque: false,
+        barrierDismissible: true,
+        barrierColor: Colors.black.withValues(alpha: 0.4),
+        pageBuilder: (_, _, _) => const MenuDrawer(),
+        transitionsBuilder: (_, animation, _, child) {
+          final slide = Tween<Offset>(
+            begin: const Offset(1, 0),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(parent: animation, curve: Curves.easeInOut));
+          return SlideTransition(position: slide, child: child);
+        },
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[200],
+      backgroundColor: const Color(0xFFFBFBFB),
+      extendBody: true,
       bottomNavigationBar: const CustomBottomNav(),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 10),
-
-              /// HEADER
-              Row(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            /// HEADER
+            Padding(
+              padding: const EdgeInsets.fromLTRB(25, 25, 25, 10),
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Text Area (Static)
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Welcome,", style: TextStyle(fontSize: 18)),
+                      Text(
+                        "Welcome,",
+                        style: GoogleFonts.montserrat(
+                          fontSize: 24,
+                          color: const Color(0xFF1A1A1A),
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
                       Text(
                         "Jane Doe",
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
+                        style: GoogleFonts.montserrat(
+                          fontSize: 42,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -1.8,
+                          color: const Color(0xFF1A1A1A),
+                          height: 1.1,
                         ),
                       ),
                     ],
                   ),
-                  Icon(Icons.menu, size: 28),
+
+                  // Custom Two-Bar Menu Icon
+                  GestureDetector(
+                    onTap: () => _openMenu(context),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      color: Colors.transparent,
+                      alignment: Alignment.centerRight,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Container(
+                            width: 26,
+                            height: 3,
+                            decoration: BoxDecoration(
+                              color: Colors.black,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Container(
+                            width: 26,
+                            height: 3,
+                            decoration: BoxDecoration(
+                              color: Colors.black,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
+            ), // Closing Padding for Header
 
-              const SizedBox(height: 20),
+            const SizedBox(height: 15),
 
-              /// QUARTERS
-              SizedBox(
-                height: 100,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  physics: const BouncingScrollPhysics(),
-                  children: const [
-                    QuarterChip(title: "Quarter 1", color: Colors.amber),
-                    SizedBox(width: 12),
-                    QuarterChip(title: "Quarter 2", color: Colors.teal),
-                    SizedBox(width: 12),
-                    QuarterChip(title: "Quarter 3", color: Colors.teal),
-                    SizedBox(width: 12),
-                    QuarterChip(title: "Quarter 4", color: Colors.teal),
-                    SizedBox(width: 12),
-                    QuarterChip(title: "Quarter 5", color: Colors.teal),
-                    SizedBox(width: 12),
-                    QuarterChip(title: "Quarter 6", color: Colors.teal),
-                    SizedBox(width: 12),
-                    QuarterChip(title: "Quarter 7", color: Colors.teal),
-                    SizedBox(width: 12),
-                    QuarterChip(title: "Quarter 8", color: Colors.teal),
-                    SizedBox(width: 12),
-                    QuarterChip(title: "Quarter 9", color: Colors.teal),
-                    SizedBox(width: 12),
-                    QuarterChip(title: "Quarter 10", color: Colors.teal),
-                  ],
-                ),
+            /// QUARTERS LIST
+            SizedBox(
+              // 1. Increase height to 140 to give the shadow and text room to breathe
+              height: 130, 
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10), // Add vertical padding
+                itemCount: 10,
+                separatorBuilder: (_, _) => const SizedBox(width: 8), // Tighten gap slightly
+                itemBuilder: (_, index) {
+                  // 2. Remove the extra GestureDetector here (QuarterChip already has one)
+                  return QuarterChip(
+                    // 3. Use "Q" prefix to fix horizontal overcrowding
+                    label: "Quarter ${index + 1}", 
+                    isActive: index == _selectedQuarter,
+                    onTap: () => setState(() => _selectedQuarter = index),
+                  );
+                },
               ),
-
-              const SizedBox(height: 20),
-
-              /// MODULE LIST
-              Expanded(
-                child: ListView(
-                  children: const [
-                    ModuleCard(title: "Brainstorming", color: Colors.teal),
-                    ModuleCard(title: "Module 2", color: Colors.amber),
-                    ModuleCard(title: "Module 3", color: Colors.teal),
-                    ModuleCard(title: "Module 4", color: Colors.amber),
-                  ],
-                ),
+            ),
+            /// MODULE LIST
+            Expanded(
+              child: ListView.separated(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                itemCount: 4,
+                separatorBuilder: (_, _) => const SizedBox(height: 16),
+                itemBuilder: (_, index) {
+                  const modules = [
+                    ("Brainstorming", Colors.teal),
+                    ("Module 2", Colors.amber),
+                    ("Module 3", Colors.teal),
+                    ("Module 4", Colors.amber),
+                  ];
+                  final (title, color) = modules[index];
+                  return ModuleCard(
+                    title: title,
+                    color: color,
+                    quarter: _selectedQuarter + 1,
+                  );
+                },
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
