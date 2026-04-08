@@ -158,7 +158,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: Image.network(
                           'https://api.dicebear.com/7.x/avataaars/png?seed=${Uri.encodeComponent(_nameController.text)}&backgroundColor=transparent',
                           fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) => const Icon(
+                          errorBuilder: (_, _, _) => const Icon(
                             Icons.person,
                             size: 80,
                             color: Colors.black54,

@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'sign_up.dart';
 import 'home.dart';
 import '../services/auth_service.dart';
-import '../services/firestore_service.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -15,7 +14,6 @@ class SignInScreen extends StatefulWidget {
 
 class _SignInScreenState extends State<SignInScreen> {
   final _auth = AuthService();
-  final _fs = FirestoreService();
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -43,8 +41,8 @@ class _SignInScreenState extends State<SignInScreen> {
       final user = await _auth.signIn(email, password);
 
       if (user != null) {
-        // Use merge:true so we don't overwrite their existing Firestore profile
-        await _fs.addUser(user.uid, user.displayName ?? 'User', user.email ?? '');
+        // For existing users, the Firestore document should already exist from sign-up
+        // No need to addUser here to speed up sign-in
 
         if (!mounted) return;
         Navigator.pushReplacement(

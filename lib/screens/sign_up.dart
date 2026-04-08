@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'sign_in.dart';
-import 'home.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
 
@@ -54,13 +53,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
         // Update display name in Firebase Auth
         await user.updateDisplayName(name);
 
-        // Create Firestore user document with full name
-        await _fs.addUser(user.uid, name, email);
+        // Create Firestore user document in background (no await for faster navigation)
+        _fs.addUser(user.uid, name, email);
+
+        // Sign out so user can sign in properly
+        await _auth.signOut();
 
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
+          MaterialPageRoute(builder: (context) => const SignInScreen()),
         );
       }
     } on FirebaseAuthException catch (e) {

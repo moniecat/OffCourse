@@ -109,7 +109,7 @@ class ModuleOneScreen extends StatelessWidget {
                       fontSize: 16,
                       letterSpacing: 2,
                       fontWeight: FontWeight.w900,
-                      color: darkBorder.withOpacity(0.5),
+                      color: darkBorder.withValues(alpha: 0.5),
                     ),
                   ),
                   const SizedBox(height: 10),

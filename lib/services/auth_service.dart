@@ -11,30 +11,20 @@ class AuthService {
 
   // Sign up with email & password
   Future<User?> signUp(String email, String password) async {
-    try {
-      final credential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      return credential.user;
-    } on FirebaseAuthException catch (e) {
-      print('SignUp Error: ${e.code} - ${e.message}');
-      rethrow; // rethrow so the UI can show specific error messages
-    }
+    final credential = await _auth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+    return credential.user;
   }
 
   // Sign in with email & password
   Future<User?> signIn(String email, String password) async {
-    try {
-      final credential = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      return credential.user;
-    } on FirebaseAuthException catch (e) {
-      print('SignIn Error: ${e.code} - ${e.message}');
-      rethrow;
-    }
+    final credential = await _auth.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+    return credential.user;
   }
 
   // Sign out
