@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:flutter_application_1/app.dart';
+import 'package:offcourse/app.dart';
 
 void main() {
   testWidgets('onboarding intro unlocks and advances to first reel',

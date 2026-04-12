@@ -54,8 +54,8 @@ class _HomeScreenState extends State<HomeScreen> {
         opaque: false,
         barrierDismissible: true,
         barrierColor: Colors.black.withValues(alpha: 0.4),
-        pageBuilder: (_, _, _) => const MenuDrawer(),
-        transitionsBuilder: (_, animation, _, child) {
+        pageBuilder: (_, ___, __) => const MenuDrawer(),
+        transitionsBuilder: (_, animation, __, child) {
           final slide = Tween<Offset>(
             begin: const Offset(1, 0),
             end: Offset.zero,
@@ -155,7 +155,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 physics: const BouncingScrollPhysics(),
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 itemCount: 10,
-                separatorBuilder: (_, _) => const SizedBox(width: 8),
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
                 itemBuilder: (_, index) {
                   return QuarterChip(
                     label: "Quarter ${index + 1}",
@@ -172,7 +172,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 physics: const BouncingScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
                 itemCount: 4,
-                separatorBuilder: (_, _) => const SizedBox(height: 16),
+                separatorBuilder: (_, __) => const SizedBox(height: 16),
                 itemBuilder: (_, index) {
                   const modules = [
                     ("Brainstorming", Colors.teal),

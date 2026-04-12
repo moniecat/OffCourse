@@ -24,8 +24,8 @@ class _SettingPageState extends State<SettingPage> {
         opaque: false,
         barrierDismissible: true,
         barrierColor: Colors.black26,
-        pageBuilder: (_, _, _) => const MenuDrawer(),
-        transitionsBuilder: (_, animation, _, child) {
+        pageBuilder: (_, ___, __) => const MenuDrawer(),
+        transitionsBuilder: (_, animation, __, child) {
           return SlideTransition(
             position: Tween<Offset>(
               begin: const Offset(1, 0),

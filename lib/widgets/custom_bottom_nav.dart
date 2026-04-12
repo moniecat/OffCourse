@@ -16,8 +16,8 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
   void _openProfile(BuildContext context) {
     Navigator.of(context).push(
       PageRouteBuilder(
-        pageBuilder: (_, _, _) => const ProfileScreen(),
-        transitionsBuilder: (_, animation, _, child) {
+        pageBuilder: (_, __, ___) => const ProfileScreen(),
+        transitionsBuilder: (_, animation, __, child) {
           // Slide up from bottom to top
           return SlideTransition(
             position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
