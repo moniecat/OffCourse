@@ -28,9 +28,15 @@ class _HomeScreenState extends State<HomeScreen> {
     final user = AuthService().currentUser;
     if (user == null) return;
 
+    // Helper function to extract only the first name
+    String getFirstName(String? fullName) {
+      if (fullName == null || fullName.isEmpty) return 'User';
+      return fullName.trim().split(' ').first;
+    }
+
     // First use Firebase Auth display name for a fast load
     if (user.displayName != null && user.displayName!.isNotEmpty) {
-      setState(() => _displayName = user.displayName!);
+      setState(() => _displayName = getFirstName(user.displayName));
     }
 
     // Then fetch Firestore to get the most up-to-date name
@@ -40,11 +46,11 @@ class _HomeScreenState extends State<HomeScreen> {
         final data = doc.data() as Map<String, dynamic>;
         final name = data['name'] as String?;
         if (name != null && name.isNotEmpty) {
-          setState(() => _displayName = name);
+          setState(() => _displayName = getFirstName(name));
         }
       }
     } catch (_) {
-      // If Firestore fails, keep Auth display name
+      // If Firestore fails, keep current name
     }
   }
 
@@ -84,29 +90,36 @@ class _HomeScreenState extends State<HomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Welcome,",
-                        style: GoogleFonts.montserrat(
-                          fontSize: 24,
-                          color: const Color(0xFF1A1A1A),
-                          fontWeight: FontWeight.w400,
+                  // FIX: Added Expanded to prevent "Right Overflowed" error
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Welcome,",
+                          style: GoogleFonts.montserrat(
+                            fontSize: 24,
+                            color: const Color(0xFF1A1A1A),
+                            fontWeight: FontWeight.w400,
+                          ),
                         ),
-                      ),
-                      Text(
-                        _displayName,
-                        style: GoogleFonts.montserrat(
-                          fontSize: 42,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -1.8,
-                          color: const Color(0xFF1A1A1A),
-                          height: 1.1,
+                        Text(
+                          _displayName,
+                          maxLines: 1, // Keep on one line
+                          overflow: TextOverflow.ellipsis, // Add "..." if too long
+                          style: GoogleFonts.montserrat(
+                            fontSize: 42,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -1.8,
+                            color: const Color(0xFF1A1A1A),
+                            height: 1.1,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
+
+                  const SizedBox(width: 10), // Added spacing between name and menu
 
                   // Menu Icon
                   GestureDetector(
