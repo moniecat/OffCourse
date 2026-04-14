@@ -6,6 +6,8 @@ import '../widgets/custom_bottom_nav.dart';
 import '../widgets/menu_drawer.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
+import '../models/course.dart';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,14 +17,53 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedCourse = 0;
+  int _selectedIndex = 0;
   String _displayName = 'User';
+
+  List<Course> _courses = [];
+  bool _loadingCourses = true;
+
+  List<Map<String, dynamic>> _modules = [];
+  bool _loadingModules = true;
 
   @override
   void initState() {
     super.initState();
     _loadUserName();
+    _loadCourses();
   }
+
+  Future<void> _loadModules() async {
+  if (_courses.isEmpty) return;
+  setState(() => _loadingModules = true);
+  try {
+    final modules = await FirestoreService().getModules(_courses[_selectedIndex].id);
+    if (mounted) {
+      setState(() {
+        _modules = modules;
+        _loadingModules = false;
+      });
+    }
+  } catch (e) {
+    print('Error loading modules: $e');
+    if (mounted) setState(() => _loadingModules = false);
+  }
+}
+
+Future<void> _loadCourses() async {
+  try {
+    final courses = await FirestoreService().getCourses();
+    if (mounted) {
+      setState(() {
+        _courses = courses;
+        _loadingCourses = false;
+      });
+      _loadModules(); // ← load modules for first course
+    }
+  } catch (e) {
+    if (mounted) setState(() => _loadingCourses = false);
+  }
+}
 
   Future<void> _loadUserName() async {
     final user = AuthService().currentUser;
@@ -163,44 +204,49 @@ class _HomeScreenState extends State<HomeScreen> {
             /// COURSES LIST
             SizedBox(
               height: 130,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                itemCount: 10,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (_, index) {
-                  return CourseChip(
-                    label: "Course ${index + 1}",
-                    isActive: index == _selectedCourse,
-                    onTap: () => setState(() => _selectedCourse = index),
-                  );
-                },
-              ),
+              child: _loadingCourses
+                  ? const Center(child: CircularProgressIndicator())
+                  : _courses.isEmpty
+                      ? const Center(child: Text("No courses available"))
+                      : ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          physics: const BouncingScrollPhysics(),
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          itemCount: _courses.length,
+                          separatorBuilder: (_, __) => const SizedBox(width: 8),
+                          itemBuilder: (_, index) {
+                            return CourseChip(
+                              label: _courses[index].title,  // ← pulls title from Firestore
+                              isActive: index == _selectedIndex,
+                              onTap: () {
+                                setState(() => _selectedIndex = index);
+                                _loadModules(); // ← reload modules for selected course
+                              },
+                            );
+                          },
+                        ),
             ),
 
             /// MODULE LIST
             Expanded(
-              child: ListView.separated(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-                itemCount: 4,
-                separatorBuilder: (_, __) => const SizedBox(height: 16),
-                itemBuilder: (_, index) {
-                  const modules = [
-                    ("Brainstorming", Colors.teal),
-                    ("Module 2", Colors.amber),
-                    ("Module 3", Colors.teal),
-                    ("Module 4", Colors.amber),
-                  ];
-                  final (title, color) = modules[index];
-                  return ModuleCard(
-                    title: title,
-                    color: color,
-                    course: _selectedCourse + 1,
-                  );
-                },
-              ),
+              child: _loadingModules
+                  ? const Center(child: CircularProgressIndicator())
+                  : _modules.isEmpty
+                      ? const Center(child: Text("No modules available"))
+                      : ListView.separated(
+                          physics: const BouncingScrollPhysics(),
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                          itemCount: _modules.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: 16),
+                          itemBuilder: (_, index) {
+                            final colors = [Colors.teal, Colors.amber];
+                            return ModuleCard(
+                              title: _modules[index]['title'] as String,
+                              color: colors[index % colors.length],
+                              courseId: _courses[_selectedIndex].id,
+                            );
+                          },
+                        ),
             ),
           ],
         ),

@@ -7,12 +7,12 @@ import 'result_screen.dart';
 
 class BrainstormingScreen extends StatefulWidget {
   final String moduleName;
-  final int course;
+  final String courseId; // ← was: int course
 
   const BrainstormingScreen({
     super.key,
     required this.moduleName,
-    required this.course,
+    required this.courseId, // ← was: int course
   });
 
   @override
@@ -21,13 +21,8 @@ class BrainstormingScreen extends StatefulWidget {
 
 class _BrainstormingScreenState extends State<BrainstormingScreen> {
   List<QuestionModel> _questions = [];
-  
-  // Permanent record of confirmed answers: { questionIndex: selectedLabel }
-  final Map<int, String> _userAnswers = {}; 
-  
-  // Temporary highlight before pressing "CHECK"
-  String? _currentSelection; 
-  
+  final Map<int, String> _userAnswers = {};
+  String? _currentSelection;
   bool _isLoading = true;
   String? _error;
   int _currentIndex = 0;
@@ -41,7 +36,10 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
 
   Future<void> _loadQuestions() async {
     try {
-      final questions = await QuestionService.loadForModule(widget.moduleName, widget.course);
+      final questions = await QuestionService.loadForModule(
+        widget.moduleName,
+        widget.courseId, // ← was: widget.course
+      );
       setState(() {
         _questions = questions;
         _isLoading = false;
@@ -56,14 +54,11 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
 
   void _onOptionTap(String label) {
     if (_userAnswers.containsKey(_currentIndex)) return;
-    setState(() {
-      _currentSelection = label;
-    });
+    setState(() => _currentSelection = label);
   }
 
   void _confirmAnswer() {
     if (_currentSelection == null || _userAnswers.containsKey(_currentIndex)) return;
-    
     setState(() {
       _userAnswers[_currentIndex] = _currentSelection!;
       if (_questions[_currentIndex].isCorrect(_currentSelection!)) {
@@ -76,7 +71,7 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
     if (_currentIndex < _questions.length - 1) {
       setState(() {
         _currentIndex++;
-        _currentSelection = null; 
+        _currentSelection = null;
       });
     } else {
       Navigator.pushReplacement(
@@ -96,18 +91,14 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
       if (label == confirmedAnswer) return AnswerState.wrong;
       return AnswerState.idle;
     }
-    if (label == _currentSelection) {
-      return AnswerState.correct; 
-    }
+    if (label == _currentSelection) return AnswerState.correct;
     return AnswerState.idle;
   }
 
   @override
   Widget build(BuildContext context) {
-    // 1. Loading State
     if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
-    // 2. Error State (Includes "X" to go back)
     if (_error != null) {
       return Scaffold(
         backgroundColor: const Color(0xFFF9F9F9),
@@ -122,7 +113,6 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
       );
     }
 
-    // 3. Empty State (Includes "X" to go back)
     if (_questions.isEmpty) {
       return Scaffold(
         backgroundColor: const Color(0xFFF9F9F9),
@@ -152,7 +142,6 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
       );
     }
 
-    // 4. Normal Quiz State
     final currentQuestion = _questions[_currentIndex];
     final bool isAnswered = _userAnswers.containsKey(_currentIndex);
     final bool isCorrect = isAnswered && currentQuestion.isCorrect(_userAnswers[_currentIndex]!);
@@ -162,7 +151,7 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            _buildTopBar(), 
+            _buildTopBar(),
             Expanded(
               child: LayoutBuilder(
                 builder: (context, constraints) {
@@ -170,11 +159,11 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
                     physics: const BouncingScrollPhysics(),
                     child: ConstrainedBox(
                       constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                      child: Center( 
+                      child: Center(
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                           child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center, 
+                            mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               _buildHeader(),
@@ -191,9 +180,7 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
                 },
               ),
             ),
-            isAnswered 
-              ? _buildFeedbackOverlay(isCorrect) 
-              : _buildControlButtons(),
+            isAnswered ? _buildFeedbackOverlay(isCorrect) : _buildControlButtons(),
           ],
         ),
       ),
@@ -270,13 +257,18 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
             padding: const EdgeInsets.symmetric(vertical: 14),
             decoration: const BoxDecoration(
               color: Color(0xFF249780),
-              borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
               border: Border(bottom: BorderSide(color: Colors.black, width: 3)),
             ),
             child: Text(
               question.questionType.toUpperCase(),
               textAlign: TextAlign.center,
-              style: GoogleFonts.montserrat(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w900),
+              style: GoogleFonts.montserrat(
+                color: Colors.white, fontSize: 14, fontWeight: FontWeight.w900,
+              ),
             ),
           ),
           Padding(
@@ -286,7 +278,9 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
                 Text(
                   question.question,
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.montserrat(fontSize: 18, fontWeight: FontWeight.w800, height: 1.3),
+                  style: GoogleFonts.montserrat(
+                    fontSize: 18, fontWeight: FontWeight.w800, height: 1.3,
+                  ),
                 ),
                 const SizedBox(height: 24),
                 ...['A', 'B', 'C', 'D'].map((label) {
@@ -324,18 +318,24 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(isCorrect ? Icons.check_circle : Icons.error, color: Colors.white, size: 32),
+                Icon(isCorrect ? Icons.check_circle : Icons.error,
+                    color: Colors.white, size: 32),
                 const SizedBox(width: 12),
                 Text(
-                  isCorrect ? "EXCELLENT!" : "NOT QUITE!", 
-                  style: GoogleFonts.montserrat(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900)
+                  isCorrect ? "EXCELLENT!" : "NOT QUITE!",
+                  style: GoogleFonts.montserrat(
+                    color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900,
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 15),
             Text(
-              "TAP TO CONTINUE", 
-              style: GoogleFonts.montserrat(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w800, letterSpacing: 1.2)
+              "TAP TO CONTINUE",
+              style: GoogleFonts.montserrat(
+                color: Colors.white, fontSize: 13,
+                fontWeight: FontWeight.w800, letterSpacing: 1.2,
+              ),
             ),
           ],
         ),
@@ -352,12 +352,14 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           height: 65,
-          width: double.infinity, 
+          width: double.infinity,
           decoration: BoxDecoration(
             color: !canCheck ? Colors.grey[300] : const Color(0xFFFBB017),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: Colors.black, width: 3),
-            boxShadow: canCheck ? [const BoxShadow(color: Colors.black, offset: Offset(0, 6))] : null,
+            boxShadow: canCheck
+                ? [const BoxShadow(color: Colors.black, offset: Offset(0, 6))]
+                : null,
           ),
           child: Center(
             child: Text(

@@ -4,12 +4,12 @@ import '../screens/brainstorming_screen.dart';
 
 class ModuleOneScreen extends StatelessWidget {
   final String moduleName;
-  final int course;
+  final String courseId; // ← was: int course
 
   const ModuleOneScreen({
     super.key,
     required this.moduleName,
-    required this.course,
+    required this.courseId, // ← was: int course
   });
 
   @override
@@ -25,22 +25,18 @@ class ModuleOneScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
             children: [
-              // --- Header Row ---
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Title on the left
                   Text(
-                    'Module $course',
+                    'Module',  // ← removed "Module $course" since courseId is now a string ID, not a display number
                     style: GoogleFonts.montserrat(
                       fontWeight: FontWeight.w900,
                       fontSize: 24,
                       color: darkBorder,
                     ),
                   ),
-                  
-                  // The "X" Button on the right with the exact style from your image
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
                     child: Container(
@@ -48,19 +44,19 @@ class ModuleOneScreen extends StatelessWidget {
                       width: 46,
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(12), // Rounded square
+                        borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: darkBorder, width: 3),
                         boxShadow: const [
                           BoxShadow(
                             color: darkBorder,
-                            offset: Offset(4, 4), // Hard offset shadow
+                            offset: Offset(4, 4),
                             blurRadius: 0,
                           )
                         ],
                       ),
                       child: const Icon(
-                        Icons.close, 
-                        size: 24, 
+                        Icons.close,
+                        size: 24,
                         color: darkBorder,
                         weight: 700,
                       ),
@@ -71,7 +67,6 @@ class ModuleOneScreen extends StatelessWidget {
 
               const SizedBox(height: 40),
 
-              // --- Main Info Card ---
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 35, horizontal: 20),
@@ -86,10 +81,10 @@ class ModuleOneScreen extends StatelessWidget {
                     )
                   ],
                 ),
-                child: Text(
-                  'Inquiries, Investigation\nand Immersion\nCourse $course',
+                child: const Text(  // ← removed "Course $course" reference
+                  'Inquiries, Investigation\nand Immersion',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.montserrat(
+                  style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
                     height: 1.3,
@@ -100,11 +95,10 @@ class ModuleOneScreen extends StatelessWidget {
 
               const Spacer(flex: 2),
 
-              // --- Module Title and Name ---
               Column(
                 children: [
                   Text(
-                    'MODULE $course',
+                    'MODULE',  // ← removed "MODULE $course"
                     style: GoogleFonts.montserrat(
                       fontSize: 16,
                       letterSpacing: 2,
@@ -117,7 +111,7 @@ class ModuleOneScreen extends StatelessWidget {
                     moduleName,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.montserrat(
-                      fontSize: 32, // Larger for better impact
+                      fontSize: 32,
                       fontWeight: FontWeight.w900,
                       color: darkBorder,
                       height: 1.1,
@@ -128,7 +122,6 @@ class ModuleOneScreen extends StatelessWidget {
 
               const Spacer(flex: 3),
 
-              // --- Bottom Start Button ---
               GestureDetector(
                 onTap: () {
                   Navigator.push(
@@ -136,7 +129,7 @@ class ModuleOneScreen extends StatelessWidget {
                     MaterialPageRoute(
                       builder: (_) => BrainstormingScreen(
                         moduleName: moduleName,
-                        course: course,
+                        courseId: courseId, // ← was: course: course
                       ),
                     ),
                   );
@@ -151,7 +144,7 @@ class ModuleOneScreen extends StatelessWidget {
                     border: Border.all(color: darkBorder, width: 3),
                     boxShadow: const [
                       BoxShadow(
-                        color: darkBorder, 
+                        color: darkBorder,
                         offset: Offset(0, 6),
                       )
                     ],
