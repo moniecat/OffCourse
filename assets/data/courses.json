@@ -1,0 +1,37 @@
+[
+  {
+    "title": "Computer Science Fundamentals",
+    "description": "Core concepts including theory, data structures, and algorithms",
+    "order": 1
+  },
+  {
+    "title": "Computer Systems",
+    "description": "Hardware, OS, and system architecture",
+    "order": 2
+  },
+  {
+    "title": "System Development",
+    "description": "Software engineering methods and testing",
+    "order": 3
+  },
+  {
+    "title": "Network Technology",
+    "description": "Networking concepts and protocols",
+    "order": 4
+  },
+  {
+    "title": "Database Technology",
+    "description": "Database models, SQL, and control",
+    "order": 5
+  },
+  {
+    "title": "Security & Standardization",
+    "description": "Cybersecurity and standards",
+    "order": 6
+  },
+  {
+    "title": "Computerization & Management",
+    "description": "IT strategy, management, and business systems",
+    "order": 7
+  }
+]

@@ -71,6 +71,9 @@ flutter:
     - assets/pics/reel3.png
     - assets/pics/reel4.png
     - assets/pics/welcome.png
+    - assets/data/courses.json
+    - assets/data/modules.json
+    - assets/data/questions.json
 
   # To add assets to your application, add an assets section, like this:
   # assets:
