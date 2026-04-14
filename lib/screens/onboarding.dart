@@ -11,12 +11,10 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  final PageController _pageController = PageController();
   int _currentPage = 0;
   bool _canContinueFromIntro = false;
   Timer? _introDelayTimer;
 
-  // Colors based on your Login screen
   final Color primaryYellow = const Color(0xFFFFC107);
   final Color textDark = Colors.black;
   final Color textGrey = Colors.black54;
@@ -74,37 +72,54 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   void _nextPage() {
     if (_currentPage < _pages.length - 1) {
-      _pageController.nextPage(duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
+      setState(() => _currentPage++);
     } else {
       _navigateToSignIn();
     }
   }
 
   void _navigateToSignIn() {
-    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const SignInScreen()));
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const SignInScreen()),
+    );
   }
 
   @override
   void dispose() {
     _introDelayTimer?.cancel();
-    _pageController.dispose();
     super.dispose();
   }
 
-  // Dots with clean black outlines or simple colors
   Widget _buildDots() {
     return Row(
       children: List.generate(_reelCount, (i) {
         final isActive = _reelIndex == i;
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
+        return Container(
           margin: const EdgeInsets.only(right: 8),
-          width: isActive ? 20 : 10,
-          height: 10,
-          decoration: BoxDecoration(
-            color: isActive ? primaryYellow : Colors.white,
-            borderRadius: BorderRadius.circular(5),
-            border: Border.all(color: Colors.black, width: 1.5),
+          child: AnimatedCrossFade(
+            duration: const Duration(milliseconds: 400),
+            crossFadeState: isActive
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            firstChild: Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(5),
+                border: Border.all(color: Colors.black, width: 1.5),
+              ),
+            ),
+            secondChild: Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                color: primaryYellow,
+                borderRadius: BorderRadius.circular(5),
+                border: Border.all(color: Colors.black, width: 1.5),
+              ),
+            ),
           ),
         );
       }),
@@ -115,21 +130,27 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: PageView.builder(
-        controller: _pageController,
-        onPageChanged: (index) {
-          setState(() => _currentPage = index);
-          if (index == 0) _setupIntroDelay();
-        },
-        itemCount: _pages.length,
-        itemBuilder: (context, index) {
-          final page = _pages[index];
-          if (page['type'] == 'intro') return _buildIntroPage(page);
-          if (page['type'] == 'welcome') return _buildWelcomePage(page);
-          return _buildReelPage(page);
-        },
+      body: Stack(
+        children: List.generate(_pages.length, (index) {
+          return AnimatedOpacity(
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeInOut,
+            opacity: _currentPage == index ? 1.0 : 0.0,
+            child: IgnorePointer(
+              ignoring: _currentPage != index,
+              child: _buildPage(index),
+            ),
+          );
+        }),
       ),
     );
+  }
+
+  Widget _buildPage(int index) {
+    final page = _pages[index];
+    if (page['type'] == 'intro') return _buildIntroPage(page);
+    if (page['type'] == 'welcome') return _buildWelcomePage(page);
+    return _buildReelPage(page);
   }
 
   // INTRO PAGE
@@ -166,7 +187,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  // REEL PAGES (Matches Input Style)
+  // REEL PAGES
   Widget _buildReelPage(Map<String, String> page) {
     return SafeArea(
       child: Padding(
@@ -237,11 +258,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 40),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center, 
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const Spacer(flex: 2),
-
-            // 2. TITLE SECTION
             Column(
               children: [
                 Text(
@@ -280,20 +299,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
               ],
             ),
-
-            // 3. IMAGE (Updated height to 340)
             Transform.translate(
-  offset: const Offset(0, -10),
-  child: Image.asset(
-    page['image']!,
-    height: 300, // Updated from 340 to 300
-    fit: BoxFit.contain,
-  ),
-),
-
+              offset: const Offset(0, -10),
+              child: Image.asset(
+                page['image']!,
+                height: 300,
+                fit: BoxFit.contain,
+              ),
+            ),
             const SizedBox(height: 30),
-
-            // 4. DESCRIPTION
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10),
               child: Text(
@@ -307,10 +321,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
               ),
             ),
-
             const Spacer(flex: 3),
-
-            // 6. BUTTON
             Padding(
               padding: const EdgeInsets.only(bottom: 30),
               child: GestureDetector(
@@ -320,7 +331,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   height: 65,
                   decoration: BoxDecoration(
                     color: primaryYellow,
-                    borderRadius: BorderRadius.circular(15), 
+                    borderRadius: BorderRadius.circular(15),
                     border: Border.all(color: Colors.black, width: 2.5),
                     boxShadow: const [
                       BoxShadow(
