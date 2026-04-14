@@ -11,25 +11,21 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: 'OffCourse', // <--- ADD THIS LINE TO FIX THE TAB NAME
       debugShowCheckedModeBanner: false,
-      // Use a StreamBuilder on authStateChanges so the app automatically
-      // routes to Home when already signed in, or to Sign-In when signed out.
       home: StreamBuilder<User?>(
         stream: AuthService().authStateChanges,
         builder: (context, snapshot) {
-          // While Firebase resolves the auth state, show a loading spinner
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Scaffold(
               body: Center(child: CircularProgressIndicator()),
             );
           }
 
-          // User is signed in → go straight to Home
           if (snapshot.hasData && snapshot.data != null) {
             return const HomeScreen();
           }
 
-          // Not signed in → show Onboarding
           return const OnboardingScreen();
         },
       ),
