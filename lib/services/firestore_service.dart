@@ -24,18 +24,24 @@ class FirestoreService {
 
   /// Update editable profile fields (name, bio, lrn)
   Future<void> updateUserProfile(
-      String id, {
-      String? name,
-      String? bio,
-      String? lrn,
-    }) async {
-    final data = <String, dynamic>{};
-    if (name != null) data['name'] = name;
-    if (bio != null) data['bio'] = bio;
-    if (lrn != null) data['lrn'] = lrn;
-    if (data.isEmpty) return;
-    await db.collection('users').doc(id).update(data);
-  }
+  String uid, {
+  String? name,
+  String? bio,
+  String? lrn,
+  String? profileImage,
+}) async {
+  final data = <String, dynamic>{};
+
+  if (name != null) data['name'] = name;
+  if (bio != null) data['bio'] = bio;
+  if (lrn != null) data['lrn'] = lrn;
+  if (profileImage != null) data['profileImage'] = profileImage;
+
+  await FirebaseFirestore.instance
+      .collection('users')
+      .doc(uid)
+      .set(data, SetOptions(merge: true));
+}
 
   // --- COURSES ---
   Future<void> addCourse(String title, String description) async {
