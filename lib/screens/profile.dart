@@ -197,26 +197,58 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   if (!isKeyboardOpen) ...[
                     const Spacer(),
                     // INTEGRATED IMAGE UPLOAD GESTURE
-                    GestureDetector(
-                      onTap: _isEditing ? _pickAndUploadImage : null,
-                      child: Container(
-                        width: 160,
-                        height: 160,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: textBlack, width: 1.5),
-                        ),
-                        child: ClipOval(
-                          child: _profileImageUrl != null
-                              ? Image.network(_profileImageUrl!, fit: BoxFit.cover)
-                              : Image.network(
-                                  'https://api.dicebear.com/7.x/avataaars/png?seed=${Uri.encodeComponent(_nameController.text)}&backgroundColor=transparent',
-                                  fit: BoxFit.contain,
-                                  errorBuilder: (_, __, ___) => const Icon(Icons.person, size: 80),
-                                ),
-                        ),
-                      ),
-                    ),
+                    // 🔥 UPDATED PROFILE IMAGE WITH EDIT OVERLAY
+GestureDetector(
+  onTap: _isEditing ? _pickAndUploadImage : null,
+  child: Container(
+    width: 160,
+    height: 160,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      border: Border.all(color: textBlack, width: 1.5),
+    ),
+    child: ClipOval(
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // 1. The Profile Image
+          _profileImageUrl != null
+              ? Image.network(
+                  _profileImageUrl!,
+                  fit: BoxFit.cover,
+                  width: 160,
+                  height: 160,
+                )
+              : Image.network(
+                  'https://api.dicebear.com/7.x/avataaars/png?seed=${Uri.encodeComponent(_nameController.text)}&backgroundColor=transparent',
+                  fit: BoxFit.contain,
+                  width: 160,
+                  height: 160,
+                  errorBuilder: (_, __, ___) => const Icon(Icons.person, size: 80),
+                ),
+
+          // 2. The "Hover/Edit" Overlay (Only shows when editing)
+          if (_isEditing)
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 160,
+              height: 160,
+              color: Colors.black.withOpacity(0.4), // Dims the image
+              child: const Icon(
+                Icons.camera_alt_outlined,
+                color: Colors.white,
+                size: 35,
+              ),
+            ),
+            
+          // 3. Loading indicator if uploading
+          if (_isSaving && _isEditing)
+            const CircularProgressIndicator(color: Colors.white),
+        ],
+      ),
+    ),
+  ),
+),
                     const Spacer(),
                     _buildProgressSection(),
                     const SizedBox(height: 25),
