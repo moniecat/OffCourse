@@ -8,7 +8,6 @@ import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
 import '../models/course.dart';
 
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -19,10 +18,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   String _displayName = 'User';
-
   List<Course> _courses = [];
   bool _loadingCourses = true;
-
   List<Map<String, dynamic>> _modules = [];
   bool _loadingModules = true;
 
@@ -34,53 +31,49 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadModules() async {
-  if (_courses.isEmpty) return;
-  setState(() => _loadingModules = true);
-  try {
-    final modules = await FirestoreService().getModules(_courses[_selectedIndex].id);
-    if (mounted) {
-      setState(() {
-        _modules = modules;
-        _loadingModules = false;
-      });
+    if (_courses.isEmpty) return;
+    setState(() => _loadingModules = true);
+    try {
+      final modules = await FirestoreService().getModules(_courses[_selectedIndex].id);
+      if (mounted) {
+        setState(() {
+          _modules = modules;
+          _loadingModules = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _loadingModules = false);
     }
-  } catch (e) {
-    print('Error loading modules: $e');
-    if (mounted) setState(() => _loadingModules = false);
   }
-}
 
-Future<void> _loadCourses() async {
-  try {
-    final courses = await FirestoreService().getCourses();
-    if (mounted) {
-      setState(() {
-        _courses = courses;
-        _loadingCourses = false;
-      });
-      _loadModules(); // ← load modules for first course
+  Future<void> _loadCourses() async {
+    try {
+      final courses = await FirestoreService().getCourses();
+      if (mounted) {
+        setState(() {
+          _courses = courses;
+          _loadingCourses = false;
+        });
+        _loadModules();
+      }
+    } catch (e) {
+      if (mounted) setState(() => _loadingCourses = false);
     }
-  } catch (e) {
-    if (mounted) setState(() => _loadingCourses = false);
   }
-}
 
   Future<void> _loadUserName() async {
     final user = AuthService().currentUser;
     if (user == null) return;
 
-    // Helper function to extract only the first name
     String getFirstName(String? fullName) {
       if (fullName == null || fullName.isEmpty) return 'User';
       return fullName.trim().split(' ').first;
     }
 
-    // First use Firebase Auth display name for a fast load
     if (user.displayName != null && user.displayName!.isNotEmpty) {
       setState(() => _displayName = getFirstName(user.displayName));
     }
 
-    // Then fetch Firestore to get the most up-to-date name
     try {
       final doc = await FirestoreService().getUser(user.uid);
       if (doc.exists && mounted) {
@@ -90,9 +83,7 @@ Future<void> _loadCourses() async {
           setState(() => _displayName = getFirstName(name));
         }
       }
-    } catch (_) {
-      // If Firestore fails, keep current name
-    }
+    } catch (_) {}
   }
 
   void _openMenu(BuildContext context) {
@@ -129,9 +120,7 @@ Future<void> _loadCourses() async {
               padding: const EdgeInsets.fromLTRB(25, 25, 25, 10),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // FIX: Added Expanded to prevent "Right Overflowed" error
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -146,8 +135,8 @@ Future<void> _loadCourses() async {
                         ),
                         Text(
                           _displayName,
-                          maxLines: 1, // Keep on one line
-                          overflow: TextOverflow.ellipsis, // Add "..." if too long
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.montserrat(
                             fontSize: 42,
                             fontWeight: FontWeight.w900,
@@ -159,40 +148,17 @@ Future<void> _loadCourses() async {
                       ],
                     ),
                   ),
-
-                  const SizedBox(width: 10), // Added spacing between name and menu
-
-                  // Menu Icon
+                  const SizedBox(width: 10),
                   GestureDetector(
                     onTap: () => _openMenu(context),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      color: Colors.transparent,
-                      alignment: Alignment.centerRight,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Container(
-                            width: 26,
-                            height: 3,
-                            decoration: BoxDecoration(
-                              color: Colors.black,
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Container(
-                            width: 26,
-                            height: 3,
-                            decoration: BoxDecoration(
-                              color: Colors.black,
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                          ),
-                        ],
-                      ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Container(width: 26, height: 3, decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(2))),
+                        const SizedBox(height: 6),
+                        Container(width: 26, height: 3, decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(2))),
+                      ],
                     ),
                   ),
                 ],
@@ -201,9 +167,9 @@ Future<void> _loadCourses() async {
 
             const SizedBox(height: 15),
 
-            /// COURSES LIST
+            /// COURSES LIST (Horizontal)
             SizedBox(
-              height: 130,
+              height: 155, // INCREASED height to fit 2 lines of text
               child: _loadingCourses
                   ? const Center(child: CircularProgressIndicator())
                   : _courses.isEmpty
@@ -213,21 +179,22 @@ Future<void> _loadCourses() async {
                           physics: const BouncingScrollPhysics(),
                           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                           itemCount: _courses.length,
-                          separatorBuilder: (_, __) => const SizedBox(width: 8),
+                          // Inside ListView.separated in home.dart
+                          separatorBuilder: (_, __) => const SizedBox(width: 0), // REDUCED space between chips
                           itemBuilder: (_, index) {
                             return CourseChip(
-                              label: _courses[index].title,  // ← pulls title from Firestore
+                              label: _courses[index].title,
                               isActive: index == _selectedIndex,
                               onTap: () {
                                 setState(() => _selectedIndex = index);
-                                _loadModules(); // ← reload modules for selected course
+                                _loadModules();
                               },
                             );
                           },
                         ),
             ),
 
-            /// MODULE LIST
+            /// MODULE LIST (Vertical)
             Expanded(
               child: _loadingModules
                   ? const Center(child: CircularProgressIndicator())
