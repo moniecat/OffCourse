@@ -4,12 +4,12 @@ import '../screens/brainstorming_screen.dart';
 
 class ModuleOneScreen extends StatelessWidget {
   final String moduleName;
-  final int quarter;
+  final int course;
 
   const ModuleOneScreen({
     super.key,
     required this.moduleName,
-    required this.quarter,
+    required this.course,
   });
 
   @override
@@ -32,7 +32,7 @@ class ModuleOneScreen extends StatelessWidget {
                 children: [
                   // Title on the left
                   Text(
-                    'Module $quarter',
+                    'Module $course',
                     style: GoogleFonts.montserrat(
                       fontWeight: FontWeight.w900,
                       fontSize: 24,
@@ -87,7 +87,7 @@ class ModuleOneScreen extends StatelessWidget {
                   ],
                 ),
                 child: Text(
-                  'Inquiries, Investigation\nand Immersion\nQuarter $quarter',
+                  'Inquiries, Investigation\nand Immersion\nCourse $course',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.montserrat(
                     fontSize: 20,
@@ -104,7 +104,7 @@ class ModuleOneScreen extends StatelessWidget {
               Column(
                 children: [
                   Text(
-                    'MODULE $quarter',
+                    'MODULE $course',
                     style: GoogleFonts.montserrat(
                       fontSize: 16,
                       letterSpacing: 2,
@@ -136,7 +136,7 @@ class ModuleOneScreen extends StatelessWidget {
                     MaterialPageRoute(
                       builder: (_) => BrainstormingScreen(
                         moduleName: moduleName,
-                        quarter: quarter,
+                        course: course,
                       ),
                     ),
                   );

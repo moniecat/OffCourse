@@ -1,6 +1,6 @@
 class QuestionModel {
   final String module;
-  final int quarter;
+  final int course;
   final String questionType;
   final String question;
   final String optionA;
@@ -11,7 +11,7 @@ class QuestionModel {
 
   const QuestionModel({
     required this.module,
-    required this.quarter,
+    required this.course,
     required this.questionType,
     required this.question,
     required this.optionA,
@@ -43,7 +43,7 @@ class QuestionModel {
   factory QuestionModel.fromCsvRow(List<dynamic> row) {
     return QuestionModel(
       module: row[0].toString().trim(),
-      quarter: int.tryParse(row[1].toString().trim()) ?? 1,
+      course: int.tryParse(row[1].toString().trim()) ?? 1,
       questionType: row[2].toString().trim(),
       question: row[3].toString().trim(),
       optionA: row[4].toString().trim(),

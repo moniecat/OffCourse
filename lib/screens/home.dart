@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../widgets/quarter_chip.dart';
+import '../widgets/course_chip.dart';
 import '../widgets/module_card.dart';
 import '../widgets/custom_bottom_nav.dart';
 import '../widgets/menu_drawer.dart';
@@ -15,7 +15,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedQuarter = 0;
+  int _selectedCourse = 0;
   String _displayName = 'User';
 
   @override
@@ -147,7 +147,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
             const SizedBox(height: 15),
 
-            /// QUARTERS LIST
+            /// COURSES LIST
             SizedBox(
               height: 130,
               child: ListView.separated(
@@ -157,10 +157,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 itemCount: 10,
                 separatorBuilder: (_, __) => const SizedBox(width: 8),
                 itemBuilder: (_, index) {
-                  return QuarterChip(
-                    label: "Quarter ${index + 1}",
-                    isActive: index == _selectedQuarter,
-                    onTap: () => setState(() => _selectedQuarter = index),
+                  return CourseChip(
+                    label: "Course ${index + 1}",
+                    isActive: index == _selectedCourse,
+                    onTap: () => setState(() => _selectedCourse = index),
                   );
                 },
               ),
@@ -184,7 +184,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   return ModuleCard(
                     title: title,
                     color: color,
-                    quarter: _selectedQuarter + 1,
+                    course: _selectedCourse + 1,
                   );
                 },
               ),

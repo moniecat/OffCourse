@@ -6,13 +6,13 @@ import '../screens/module_welcome.dart'; // Keep your import
 class ModuleCard extends StatelessWidget {
   final String title;
   final Color color;
-  final int quarter;
+  final int course;
 
   const ModuleCard({
     super.key,
     required this.title,
     required this.color,
-    required this.quarter,
+    required this.course,
   });
 
   @override
@@ -28,7 +28,7 @@ class ModuleCard extends StatelessWidget {
           MaterialPageRoute(
             builder: (_) => ModuleOneScreen(
               moduleName: title,
-              quarter: quarter,
+              course: course,
             ),
           ),
         );

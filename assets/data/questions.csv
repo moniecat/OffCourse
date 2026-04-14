@@ -1,4 +1,4 @@
-module,quarter,question_type,question,option_a,option_b,option_c,option_d,correct_answer
+module,course,question_type,question,option_a,option_b,option_c,option_d,correct_answer
 Brainstorming,1,Identify,What are the two phases of brainstorming?,cause and effect,projection and selection,idea generation and evaluation,problem and solution,C
 Brainstorming,1,Identify,Which technique involves writing ideas without judgment?,Mind mapping,Free writing,SWOT analysis,Fishbone diagram,B
 Brainstorming,1,Define,Brainstorming is best described as?,A structured debate,A spontaneous idea generation process,A formal report writing method,A data analysis technique,B

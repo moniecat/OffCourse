@@ -7,12 +7,12 @@ import 'result_screen.dart';
 
 class BrainstormingScreen extends StatefulWidget {
   final String moduleName;
-  final int quarter;
+  final int course;
 
   const BrainstormingScreen({
     super.key,
     required this.moduleName,
-    required this.quarter,
+    required this.course,
   });
 
   @override
@@ -41,7 +41,7 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
 
   Future<void> _loadQuestions() async {
     try {
-      final questions = await QuestionService.loadForModule(widget.moduleName, widget.quarter);
+      final questions = await QuestionService.loadForModule(widget.moduleName, widget.course);
       setState(() {
         _questions = questions;
         _isLoading = false;

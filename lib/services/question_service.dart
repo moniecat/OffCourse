@@ -17,17 +17,17 @@ class QuestionService {
         .toList();
   }
 
-  /// Filters questions by module name and quarter number.
+  /// Filters questions by module name and course number.
   static Future<List<QuestionModel>> loadForModule(
     String module,
-    int quarter,
+    int course,
   ) async {
     final all = await loadAll();
     return all
         .where(
           (q) =>
               q.module.toLowerCase() == module.toLowerCase() &&
-              q.quarter == quarter,
+              q.course == course,
         )
         .toList();
   }

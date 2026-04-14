@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class QuarterChip extends StatelessWidget {
+class CourseChip extends StatelessWidget {
   final String label; // Ensure this is named 'label'
   final bool isActive;
   final VoidCallback? onTap;
 
-  const QuarterChip({
+  const CourseChip({
     super.key,
     required this.label, 
     this.isActive = false,
