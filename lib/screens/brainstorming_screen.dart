@@ -4,6 +4,7 @@ import '../models/question_model.dart';
 import '../services/question_service.dart';
 import '../widgets/answer_option.dart';
 import 'result_screen.dart';
+import '../services/result_service.dart';
 
 class BrainstormingScreen extends StatefulWidget {
   final String moduleName;
@@ -74,6 +75,18 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
         _currentSelection = null;
       });
     } else {
+      // Save result before navigating
+      ResultService.saveResult(
+        courseId: widget.courseId,
+        moduleId: _questions.first.moduleId,
+        score:    _score,
+        total:    _questions.length,
+      ).then((_) {
+        print('✅ Result saved successfully');
+      }).catchError((e) {
+        print('❌ Error saving result: $e');
+      });
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(

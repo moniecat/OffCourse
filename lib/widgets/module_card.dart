@@ -1,40 +1,79 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:math' as math;
 import '../screens/module_welcome.dart';
+import '../services/result_service.dart';
+import '../services/question_service.dart';
+import '../models/best_score.dart';
 
-class ModuleCard extends StatelessWidget {
+class ModuleCard extends StatefulWidget {
   final String title;
   final Color color;
   final String courseId;
+  final String moduleId; // 👈 new
 
   const ModuleCard({
     super.key,
     required this.title,
     required this.color,
     required this.courseId,
+    required this.moduleId, // 👈 new
   });
+
+  @override
+  State<ModuleCard> createState() => _ModuleCardState();
+}
+
+class _ModuleCardState extends State<ModuleCard> {
+  int? _totalQuestions;
+  int? _bestScore;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStats();
+  }
+
+  Future<void> _loadStats() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    // Fetch total questions and best score in parallel
+    final results = await Future.wait([
+      QuestionService.getTotalQuestions(widget.courseId, widget.moduleId),
+      ResultService.getBestScore(userId: uid, moduleId: widget.moduleId),
+    ]);
+
+    if (mounted) {
+      setState(() {
+        _totalQuestions = results[0] as int;
+        final best = results[1] as BestScoreModel?;
+        _bestScore = best?.score;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     const Color darkBorder = Color(0xFF1A1A1A);
     const double thickness = 3.5;
-    const double shadowOffset = 7.0; // Same as CourseChip
-
+    const double shadowOffset = 7.0;
+    
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => ModuleOneScreen(
-              moduleName: title,
-              courseId: courseId,
+              moduleName: widget.title,
+              courseId: widget.courseId,
             ),
           ),
         );
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: shadowOffset + 5), 
+        margin: const EdgeInsets.only(bottom: shadowOffset + 5),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(30),
@@ -57,7 +96,7 @@ class ModuleCard extends StatelessWidget {
                 height: 140,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: color,
+                  color: widget.color,
                   border: const Border(
                     bottom: BorderSide(color: darkBorder, width: thickness),
                   ),
@@ -77,7 +116,7 @@ class ModuleCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            title,
+                            widget.title,
                             style: GoogleFonts.montserrat(
                               fontSize: 24,
                               fontWeight: FontWeight.w900,
@@ -86,14 +125,25 @@ class ModuleCard extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 6),
-                          Text(
-                            'Viewed 1  •  Best Score 50',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: darkBorder.withValues(alpha: 0.6),
-                            ),
-                          ),
+                          _totalQuestions == null
+                            ? Container(
+                                height: 13,
+                                width: 160,
+                                decoration: BoxDecoration(
+                                  color: Colors.black12,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              )
+                            : Text(
+                                _bestScore == null
+                                    ? 'Total: $_totalQuestions  •  No attempts yet'
+                                    : 'Total: $_totalQuestions  •  Best: $_bestScore/$_totalQuestions',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: darkBorder.withValues(alpha: 0.6),
+                                ),
+                              ),
                         ],
                       ),
                     ),

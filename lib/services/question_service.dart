@@ -31,4 +31,16 @@ class QuestionService {
         .map((doc) => QuestionModel.fromMap(doc.id, doc.data()))
         .toList();
   }
+
+  static Future<int> getTotalQuestions(String courseId, String moduleId) async {
+    final snapshot = await db
+        .collection('courses')
+        .doc(courseId)
+        .collection('modules')
+        .doc(moduleId)
+        .collection('questions')
+        .count()
+        .get();
+    return snapshot.count ?? 0;
+  }
 }
