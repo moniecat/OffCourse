@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart'; // Added for debugPrint
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -17,10 +18,9 @@ class SeedService {
     final modules   = List<Map<String, dynamic>>.from(jsonDecode(modulesJson));
     final questions = List<Map<String, dynamic>>.from(jsonDecode(questionsJson));
 
-    // Step 1: Seed courses, build title → docId map
+    // Step 1: Seed courses
     final Map<String, String> courseTitleToId = {};
     for (final course in courses) {
-      // Avoid duplicates by checking existing docs
       final existing = await db
           .collection('courses')
           .where('title', isEqualTo: course['title'])
@@ -40,13 +40,13 @@ class SeedService {
       courseTitleToId[course['title'] as String] = courseId;
     }
 
-    // Step 2: Seed modules, build "courseId/moduleTitle" → moduleId map
+    // Step 2: Seed modules
     final Map<String, String> moduleTitleToId = {};
     for (final module in modules) {
       final courseTitle = module['courseTitle'] as String;
       final courseId    = courseTitleToId[courseTitle];
       if (courseId == null) {
-        print('⚠️  Course not found for module: ${module['title']}');
+        debugPrint('⚠️  Course not found for module: ${module['title']}'); // Fixed: avoid_print
         continue;
       }
 
@@ -74,24 +74,23 @@ class SeedService {
             .add(moduleData);
         moduleId = ref.id;
       }
-      // Key: "courseId::moduleTitle" to handle same module titles across courses
       moduleTitleToId['$courseId::${module['title']}'] = moduleId;
     }
 
-    // Step 3: Seed questions using resolved IDs
+    // Step 3: Seed questions
     for (final question in questions) {
       final courseTitle  = question['courseTitle'] as String;
       final moduleTitle  = question['moduleTitle'] as String;
       final courseId     = courseTitleToId[courseTitle];
 
       if (courseId == null) {
-        print('⚠️  Course not found for question: ${question['question']}');
+        debugPrint('⚠️  Course not found for question: ${question['question']}'); // Fixed: avoid_print
         continue;
       }
 
       final moduleId = moduleTitleToId['$courseId::$moduleTitle'];
       if (moduleId == null) {
-        print('⚠️  Module not found for question: ${question['question']}');
+        debugPrint('⚠️  Module not found for question: ${question['question']}'); // Fixed: avoid_print
         continue;
       }
 
@@ -107,7 +106,6 @@ class SeedService {
         'correctAnswer': question['correctAnswer'],
       };
 
-      // Avoid duplicates by matching question text + moduleId
       final existing = await db
           .collection('courses')
           .doc(courseId)
@@ -129,6 +127,6 @@ class SeedService {
       }
     }
 
-    print('✅ Seeding complete.');
+    debugPrint('✅ Seeding complete.'); // Fixed: avoid_print
   }
 }

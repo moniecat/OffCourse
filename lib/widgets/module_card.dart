@@ -17,9 +17,9 @@ class ModuleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const Color darkBorder = Color(0xFF1A1C1E);
+    const Color darkBorder = Color(0xFF1A1A1A);
     const double thickness = 3.5;
-    const double bottomThickness = 8.0;
+    const double shadowOffset = 7.0; // Same as CourseChip
 
     return GestureDetector(
       onTap: () {
@@ -34,27 +34,27 @@ class ModuleCard extends StatelessWidget {
         );
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: bottomThickness, left: 4, right: 4),
+        margin: const EdgeInsets.only(bottom: shadowOffset + 5), 
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(32),
+          borderRadius: BorderRadius.circular(30),
           border: Border.all(color: darkBorder, width: thickness),
           boxShadow: const [
             BoxShadow(
               color: darkBorder,
-              offset: Offset(0, bottomThickness),
+              offset: Offset(0, shadowOffset),
               blurRadius: 0,
             ),
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(26),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // 1. Illustration Area
+              // Illustration Area
               Container(
-                height: 160,
+                height: 140,
                 width: double.infinity,
                 decoration: BoxDecoration(
                   color: color,
@@ -67,9 +67,9 @@ class ModuleCard extends StatelessWidget {
                 ),
               ),
 
-              // 2. Info Area
+              // Info Area
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+                padding: const EdgeInsets.all(20),
                 child: Row(
                   children: [
                     Expanded(
@@ -79,19 +79,19 @@ class ModuleCard extends StatelessWidget {
                           Text(
                             title,
                             style: GoogleFonts.montserrat(
-                              fontSize: 26,
+                              fontSize: 24,
                               fontWeight: FontWeight.w900,
                               color: darkBorder,
                               height: 1.1,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 6),
                           Text(
                             'Viewed 1  •  Best Score 50',
                             style: GoogleFonts.montserrat(
-                              fontSize: 14,
+                              fontSize: 13,
                               fontWeight: FontWeight.w700,
-                              color: Colors.black.withValues(alpha: 0.7),
+                              color: darkBorder.withValues(alpha: 0.6),
                             ),
                           ),
                         ],
@@ -99,18 +99,14 @@ class ModuleCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 10),
                     Container(
-                      width: 50,
-                      height: 50,
+                      width: 46,
+                      height: 46,
                       decoration: BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
                         border: Border.all(color: darkBorder, width: thickness),
                       ),
-                      child: const Icon(
-                        Icons.arrow_forward_rounded,
-                        color: darkBorder,
-                        size: 28,
-                      ),
+                      child: const Icon(Icons.arrow_forward_rounded, color: darkBorder, size: 26),
                     ),
                   ],
                 ),
@@ -123,6 +119,7 @@ class ModuleCard extends StatelessWidget {
   }
 }
 
+// ... Keep your _BoldStickerPainter class here ...
 class _BoldStickerPainter extends CustomPainter {
   final Color borderColor;
   final double thickness;
@@ -167,14 +164,10 @@ class _BoldStickerPainter extends CustomPainter {
     canvas.save();
     canvas.translate(x, y);
     canvas.rotate(angle * math.pi / 180);
-
-    final rect = RRect.fromRectAndRadius(
-        Rect.fromLTWH(0, 0, bw, bh), const Radius.circular(6));
-
+    final rect = RRect.fromRectAndRadius(Rect.fromLTWH(0, 0, bw, bh), const Radius.circular(6));
     canvas.drawRRect(rect.shift(const Offset(3, 3)), fill..color = borderColor);
     canvas.drawRRect(rect, fill..color = color);
     canvas.drawRRect(rect, stroke);
-
     canvas.restore();
   }
 
