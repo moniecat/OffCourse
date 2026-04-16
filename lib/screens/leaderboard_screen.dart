@@ -143,7 +143,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            'Rankings',
+            'Leaderboard',
             style: GoogleFonts.montserrat(
               fontSize: 38,
               fontWeight: FontWeight.w900,
