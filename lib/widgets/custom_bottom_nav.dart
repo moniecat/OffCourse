@@ -4,8 +4,8 @@ import '../screens/leaderboard_screen.dart';
 import '../screens/home.dart';
 
 class CustomBottomNav extends StatefulWidget {
-  final int selectedIndex; // 👈 add this
-  const CustomBottomNav({super.key, this.selectedIndex = 1}); // default to home
+  final int selectedIndex;
+  const CustomBottomNav({super.key, this.selectedIndex = 1}); // Defaults to Home (index 1)
 
   @override
   State<CustomBottomNav> createState() => _CustomBottomNavState();
@@ -17,7 +17,7 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
   @override
   void initState() {
     super.initState();
-    _selectedIndex = widget.selectedIndex; // 👈 initialize from widget
+    _selectedIndex = widget.selectedIndex;
   }
 
   void _onTap(int index) {
@@ -57,7 +57,9 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
       child: Container(
         decoration: const BoxDecoration(
           color: Colors.white,
-          border: Border(top: BorderSide(color: darkBorder, width: thickness)),
+          border: Border(
+            top: BorderSide(color: darkBorder, width: thickness),
+          ),
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(45),
             topRight: Radius.circular(45),
@@ -67,7 +69,7 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             _buildNavItem(0, Icons.leaderboard_rounded),
-            _buildNavItem(1, Icons.menu_book_rounded),
+            _buildNavItem(1, Icons.home_rounded), // 👈 Changed to Home Icon
             _buildNavItem(2, Icons.person_rounded),
           ],
         ),
