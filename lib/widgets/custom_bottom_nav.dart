@@ -17,7 +17,8 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
   @override
   void initState() {
     super.initState();
-    _selectedIndex = widget.selectedIndex; // 👈 Removed the accidental URL here
+    // Removed the accidental URL paste here 👈
+    _selectedIndex = widget.selectedIndex; 
   }
 
   void _onTap(int index) {

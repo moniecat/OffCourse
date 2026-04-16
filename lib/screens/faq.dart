@@ -1,9 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/menu_drawer.dart';
+import '../services/auth_service.dart';
+import '../services/firestore_service.dart';
 
-class FAQPage extends StatelessWidget {
+class FAQPage extends StatefulWidget {
   const FAQPage({super.key});
+
+  @override
+  State<FAQPage> createState() => _FAQPageState();
+}
+
+class _FAQPageState extends State<FAQPage> {
+  // Styling Constants from Home/Settings
+  static const Color darkBorder = Color(0xFF1A1C1E);
+  static const double borderWidth = 3.0;
+
+  // Role logic for the Drawer
+  String _userRole = 'student';
+  bool get _isAdmin => _userRole == 'admin';
 
   static const _faqs = [
     _FAQ('What is this app?', 'This app helps you manage your tasks easily.'),
@@ -12,22 +27,62 @@ class FAQPage extends StatelessWidget {
     _FAQ('How do I contact support?', 'You can reach us via Settings > About > Contact.'),
   ];
 
-  void openDrawer(BuildContext context) {
+  @override
+  void initState() {
+    super.initState();
+    _loadUserRole();
+  }
+
+  /// Fetch user role to pass the correct isAdmin flag to MenuDrawer
+  Future<void> _loadUserRole() async {
+    final user = AuthService().currentUser;
+    if (user == null) return;
+    try {
+      final doc = await FirestoreService().getUser(user.uid);
+      if (doc.exists && mounted) {
+        final data = doc.data() as Map<String, dynamic>;
+        setState(() {
+          _userRole = data['role'] ?? 'student';
+        });
+      }
+    } catch (_) {}
+  }
+
+  /// Updated Drawer Animation to match Home
+  void _openDrawer(BuildContext context) {
     Navigator.of(context).push(
       PageRouteBuilder(
         opaque: false,
         barrierDismissible: true,
-        barrierColor: Colors.black26,
-        pageBuilder: (_, ___, __) => const MenuDrawer(),
+        barrierColor: Colors.black.withValues(alpha: 0.5),
+        pageBuilder: (_, ___, __) => MenuDrawer(isAdmin: _isAdmin),
         transitionsBuilder: (_, animation, __, child) {
           return SlideTransition(
             position: Tween<Offset>(
               begin: const Offset(1, 0),
               end: Offset.zero,
-            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutQuart)),
             child: child,
           );
         },
+      ),
+    );
+  }
+
+  /// Reusable Styled Menu Button from Home
+  Widget _buildMenuButton() {
+    return GestureDetector(
+      onTap: () => _openDrawer(context),
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: darkBorder, width: borderWidth),
+          boxShadow: const [
+            BoxShadow(color: darkBorder, offset: Offset(3, 3))
+          ],
+        ),
+        child: const Icon(Icons.menu, color: darkBorder, size: 30),
       ),
     );
   }
@@ -42,30 +97,9 @@ class FAQPage extends StatelessWidget {
         toolbarHeight: 80,
         automaticallyImplyLeading: false,
         actions: [
-          GestureDetector(
-            onTap: () => openDrawer(context),
-            child: Padding(
-              padding: const EdgeInsets.only(right: 24),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Container(
-                      width: 30,
-                      height: 4,
-                      decoration: BoxDecoration(
-                          color: Colors.black,
-                          borderRadius: BorderRadius.circular(2))),
-                  const SizedBox(height: 6),
-                  Container(
-                      width: 30,
-                      height: 4,
-                      decoration: BoxDecoration(
-                          color: Colors.black,
-                          borderRadius: BorderRadius.circular(2))),
-                ],
-              ),
-            ),
+          Padding(
+            padding: const EdgeInsets.only(right: 25, top: 10),
+            child: _buildMenuButton(), // Updated Button
           ),
         ],
       ),
@@ -82,7 +116,7 @@ class FAQPage extends StatelessWidget {
                     fontWeight: FontWeight.w900,
                     height: 1.0,
                     letterSpacing: -1.5,
-                    color: Colors.black,
+                    color: darkBorder,
                   ),
                 ),
                 const SizedBox(height: 30),
@@ -100,7 +134,7 @@ class FAQPage extends StatelessWidget {
       ),
     );
   }
-} // <--- THIS WAS MISSING: Closing brace for FAQPage
+}
 
 class _FAQ {
   final String question;

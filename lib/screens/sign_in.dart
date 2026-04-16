@@ -41,9 +41,6 @@ class _SignInScreenState extends State<SignInScreen> {
       final user = await _auth.signIn(email, password);
 
       if (user != null) {
-        // For existing users, the Firestore document should already exist from sign-up
-        // No need to addUser here to speed up sign-in
-
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
@@ -103,7 +100,6 @@ class _SignInScreenState extends State<SignInScreen> {
                 fit: BoxFit.contain,
               ),
               const SizedBox(height: 10),
-
               SizedBox(
                 width: double.infinity,
                 child: Column(
@@ -132,27 +128,29 @@ class _SignInScreenState extends State<SignInScreen> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 40),
-
+              
+              // Email Field - Moves to NEXT field
               _buildTextField(
                 controller: _emailController,
                 hintText: 'Email address',
                 icon: Icons.person_outline,
                 keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: 20),
 
+              // Password Field - Submits the form
               _buildTextField(
                 controller: _passwordController,
                 hintText: '••••••••',
                 icon: Icons.lock_outline,
                 isPassword: true,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _handleSignIn(),
               ),
 
               const SizedBox(height: 40),
-
-              // Sign In Button
               GestureDetector(
                 onTap: _isLoading ? null : _handleSignIn,
                 child: Container(
@@ -162,12 +160,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     color: const Color(0xFFFFC107),
                     borderRadius: BorderRadius.circular(22),
                     border: Border.all(color: Colors.black, width: 2.5),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.black,
-                        offset: Offset(0, 5),
-                      )
-                    ],
+                    boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(0, 5))],
                   ),
                   alignment: Alignment.center,
                   child: _isLoading
@@ -182,33 +175,21 @@ class _SignInScreenState extends State<SignInScreen> {
                         ),
                 ),
               ),
-
               const SizedBox(height: 30),
-
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     "You are new? ",
-                    style: GoogleFonts.montserrat(
-                        color: Colors.black54,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600),
+                    style: GoogleFonts.montserrat(color: Colors.black54, fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                   GestureDetector(
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const SignUpScreen()),
-                      );
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const SignUpScreen()));
                     },
                     child: Text(
                       'Create new',
-                      style: GoogleFonts.montserrat(
-                        color: Colors.teal,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                      ),
+                      style: GoogleFonts.montserrat(color: Colors.teal, fontSize: 16, fontWeight: FontWeight.w900),
                     ),
                   ),
                 ],
@@ -226,11 +207,15 @@ class _SignInScreenState extends State<SignInScreen> {
     required IconData icon,
     bool isPassword = false,
     TextInputType? keyboardType,
+    TextInputAction? textInputAction,
+    void Function(String)? onSubmitted,
   }) {
     return TextField(
       controller: controller,
       obscureText: isPassword,
       keyboardType: keyboardType,
+      textInputAction: textInputAction,
+      onSubmitted: onSubmitted,
       style: GoogleFonts.montserrat(fontSize: 18, fontWeight: FontWeight.w700),
       decoration: InputDecoration(
         filled: true,

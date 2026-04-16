@@ -5,12 +5,14 @@ class LeaderboardEntry {
   final String name;
   final int score;
   final int total;
+  final String? profileImage;
 
   const LeaderboardEntry({
     required this.userId,
     required this.name,
     required this.score,
     required this.total,
+    this.profileImage,
   });
 }
 
@@ -18,7 +20,6 @@ class LeaderboardService {
   static final _db = FirebaseFirestore.instance;
 
   static Future<List<LeaderboardEntry>> getLeaderboard(String moduleId) async {
-    // Get top 10 best scores for this module
     final scoresSnap = await _db
         .collection('bestScores')
         .where('moduleId', isEqualTo: moduleId)
@@ -28,7 +29,6 @@ class LeaderboardService {
 
     if (scoresSnap.docs.isEmpty) return [];
 
-    // Fetch user names in parallel
     final entries = await Future.wait(
       scoresSnap.docs.map((doc) async {
         final data = doc.data();
@@ -36,12 +36,15 @@ class LeaderboardService {
         final score = data['score'] as int? ?? 0;
         final total = data['total'] as int? ?? 0;
 
-        // Fetch name from users collection
         String name = 'Unknown';
+        String? profileImage;
+
         try {
           final userDoc = await _db.collection('users').doc(userId).get();
           if (userDoc.exists) {
-            name = userDoc.data()?['name'] as String? ?? 'Unknown';
+            final userData = userDoc.data();
+            name = userData?['name'] as String? ?? 'Student';
+            profileImage = userData?['profileImage'] as String?;
           }
         } catch (_) {}
 
@@ -50,6 +53,7 @@ class LeaderboardService {
           name: name,
           score: score,
           total: total,
+          profileImage: profileImage,
         );
       }),
     );

@@ -14,10 +14,14 @@ class _AddModuleScreenState extends State<AddModuleScreen> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _orderController = TextEditingController(text: '0');
+  
   bool _isLoading = false;
   bool _loadingCourses = true;
   List<Course> _courses = [];
   Course? _selectedCourse;
+
+  // Styling Constants
+  static const Color darkBorder = Color(0xFF1A1C1E);
 
   @override
   void initState() {
@@ -66,8 +70,6 @@ class _AddModuleScreenState extends State<AddModuleScreen> {
     setState(() => _isLoading = true);
     try {
       await FirestoreService().addModule(course.id, title, description, order);
-      
-      // FIX: Guard with mounted check before using BuildContext across async gaps
       if (!mounted) return;
       
       _showMessage('Module added successfully.');
@@ -82,87 +84,201 @@ class _AddModuleScreenState extends State<AddModuleScreen> {
 
   void _showMessage(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: darkBorder,
+        content: Text(message, style: GoogleFonts.montserrat()),
+      ),
+    );
+  }
+
+  /// Back button style from the image provided
+  Widget _buildBackButton() {
+    return GestureDetector(
+      onTap: () => Navigator.pop(context),
+      child: Container(
+        width: 45,
+        height: 45,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: Colors.black, width: 2.5),
+          boxShadow: const [
+            BoxShadow(color: Colors.black, offset: Offset(4, 4)),
+          ],
+        ),
+        child: const Icon(Icons.arrow_back, color: Colors.black, size: 26),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1A1D23),
-        title: Text('Add Module', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900)),
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: _loadingCourses
-              ? const Center(child: CircularProgressIndicator())
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    DropdownButtonFormField<Course>(
-                      // FIX: Changed 'value' to 'initialValue' per deprecation notice
-                      initialValue: _selectedCourse,
-                      decoration: InputDecoration(
-                        labelText: 'Select course',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                      ),
-                      items: _courses
-                          .map((course) => DropdownMenuItem(
-                                value: course,
-                                child: Text(course.title),
-                              ))
-                          .toList(),
-                      onChanged: (value) {
-                        setState(() => _selectedCourse = value);
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    _buildTextField(_titleController, 'Module title'),
-                    const SizedBox(height: 16),
-                    _buildTextField(_descriptionController, 'Module description', maxLines: 4),
-                    const SizedBox(height: 16),
-                    _buildTextField(_orderController, 'Display order', keyboardType: TextInputType.number),
-                    const SizedBox(height: 30),
-                    GestureDetector(
-                      onTap: _isLoading ? null : _saveModule,
-                      child: Container(
-                        height: 60,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1A1D23),
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                        child: Center(
-                          child: _isLoading
-                              ? const CircularProgressIndicator(color: Colors.white)
-                              : Text(
-                                  'Save Module',
-                                  style: GoogleFonts.montserrat(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        toolbarHeight: 90,
+        automaticallyImplyLeading: false,
+        flexibleSpace: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.only(left: 24, top: 12),
+            child: Row(children: [_buildBackButton()]),
+          ),
         ),
+      ),
+      body: _loadingCourses
+          ? const Center(child: CircularProgressIndicator(color: darkBorder))
+          : SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Add\nModule',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 48,
+                      fontWeight: FontWeight.w900,
+                      height: 1.0,
+                      letterSpacing: -1.5,
+                      color: darkBorder,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+
+                  // Dropdown Field
+                  _buildLabel('SELECT COURSE'),
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.black, width: 2.5),
+                      boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<Course>(
+                        value: _selectedCourse,
+                        isExpanded: true,
+                        icon: const Icon(Icons.keyboard_arrow_down, color: Colors.black),
+                        style: GoogleFonts.montserrat(
+                          color: Colors.black,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                        ),
+                        items: _courses.map((course) {
+                          return DropdownMenuItem(
+                            value: course,
+                            child: Text(course.title),
+                          );
+                        }).toList(),
+                        onChanged: (value) => setState(() => _selectedCourse = value),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  _buildNeoTextField(
+                    controller: _titleController,
+                    label: 'MODULE TITLE',
+                    hint: 'e.g. Intro to Biology',
+                  ),
+                  const SizedBox(height: 24),
+
+                  _buildNeoTextField(
+                    controller: _descriptionController,
+                    label: 'DESCRIPTION',
+                    hint: 'Details about the module...',
+                    maxLines: 4,
+                  ),
+                  const SizedBox(height: 24),
+
+                  _buildNeoTextField(
+                    controller: _orderController,
+                    label: 'DISPLAY ORDER',
+                    hint: '0',
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 40),
+
+                  // Save Button
+                  GestureDetector(
+                    onTap: _isLoading ? null : _saveModule,
+                    child: Container(
+                      height: 70,
+                      decoration: BoxDecoration(
+                        color: darkBorder,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.black, width: 3),
+                        boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
+                      ),
+                      child: Center(
+                        child: _isLoading
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : Text(
+                                'SAVE MODULE',
+                                style: GoogleFonts.montserrat(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                ],
+              ),
+            ),
+    );
+  }
+
+  Widget _buildLabel(String text) {
+    return Text(
+      text,
+      style: GoogleFonts.montserrat(
+        fontWeight: FontWeight.w900,
+        fontSize: 13,
+        letterSpacing: 1.2,
       ),
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label,
-      {int maxLines = 1, TextInputType keyboardType = TextInputType.text}) {
-    return TextField(
-      controller: controller,
-      maxLines: maxLines,
-      keyboardType: keyboardType,
-      decoration: InputDecoration(
-        labelText: label,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-      ),
+  Widget _buildNeoTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    int maxLines = 1,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildLabel(label),
+        const SizedBox(height: 10),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.black, width: 2.5),
+            boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
+          ),
+          child: TextField(
+            controller: controller,
+            maxLines: maxLines,
+            keyboardType: keyboardType,
+            style: GoogleFonts.montserrat(fontWeight: FontWeight.w700),
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: GoogleFonts.montserrat(color: Colors.black26),
+              contentPadding: const EdgeInsets.all(20),
+              border: InputBorder.none,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

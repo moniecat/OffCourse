@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-enum AnswerState { idle, correct, wrong }
+enum AnswerState { idle, selected, correct, wrong }
 
 class AnswerOption extends StatelessWidget {
   final String label;
@@ -21,13 +21,23 @@ class AnswerOption extends StatelessWidget {
   Widget build(BuildContext context) {
     Color bgColor = Colors.white;
     Color borderColor = Colors.black;
+    Color textColor = Colors.black;
 
-    if (state == AnswerState.correct) {
-      bgColor = const Color(0xFFC8E6C9);
-      borderColor = const Color(0xFF2E7D32);
+    // Logic for states
+    if (state == AnswerState.selected) {
+      // Use the requested color 0xFFFBB017 for selection
+      bgColor = const Color(0xFFFFF9C4); // Very light yellow background
+      borderColor = const Color(0xFFFBB017); // Your specific Orange/Yellow
+      textColor = Colors.black;
+    } else if (state == AnswerState.correct) {
+      // Matches the green in your screenshot
+      bgColor = const Color(0xFFE8F5E9); 
+      borderColor = const Color(0xFF2E7D32); 
+      textColor = const Color(0xFF2E7D32); 
     } else if (state == AnswerState.wrong) {
-      bgColor = const Color(0xFFFFCDD2);
+      bgColor = const Color(0xFFFFEBEE); 
       borderColor = const Color(0xFFC62828);
+      textColor = const Color(0xFFC62828);
     }
 
     return GestureDetector(
@@ -51,19 +61,29 @@ class AnswerOption extends StatelessWidget {
                 width: 32, height: 32,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.black, width: 2),
+                  border: Border.all(color: borderColor, width: 2),
                   color: Colors.white,
                 ),
                 child: Center(
-                  child: Text(label, style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: 14)),
+                  child: Text(label, style: GoogleFonts.montserrat(
+                    fontWeight: FontWeight.w900, 
+                    fontSize: 14,
+                    color: borderColor
+                  )),
                 ),
               ),
               const SizedBox(width: 15),
               Expanded(
-                child: Text(text, style: GoogleFonts.montserrat(fontSize: 16, fontWeight: FontWeight.w700)),
+                child: Text(text, style: GoogleFonts.montserrat(
+                  fontSize: 16, 
+                  fontWeight: FontWeight.w700,
+                  color: textColor
+                )),
               ),
-              if (state == AnswerState.correct) const Icon(Icons.check_circle, color: Colors.green, size: 24),
-              if (state == AnswerState.wrong) const Icon(Icons.cancel, color: Colors.red, size: 24),
+              if (state == AnswerState.correct) 
+                const Icon(Icons.check_circle, color: Color(0xFF2E7D32), size: 24),
+              if (state == AnswerState.wrong) 
+                const Icon(Icons.cancel, color: Color(0xFFC62828), size: 24),
             ],
           ),
         ),

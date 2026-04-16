@@ -16,6 +16,7 @@ class _AddQuestionScreenState extends State<AddQuestionScreen> {
   final TextEditingController _optionBController = TextEditingController();
   final TextEditingController _optionCController = TextEditingController();
   final TextEditingController _optionDController = TextEditingController();
+  
   String _correctAnswer = 'A';
   bool _isLoading = false;
   bool _loadingCourses = true;
@@ -25,6 +26,9 @@ class _AddQuestionScreenState extends State<AddQuestionScreen> {
   Course? _selectedCourse;
   List<Map<String, dynamic>> _modules = [];
   Map<String, dynamic>? _selectedModule;
+
+  // Styling Constants
+  static const Color darkBorder = Color(0xFF1A1C1E);
 
   @override
   void initState() {
@@ -90,12 +94,8 @@ class _AddQuestionScreenState extends State<AddQuestionScreen> {
     final optionC = _optionCController.text.trim();
     final optionD = _optionDController.text.trim();
 
-    if (course == null) {
-      _showMessage('Please select a course.');
-      return;
-    }
-    if (module == null) {
-      _showMessage('Please select a module.');
+    if (course == null || module == null) {
+      _showMessage('Please select course and module.');
       return;
     }
     if (question.isEmpty || optionA.isEmpty || optionB.isEmpty || optionC.isEmpty || optionD.isEmpty) {
@@ -117,9 +117,7 @@ class _AddQuestionScreenState extends State<AddQuestionScreen> {
         correctAnswer: _correctAnswer,
       );
 
-      // FIX: Guard with mounted check before using context across async gaps
       if (!mounted) return;
-      
       _showMessage('Question added successfully.');
       Navigator.pop(context);
     } catch (e) {
@@ -132,137 +130,219 @@ class _AddQuestionScreenState extends State<AddQuestionScreen> {
 
   void _showMessage(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: darkBorder,
+        content: Text(message, style: GoogleFonts.montserrat()),
+      ),
+    );
+  }
+
+  /// Styled Back Button from your provided image
+  Widget _buildBackButton() {
+    return GestureDetector(
+      onTap: () => Navigator.pop(context),
+      child: Container(
+        width: 45,
+        height: 45,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: Colors.black, width: 2.5),
+          boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
+        ),
+        child: const Icon(Icons.arrow_back, color: Colors.black, size: 26),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1A1D23),
-        title: Text('Add Question', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        toolbarHeight: 90,
+        automaticallyImplyLeading: false,
+        flexibleSpace: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.only(left: 24, top: 12),
+            child: Row(children: [_buildBackButton()]),
+          ),
+        ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView( // Added scroll view to prevent overflow on small screens
-          padding: const EdgeInsets.all(24),
-          child: _loadingCourses
-              ? const Center(child: CircularProgressIndicator())
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    DropdownButtonFormField<Course>(
-                      // FIX: Changed 'value' to 'initialValue'
-                      initialValue: _selectedCourse,
-                      decoration: InputDecoration(
-                        labelText: 'Select course',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                      ),
-                      items: _courses
-                          .map((course) => DropdownMenuItem(
-                                value: course,
-                                child: Text(course.title),
-                              ))
-                          .toList(),
-                      onChanged: (value) {
-                        if (value == null) return;
-                        setState(() => _selectedCourse = value);
-                        _loadModules(value.id);
-                      },
+      body: _loadingCourses
+          ? const Center(child: CircularProgressIndicator(color: darkBorder))
+          : SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Add\nQuestion',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 48,
+                      fontWeight: FontWeight.w900,
+                      height: 1.0,
+                      letterSpacing: -1.5,
+                      color: darkBorder,
                     ),
-                    const SizedBox(height: 16),
-                    _loadingModules
-                        ? const Center(child: Padding(
-                            padding: EdgeInsets.symmetric(vertical: 20),
-                            child: CircularProgressIndicator(),
-                          ))
-                        : DropdownButtonFormField<Map<String, dynamic>>(
-                            // FIX: Changed 'value' to 'initialValue'
-                            initialValue: _selectedModule,
-                            decoration: InputDecoration(
-                              labelText: 'Select module',
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                            ),
-                            items: _modules
-                                .map((module) => DropdownMenuItem(
-                                      value: module,
-                                      child: Text(module['title'] as String? ?? 'Untitled'),
-                                    ))
-                                .toList(),
-                            onChanged: (value) {
-                              setState(() => _selectedModule = value);
-                            },
-                          ),
-                    const SizedBox(height: 16),
-                    _buildTextField(_questionController, 'Question'),
-                    const SizedBox(height: 16),
-                    _buildTextField(_optionAController, 'Option A'),
-                    const SizedBox(height: 12),
-                    _buildTextField(_optionBController, 'Option B'),
-                    const SizedBox(height: 12),
-                    _buildTextField(_optionCController, 'Option C'),
-                    const SizedBox(height: 12),
-                    _buildTextField(_optionDController, 'Option D'),
-                    const SizedBox(height: 16),
-                    InputDecorator(
-                      decoration: InputDecoration(
-                        labelText: 'Correct answer',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: _correctAnswer,
-                          items: const [
-                            DropdownMenuItem(value: 'A', child: Text('A')),
-                            DropdownMenuItem(value: 'B', child: Text('B')),
-                            DropdownMenuItem(value: 'C', child: Text('C')),
-                            DropdownMenuItem(value: 'D', child: Text('D')),
-                          ],
-                          onChanged: (value) {
-                            if (value != null) setState(() => _correctAnswer = value);
-                          },
+                  ),
+                  const SizedBox(height: 32),
+
+                  // Course Selection
+                  _buildLabel('SELECT COURSE'),
+                  const SizedBox(height: 10),
+                  _buildNeoDropdown<Course>(
+                    value: _selectedCourse,
+                    items: _courses.map((c) => DropdownMenuItem(value: c, child: Text(c.title))).toList(),
+                    onChanged: (val) {
+                      if (val == null) return;
+                      setState(() => _selectedCourse = val);
+                      _loadModules(val.id);
+                    },
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Module Selection
+                  _buildLabel('SELECT MODULE'),
+                  const SizedBox(height: 10),
+                  _loadingModules
+                      ? const LinearProgressIndicator(color: darkBorder, backgroundColor: Colors.white)
+                      : _buildNeoDropdown<Map<String, dynamic>>(
+                          value: _selectedModule,
+                          items: _modules.map((m) => DropdownMenuItem(value: m, child: Text(m['title'] as String? ?? 'Untitled'))).toList(),
+                          onChanged: (val) => setState(() => _selectedModule = val),
                         ),
+                  const SizedBox(height: 24),
+
+                  // Question Text
+                  _buildNeoTextField(controller: _questionController, label: 'QUESTION', hint: 'Type your question here...', maxLines: 3),
+                  const SizedBox(height: 24),
+
+                  // Options
+                  Row(
+                    children: [
+                      Expanded(child: _buildNeoTextField(controller: _optionAController, label: 'OPTION A', hint: 'Choice 1')),
+                      const SizedBox(width: 16),
+                      Expanded(child: _buildNeoTextField(controller: _optionBController, label: 'OPTION B', hint: 'Choice 2')),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(child: _buildNeoTextField(controller: _optionCController, label: 'OPTION C', hint: 'Choice 3')),
+                      const SizedBox(width: 16),
+                      Expanded(child: _buildNeoTextField(controller: _optionDController, label: 'OPTION D', hint: 'Choice 4')),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Correct Answer
+                  _buildLabel('CORRECT ANSWER'),
+                  const SizedBox(height: 10),
+                  _buildNeoDropdown<String>(
+                    value: _correctAnswer,
+                    items: const [
+                      DropdownMenuItem(value: 'A', child: Text('A')),
+                      DropdownMenuItem(value: 'B', child: Text('B')),
+                      DropdownMenuItem(value: 'C', child: Text('C')),
+                      DropdownMenuItem(value: 'D', child: Text('D')),
+                    ],
+                    onChanged: (val) {
+                      if (val != null) setState(() => _correctAnswer = val);
+                    },
+                  ),
+                  const SizedBox(height: 40),
+
+                  // Save Button
+                  GestureDetector(
+                    onTap: _isLoading ? null : _saveQuestion,
+                    child: Container(
+                      height: 70,
+                      decoration: BoxDecoration(
+                        color: darkBorder,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.black, width: 3),
+                        boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
                       ),
-                    ),
-                    const SizedBox(height: 30),
-                    GestureDetector(
-                      onTap: _isLoading ? null : _saveQuestion,
-                      child: Container(
-                        height: 60,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1A1D23),
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                        child: Center(
-                          child: _isLoading
-                              ? const CircularProgressIndicator(color: Colors.white)
-                              : Text(
-                                  'Save Question',
-                                  style: GoogleFonts.montserrat(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w900,
-                                  ),
+                      child: Center(
+                        child: _isLoading
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : Text(
+                                'SAVE QUESTION',
+                                style: GoogleFonts.montserrat(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 1.2,
                                 ),
-                        ),
+                              ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 40),
+                ],
+              ),
+            ),
+    );
+  }
+
+  Widget _buildLabel(String text) {
+    return Text(
+      text,
+      style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 1.2),
+    );
+  }
+
+  Widget _buildNeoDropdown<T>({required T? value, required List<DropdownMenuItem<T>> items, required ValueChanged<T?> onChanged}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.black, width: 2.5),
+        boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<T>(
+          value: value,
+          isExpanded: true,
+          icon: const Icon(Icons.keyboard_arrow_down, color: Colors.black),
+          style: GoogleFonts.montserrat(color: Colors.black, fontWeight: FontWeight.w700, fontSize: 16),
+          items: items,
+          onChanged: onChanged,
         ),
       ),
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label,
-      {int maxLines = 1, TextInputType keyboardType = TextInputType.text}) {
-    return TextField(
-      controller: controller,
-      maxLines: maxLines,
-      keyboardType: keyboardType,
-      decoration: InputDecoration(
-        labelText: label,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-      ),
+  Widget _buildNeoTextField({required TextEditingController controller, required String label, required String hint, int maxLines = 1}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildLabel(label),
+        const SizedBox(height: 10),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.black, width: 2.5),
+            boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
+          ),
+          child: TextField(
+            controller: controller,
+            maxLines: maxLines,
+            style: GoogleFonts.montserrat(fontWeight: FontWeight.w700),
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: GoogleFonts.montserrat(color: Colors.black26),
+              contentPadding: const EdgeInsets.all(20),
+              border: InputBorder.none,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -13,7 +13,11 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _orderController = TextEditingController(text: '0');
+  
   bool _isLoading = false;
+
+  // Styling Constants
+  static const Color darkBorder = Color(0xFF1A1C1E);
 
   @override
   void dispose() {
@@ -37,8 +41,6 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
 
     try {
       await FirestoreService().addCourse(title, description, order);
-      
-      // FIX: Guard with mounted check before using BuildContext across async gaps
       if (!mounted) return;
 
       _showMessage('Course added successfully.');
@@ -52,70 +54,179 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
   }
 
   void _showMessage(String message) {
-    if (!mounted) return; // Extra safety check
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
+      SnackBar(
+        backgroundColor: darkBorder,
+        content: Text(message, style: GoogleFonts.montserrat()),
+      ),
+    );
+  }
+
+  /// Recreating the exact button from your image
+  Widget _buildBackButton() {
+    return GestureDetector(
+      onTap: () => Navigator.pop(context),
+      child: Container(
+        width: 45,
+        height: 45,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: Colors.black, width: 2.5),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black,
+              offset: Offset(4, 4), // The hard shadow from your image
+            ),
+          ],
+        ),
+        child: const Icon(
+          Icons.arrow_back,
+          color: Colors.black,
+          size: 26,
+        ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1A1D23),
-        title: Text('Add Course', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        toolbarHeight: 90,
+        automaticallyImplyLeading: false,
+        flexibleSpace: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.only(left: 24, top: 12),
+            child: Row(
+              children: [
+                _buildBackButton(), // Your styled back button
+              ],
+            ),
+          ),
+        ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView( // Added to prevent overflow when keyboard appears
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildTextField(_titleController, 'Course title'),
-              const SizedBox(height: 16),
-              _buildTextField(_descriptionController, 'Course description', maxLines: 4),
-              const SizedBox(height: 16),
-              _buildTextField(_orderController, 'Display order', keyboardType: TextInputType.number),
-              const SizedBox(height: 30),
-              GestureDetector(
-                onTap: _isLoading ? null : _saveCourse,
-                child: Container(
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1A1D23),
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  child: Center(
-                    child: _isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : Text(
-                            'Save Course',
-                            style: GoogleFonts.montserrat(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w900,
-                            ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header
+            Text(
+              'Add\nCourse',
+              style: GoogleFonts.montserrat(
+                fontSize: 48,
+                fontWeight: FontWeight.w900,
+                height: 1.0,
+                letterSpacing: -1.5,
+                color: darkBorder,
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            _buildNeoTextField(
+              controller: _titleController,
+              label: 'COURSE TITLE',
+              hint: 'e.g. Science 101',
+            ),
+            const SizedBox(height: 24),
+
+            _buildNeoTextField(
+              controller: _descriptionController,
+              label: 'DESCRIPTION',
+              hint: 'Brief summary...',
+              maxLines: 4,
+            ),
+            const SizedBox(height: 24),
+
+            _buildNeoTextField(
+              controller: _orderController,
+              label: 'DISPLAY ORDER',
+              hint: '0',
+              keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 40),
+
+            // Save Button
+            GestureDetector(
+              onTap: _isLoading ? null : _saveCourse,
+              child: Container(
+                height: 70,
+                decoration: BoxDecoration(
+                  color: darkBorder,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.black, width: 3),
+                  boxShadow: const [
+                    BoxShadow(color: Colors.black, offset: Offset(4, 4)),
+                  ],
+                ),
+                child: Center(
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : Text(
+                          'SAVE COURSE',
+                          style: GoogleFonts.montserrat(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.2,
                           ),
-                  ),
+                        ),
                 ),
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 40),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label,
-      {int maxLines = 1, TextInputType keyboardType = TextInputType.text}) {
-    return TextField(
-      controller: controller,
-      maxLines: maxLines,
-      keyboardType: keyboardType,
-      decoration: InputDecoration(
-        labelText: label,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-      ),
+  Widget _buildNeoTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    int maxLines = 1,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.montserrat(
+            fontWeight: FontWeight.w900,
+            fontSize: 13,
+            letterSpacing: 1.2,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.black, width: 2.5),
+            boxShadow: const [
+              BoxShadow(color: Colors.black, offset: Offset(4, 4)),
+            ],
+          ),
+          child: TextField(
+            controller: controller,
+            maxLines: maxLines,
+            keyboardType: keyboardType,
+            style: GoogleFonts.montserrat(fontWeight: FontWeight.w700),
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: GoogleFonts.montserrat(color: Colors.black26),
+              contentPadding: const EdgeInsets.all(20),
+              border: InputBorder.none,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

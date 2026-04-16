@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 // Assumed imports based on your project structure
+// Ensure these paths match your project
 import '../screens/home.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
@@ -18,13 +19,15 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // Neo-Brutalist Theme Constants
+  // ─── NEO-BRUTALIST DESIGN TOKENS (CLEANER STYLE) ───
   static const Color brandYellow = Color(0xFFFFC21C);
   static const Color bgWhite = Colors.white;
   static const Color textBlack = Color(0xFF000000);
   static const Color textGrey = Color(0xFF6B6B6B);
-  static const double thickBorder = 3.5;
-  static const double elementBorder = 2.5;
+  
+  // Reduced thicknesses for a "not so thick" look
+  static const double thickBorder = 2.5; 
+  static const double elementBorder = 2.0;
 
   late TextEditingController _nameController;
   late TextEditingController _bioController;
@@ -37,6 +40,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _fs = FirestoreService();
   User? _user;
 
+  // Cloudinary Config
   static const String cloudName = "dve0fnxd8";
   static const String uploadPreset = "profile_upload";
 
@@ -155,15 +159,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
       resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
-          // ── 1. BACKGROUND TEXTURE (Dot Grid) ──
+          // ── BACKGROUND DOT GRID ──
           Positioned.fill(
             bottom: size.height * 0.5,
             child: CustomPaint(painter: DotGridPainter()),
           ),
 
-          // ── 3. MAIN CONTENT COLUMN ──
+          // ── MAIN LAYOUT ──
           Column(
             children: [
+              // TOP HEADER SECTION
               AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 height: isKeyboardOpen ? size.height * 0.15 : size.height * 0.45,
@@ -184,32 +189,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       if (!isKeyboardOpen) ...[
                         const Spacer(),
+                        // PROFILE IMAGE WITH VERTICAL SHADOW
                         GestureDetector(
                           onTap: _isEditing ? _pickAndUploadImage : null,
                           child: Container(
-                            width: 180,
-                            height: 180,
+                            width: 170,
+                            height: 170,
                             decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: bgWhite,
-                                border: Border.all(color: textBlack, width: 3),
-                                boxShadow: const [BoxShadow(color: textBlack, offset: Offset(8, 8))]),
+                                border: Border.all(color: textBlack, width: elementBorder),
+                                boxShadow: const [
+                                  // This creates the crescent bottom look from your screenshot
+                                  BoxShadow(color: textBlack, offset: Offset(0, 8))
+                                ]),
                             child: ClipOval(
                               child: Stack(
                                 alignment: Alignment.center,
                                 children: [
                                   _profileImageUrl != null
                                       ? Image.network(_profileImageUrl!,
-                                          fit: BoxFit.cover, width: 180, height: 180)
+                                          fit: BoxFit.cover, width: 170, height: 170)
                                       : Image.network(
                                           'https://api.dicebear.com/7.x/avataaars/png?seed=${Uri.encodeComponent(_nameController.text)}',
                                           fit: BoxFit.contain,
-                                          width: 180,
-                                          height: 180),
+                                          width: 170,
+                                          height: 170),
                                   if (_isEditing)
                                     Container(
                                         color: Colors.black45,
-                                        child: const Icon(Icons.camera_alt, color: Colors.white, size: 40)),
+                                        child: const Icon(Icons.camera_alt, color: Colors.white, size: 36)),
                                   if (_isSaving && _isEditing) const CircularProgressIndicator(color: brandYellow),
                                 ],
                               ),
@@ -224,7 +233,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
 
-              // ── BOTTOM SHEET ──
+              // BOTTOM CONTENT CARD
               Expanded(
                 child: Container(
                   width: double.infinity,
@@ -244,7 +253,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           maxLines: 1,
                           textCapitalization: TextCapitalization.words,
                           style: GoogleFonts.montserrat(
-                              fontSize: 30, fontWeight: FontWeight.w900, color: textBlack, letterSpacing: -1.0),
+                              fontSize: 28, fontWeight: FontWeight.w900, color: textBlack, letterSpacing: -0.5),
                           decoration: const InputDecoration(border: InputBorder.none, isDense: true, contentPadding: EdgeInsets.zero),
                         ),
                         const SizedBox(height: 4),
@@ -262,13 +271,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             color: bgWhite,
                             border: Border.all(color: textBlack, width: elementBorder),
                             borderRadius: BorderRadius.circular(15),
-                            boxShadow: const [BoxShadow(color: textBlack, offset: Offset(4, 4))],
+                            boxShadow: const [BoxShadow(color: textBlack, offset: Offset(0, 5))],
                           ),
                           child: TextField(
                             controller: _bioController,
                             readOnly: !_isEditing,
                             maxLines: null,
-                            style: GoogleFonts.montserrat(fontSize: 16, color: textBlack, height: 1.5, fontWeight: FontWeight.w500),
+                            style: GoogleFonts.montserrat(fontSize: 15, color: textBlack, height: 1.5, fontWeight: FontWeight.w500),
                             decoration: const InputDecoration(
                                 border: InputBorder.none,
                                 hintText: 'Share your story...',
@@ -284,10 +293,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
 
-          // ── 4. FLOATING ACTION BUTTON ──
+          // EDIT/SAVE FLOATING BUTTON
           if (!isKeyboardOpen)
             Positioned(
-              top: (size.height * 0.45) - 30,
+              top: (size.height * 0.45) - 28,
               right: 40,
               child: GestureDetector(
                 onTap: () async {
@@ -295,17 +304,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   if (mounted) setState(() => _isEditing = !_isEditing);
                 },
                 child: Container(
-                  width: 60,
-                  height: 60,
+                  width: 56,
+                  height: 56,
                   decoration: BoxDecoration(
-                    color: _isEditing ? Colors.greenAccent : brandYellow,
+                    color: _isEditing ? const Color(0xFF00FF94) : brandYellow,
                     shape: BoxShape.circle,
                     border: Border.all(color: textBlack, width: thickBorder),
-                    boxShadow: const [BoxShadow(color: textBlack, offset: Offset(4, 4))],
+                    boxShadow: const [BoxShadow(color: textBlack, offset: Offset(0, 5))],
                   ),
                   child: _isSaving
-                      ? const Padding(padding: EdgeInsets.all(15), child: CircularProgressIndicator(color: textBlack, strokeWidth: 3))
-                      : Icon(_isEditing ? Icons.check : Icons.edit, color: textBlack, size: 28),
+                      ? const Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator(color: textBlack, strokeWidth: 2.5))
+                      : Icon(_isEditing ? Icons.check : Icons.edit, color: textBlack, size: 26),
                 ),
               ),
             ),
@@ -314,32 +323,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  // REUSABLE CIRCULAR BUTTON (Like the Home icon in your screenshot)
   Widget _buildCircularButton(IconData icon, {VoidCallback? onTap}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 48,
-        height: 48,
+        width: 44,
+        height: 44,
         decoration: BoxDecoration(
-            color: bgWhite, shape: BoxShape.circle, border: Border.all(color: textBlack, width: elementBorder)),
-        child: Icon(icon, color: textBlack, size: 28),
+            color: bgWhite, 
+            shape: BoxShape.circle, 
+            border: Border.all(color: textBlack, width: elementBorder),
+            boxShadow: const [BoxShadow(color: textBlack, offset: Offset(0, 4))]
+        ),
+        child: Icon(icon, color: textBlack, size: 24),
       ),
     );
   }
 }
 
+// PAINTER FOR THE DOT GRID BACKGROUND
 class DotGridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      // Changed withOpacity(0.12) to withValues(alpha: 0.12)
-      ..color = Colors.black.withValues(alpha: 0.12) 
+      ..color = Colors.black.withValues(alpha: 0.1)
       ..strokeWidth = 2.0;
 
     const double gap = 25.0;
     for (double x = 0; x < size.width; x += gap) {
       for (double y = 0; y < size.height; y += gap) {
-        canvas.drawCircle(Offset(x, y), 1.2, paint);
+        canvas.drawCircle(Offset(x, y), 1.0, paint);
       }
     }
   }

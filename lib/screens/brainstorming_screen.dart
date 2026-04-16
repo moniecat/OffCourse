@@ -41,7 +41,7 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
     try {
       final questions = await QuestionService.loadForModule(
         widget.moduleName,
-        widget.courseId, // ← was: widget.course
+        widget.courseId,
       );
       setState(() {
         _questions = questions;
@@ -77,17 +77,12 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
         _currentSelection = null;
       });
     } else {
-      // Save result before navigating
       ResultService.saveResult(
         courseId: widget.courseId,
         moduleId: widget.moduleId,
         score:    _score,
         total:    _questions.length,
-      ).then((_) {
-        //print('✅ Result saved successfully');
-      }).catchError((e) {
-        //print('❌ Error saving result: $e');
-      });
+      );
 
       Navigator.pushReplacement(
         context,
@@ -98,15 +93,19 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
     }
   }
 
+  // LOGIC: Turns option 0xFFFBB017 (Orange) when selected,
+  // then switches to Green/Red after checking.
   AnswerState _stateFor(String label) {
     final confirmedAnswer = _userAnswers[_currentIndex];
+    
     if (confirmedAnswer != null) {
       final correctLabel = _questions[_currentIndex].correctAnswer.toUpperCase();
       if (label == correctLabel) return AnswerState.correct;
       if (label == confirmedAnswer) return AnswerState.wrong;
       return AnswerState.idle;
     }
-    if (label == _currentSelection) return AnswerState.correct;
+    
+    if (label == _currentSelection) return AnswerState.selected; 
     return AnswerState.idle;
   }
 
@@ -114,47 +113,8 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
-    if (_error != null) {
-      return Scaffold(
-        backgroundColor: const Color(0xFFF9F9F9),
-        body: SafeArea(
-          child: Column(
-            children: [
-              _buildTopBar(),
-              Expanded(child: Center(child: Text('Error: $_error'))),
-            ],
-          ),
-        ),
-      );
-    }
-
-    if (_questions.isEmpty) {
-      return Scaffold(
-        backgroundColor: const Color(0xFFF9F9F9),
-        body: SafeArea(
-          child: Column(
-            children: [
-              _buildTopBar(),
-              Expanded(
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 40),
-                    child: Text(
-                      'No questions found for\n${widget.moduleName}.',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.montserrat(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+    if (_error != null || _questions.isEmpty) {
+      return Scaffold(body: Center(child: Text('Error: ${_error ?? "No questions"}')));
     }
 
     final currentQuestion = _questions[_currentIndex];
@@ -168,31 +128,20 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
           children: [
             _buildTopBar(),
             Expanded(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  return SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                      child: Center(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              _buildHeader(),
-                              const SizedBox(height: 20),
-                              _buildProgressBar(),
-                              const SizedBox(height: 30),
-                              _buildQuestionCard(currentQuestion, isAnswered),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                  child: Column(
+                    children: [
+                      _buildHeader(),
+                      const SizedBox(height: 20),
+                      _buildProgressBar(),
+                      const SizedBox(height: 30),
+                      _buildQuestionCard(currentQuestion, isAnswered),
+                    ],
+                  ),
+                ),
               ),
             ),
             isAnswered ? _buildFeedbackOverlay(isCorrect) : _buildControlButtons(),
@@ -209,7 +158,16 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
         alignment: Alignment.topRight,
         child: GestureDetector(
           onTap: () => Navigator.pop(context),
-          child: _buildNeobrutalistBox(child: const Icon(Icons.close, size: 20)),
+          child: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.black, width: 2.5),
+              boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(3, 3))],
+            ),
+            child: const Icon(Icons.close, size: 20),
+          ),
         ),
       ),
     );
@@ -227,33 +185,31 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
 
   Widget _buildProgressBar() {
     final progress = (_currentIndex + 1) / _questions.length;
-    return Container(
-      constraints: const BoxConstraints(maxWidth: 400),
-      child: Column(
-        children: [
-          Container(
-            height: 14,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(color: Colors.black, width: 2.5),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(7),
-              child: LinearProgressIndicator(
-                value: progress,
-                backgroundColor: Colors.transparent,
-                color: const Color(0xFFFBB017),
-              ),
+    return Column(
+      children: [
+        Container(
+          height: 14,
+          width: 300,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border.all(color: Colors.black, width: 2.5),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(7),
+            child: LinearProgressIndicator(
+              value: progress,
+              backgroundColor: Colors.transparent,
+              color: const Color(0xFFFBB017),
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            "Question ${_currentIndex + 1} of ${_questions.length}",
-            style: GoogleFonts.montserrat(fontWeight: FontWeight.w700, fontSize: 13),
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          "Question ${_currentIndex + 1} of ${_questions.length}",
+          style: GoogleFonts.montserrat(fontWeight: FontWeight.w700, fontSize: 13),
+        ),
+      ],
     );
   }
 
@@ -333,8 +289,7 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(isCorrect ? Icons.check_circle : Icons.error,
-                    color: Colors.white, size: 32),
+                Icon(isCorrect ? Icons.check_circle : Icons.error, color: Colors.white, size: 32),
                 const SizedBox(width: 12),
                 Text(
                   isCorrect ? "EXCELLENT!" : "NOT QUITE!",
@@ -348,8 +303,7 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
             Text(
               "TAP TO CONTINUE",
               style: GoogleFonts.montserrat(
-                color: Colors.white, fontSize: 13,
-                fontWeight: FontWeight.w800, letterSpacing: 1.2,
+                color: Colors.white, fontSize: 13, fontWeight: FontWeight.w800,
               ),
             ),
           ],
@@ -364,17 +318,14 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
       child: GestureDetector(
         onTap: canCheck ? _confirmAnswer : null,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+        child: Container(
           height: 65,
           width: double.infinity,
           decoration: BoxDecoration(
             color: !canCheck ? Colors.grey[300] : const Color(0xFFFBB017),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: Colors.black, width: 3),
-            boxShadow: canCheck
-                ? [const BoxShadow(color: Colors.black, offset: Offset(0, 6))]
-                : null,
+            boxShadow: canCheck ? [const BoxShadow(color: Colors.black, offset: Offset(0, 6))] : null,
           ),
           child: Center(
             child: Text(
@@ -387,19 +338,6 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildNeobrutalistBox({required Widget child}) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.black, width: 2.5),
-        boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(3, 3))],
-      ),
-      child: child,
     );
   }
 }

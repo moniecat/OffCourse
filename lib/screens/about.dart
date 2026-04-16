@@ -1,25 +1,63 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/menu_drawer.dart';
+import '../services/auth_service.dart';
+import '../services/firestore_service.dart';
 
-class AboutPage extends StatelessWidget {
+class AboutPage extends StatefulWidget {
   const AboutPage({super.key});
 
-  final Color themeYellow = const Color(0xFFFFB82E);
+  @override
+  State<AboutPage> createState() => _AboutPageState();
+}
 
+class _AboutPageState extends State<AboutPage> {
+  // Styling Constants matched with FAQ/Home
+  final Color themeYellow = const Color(0xFFFFB82E);
+  static const Color darkBorder = Color(0xFF1A1C1E);
+  static const double borderWidth = 3.0;
+
+  // Role logic for the Drawer
+  String _userRole = 'student';
+  bool get _isAdmin => _userRole == 'admin';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserRole();
+  }
+
+  /// Fetch user role from Firestore to pass the correct isAdmin flag to MenuDrawer
+  Future<void> _loadUserRole() async {
+    final user = AuthService().currentUser;
+    if (user == null) return;
+    try {
+      final doc = await FirestoreService().getUser(user.uid);
+      if (doc.exists && mounted) {
+        final data = doc.data() as Map<String, dynamic>;
+        setState(() {
+          _userRole = data['role'] ?? 'student';
+        });
+      }
+    } catch (_) {
+      // Default to student if error
+    }
+  }
+
+  /// Updated Drawer Animation logic from FAQPage
   void _openDrawer(BuildContext context) {
     Navigator.of(context).push(
       PageRouteBuilder(
         opaque: false,
         barrierDismissible: true,
-        barrierColor: Colors.black26,
-        pageBuilder: (_, __, ___) => const MenuDrawer(),
+        barrierColor: Colors.black.withValues(alpha: 0.5),
+        pageBuilder: (_, __, ___) => MenuDrawer(isAdmin: _isAdmin),
         transitionsBuilder: (_, animation, __, child) {
           return SlideTransition(
             position: Tween<Offset>(
               begin: const Offset(1, 0),
               end: Offset.zero,
-            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutQuart)),
             child: child,
           );
         },
@@ -27,7 +65,25 @@ class AboutPage extends StatelessWidget {
     );
   }
 
-  // ── Contact Us dialog ──────────────────────────────────────────────────────
+  /// Styled Menu Button matched with FAQPage
+  Widget _buildMenuButton() {
+    return GestureDetector(
+      onTap: () => _openDrawer(context),
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: darkBorder, width: borderWidth),
+          boxShadow: const [
+            BoxShadow(color: darkBorder, offset: Offset(3, 3))
+          ],
+        ),
+        child: const Icon(Icons.menu, color: darkBorder, size: 30),
+      ),
+    );
+  }
+
+  // ── Contact Us Dialog ──────────────────────────────────────────────────────
   void _showContactDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -41,11 +97,7 @@ class AboutPage extends StatelessWidget {
         actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
         title: Row(
           children: [
-            const Icon(
-              Icons.email_outlined,
-              color: Color(0xFFFFB82E),
-              size: 26,
-            ),
+            Icon(Icons.email_outlined, color: themeYellow, size: 26),
             const SizedBox(width: 10),
             Text(
               'Contact Us',
@@ -108,10 +160,7 @@ class AboutPage extends StatelessWidget {
           GestureDetector(
             onTap: () => Navigator.pop(ctx),
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 10,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               decoration: BoxDecoration(
                 color: const Color(0xFFFFC107),
                 borderRadius: BorderRadius.circular(12),
@@ -134,7 +183,7 @@ class AboutPage extends StatelessWidget {
     );
   }
 
-  // ── Privacy Policy bottom sheet ────────────────────────────────────────────
+  // ── Bottom Sheets for Policies ─────────────────────────────────────────────
   void _showPrivacyPolicy(BuildContext context) {
     _showPolicySheet(
       context: context,
@@ -143,7 +192,7 @@ class AboutPage extends StatelessWidget {
       content: '''Last updated: April 2026
 
 1. Information We Collect
-OffCourse collects only the information you provide when creating an account — your name, email address, and LRN (Learner Reference Number). We also store your learning progress and preferences to personalize your experience.
+OffCourse collects only the information you provide when creating an account — your name, email address, and LRN (Learner Reference Number). We also store your learning progress and preferences.
 
 2. How We Use Your Information
 Your information is used solely to operate and improve the OffCourse app. We do not sell, trade, or share your personal data with third parties.
@@ -154,18 +203,11 @@ All data is securely stored using Google Firebase, which complies with internati
 4. Your Rights
 You may update or delete your account and personal information at any time through the app's Settings page.
 
-5. Children's Privacy
-OffCourse is intended for use by students. We do not knowingly collect data from children under 13 without parental consent.
-
-6. Changes to This Policy
-We may update this policy from time to time. Continued use of the app after changes constitutes your acceptance of the updated policy.
-
-7. Contact
+5. Contact
 For privacy concerns, reach us at offcourse.support@gmail.com.''',
     );
   }
 
-  // ── Terms of Service bottom sheet ─────────────────────────────────────────
   void _showTermsOfService(BuildContext context) {
     _showPolicySheet(
       context: context,
@@ -179,23 +221,14 @@ By using OffCourse, you agree to these Terms of Service. If you do not agree, pl
 2. Use of the App
 OffCourse is provided for educational purposes. You agree to use the app only for lawful, personal, and non-commercial purposes.
 
-3. Account Responsibility
-You are responsible for maintaining the confidentiality of your account credentials. You are liable for all activities that occur under your account.
+3. Intellectual Property
+All content within OffCourse is the property of the OffCourse team and may not be reproduced without permission.
 
-4. Intellectual Property
-All content within OffCourse — including modules, exercises, and interface design — is the property of the OffCourse team and may not be reproduced without permission.
-
-5. Limitation of Liability
+4. Limitation of Liability
 OffCourse is provided "as is." We are not liable for any loss of data, academic results, or damages arising from use of the app.
 
-6. Termination
-We reserve the right to suspend or terminate accounts that violate these terms.
-
-7. Changes to Terms
-We may revise these terms at any time. Continued use of the app implies acceptance of any updated terms.
-
-8. Contact
-For questions regarding these terms, contact us at offcourse.support@gmail.com.''',
+5. Changes to Terms
+We may revise these terms at any time. Continued use of the app implies acceptance of any updated terms.''',
     );
   }
 
@@ -228,7 +261,6 @@ For questions regarding these terms, contact us at offcourse.support@gmail.com.'
             child: Column(
               children: [
                 const SizedBox(height: 12),
-                // Drag handle
                 Container(
                   width: 48,
                   height: 5,
@@ -238,12 +270,11 @@ For questions regarding these terms, contact us at offcourse.support@gmail.com.'
                   ),
                 ),
                 const SizedBox(height: 16),
-                // Title row
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Row(
                     children: [
-                      Icon(icon, size: 26, color: const Color(0xFFFFB82E)),
+                      Icon(icon, size: 26, color: themeYellow),
                       const SizedBox(width: 12),
                       Text(
                         title,
@@ -260,7 +291,6 @@ For questions regarding these terms, contact us at offcourse.support@gmail.com.'
                   padding: EdgeInsets.symmetric(horizontal: 24),
                   child: Divider(color: Colors.black, thickness: 2),
                 ),
-                // Scrollable content
                 Expanded(
                   child: ListView(
                     controller: scrollCtrl,
@@ -293,36 +323,12 @@ For questions regarding these terms, contact us at offcourse.support@gmail.com.'
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        toolbarHeight: 80,
         automaticallyImplyLeading: false,
         actions: [
-          GestureDetector(
-            onTap: () => _openDrawer(context),
-            child: Padding(
-              padding: const EdgeInsets.only(right: 24, top: 12),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Container(
-                    width: 30,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.black,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Container(
-                    width: 30,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.black,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          Padding(
+            padding: const EdgeInsets.only(right: 25, top: 10),
+            child: _buildMenuButton(), // Updated Button
           ),
         ],
       ),
@@ -332,14 +338,14 @@ For questions regarding these terms, contact us at offcourse.support@gmail.com.'
           Text(
             'About',
             style: GoogleFonts.montserrat(
-              fontSize: 40,
+              fontSize: 48,
               fontWeight: FontWeight.w900,
-              color: Colors.black,
+              height: 1.0,
+              letterSpacing: -1.5,
+              color: darkBorder,
             ),
           ),
           const SizedBox(height: 32),
-
-          // Logo
           Center(
             child: Container(
               decoration: BoxDecoration(
@@ -356,12 +362,10 @@ For questions regarding these terms, contact us at offcourse.support@gmail.com.'
               ),
             ),
           ),
-
           const SizedBox(height: 32),
-
           _SectionCard(
             child: Text(
-              'OffCourse is a learning companion designed to help students stay on track with their modules, manage their schedule, and track their academic progress — quarter by quarter.',
+              'OffCourse is a learning companion designed to help students stay on track with their modules, manage their schedule, and track their academic progress.',
               textAlign: TextAlign.center,
               style: GoogleFonts.montserrat(
                 fontSize: 15,
@@ -371,12 +375,9 @@ For questions regarding these terms, contact us at offcourse.support@gmail.com.'
               ),
             ),
           ),
-
           const SizedBox(height: 24),
-
           const _SectionLabel(label: 'WHAT YOU CAN DO'),
           const SizedBox(height: 12),
-
           const _FeatureTile(
             icon: Icons.menu_book_rounded,
             color: Colors.teal,
@@ -397,12 +398,9 @@ For questions regarding these terms, contact us at offcourse.support@gmail.com.'
             title: 'Your Profile',
             description: 'Track your progress and manage your student info.',
           ),
-
           const SizedBox(height: 32),
-
           const _SectionLabel(label: 'GET IN TOUCH'),
           const SizedBox(height: 12),
-
           _AboutTile(
             icon: Icons.email_outlined,
             label: 'Contact Us',
@@ -422,9 +420,7 @@ For questions regarding these terms, contact us at offcourse.support@gmail.com.'
             themeYellow: themeYellow,
             onTap: () => _showTermsOfService(context),
           ),
-
           const SizedBox(height: 32),
-
           Center(
             child: Text(
               'Made with ❤️ for Students',
@@ -442,7 +438,8 @@ For questions regarding these terms, contact us at offcourse.support@gmail.com.'
   }
 }
 
-// ── Supporting widgets ─────────────────────────────────────────────────────
+// ── Supporting UI Widgets ────────────────────────────────────────────────────
+
 class _SectionLabel extends StatelessWidget {
   final String label;
   const _SectionLabel({required this.label});
@@ -500,9 +497,7 @@ class _FeatureTile extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.black, width: 2.5),
-        boxShadow: const [
-          BoxShadow(color: Colors.black, offset: Offset(3, 3)),
-        ],
+        boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(3, 3))],
       ),
       child: Row(
         children: [
@@ -510,7 +505,7 @@ class _FeatureTile extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: color.withAlpha(30),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: color, size: 24),
@@ -568,28 +563,22 @@ class _AboutTile extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.black, width: 3),
-        boxShadow: const [
-          BoxShadow(color: Colors.black, offset: Offset(4, 4)),
-        ],
+        boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
       ),
       child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
         leading: Icon(icon, color: themeYellow, size: 28),
         title: Text(
           label,
-          style:
-              GoogleFonts.montserrat(fontWeight: FontWeight.w800, fontSize: 16),
+          style: GoogleFonts.montserrat(fontWeight: FontWeight.w800, fontSize: 16),
         ),
         subtitle: subtitle != null
             ? Text(
                 subtitle!,
-                style: GoogleFonts.montserrat(
-                    fontSize: 13, fontWeight: FontWeight.w500),
+                style: GoogleFonts.montserrat(fontSize: 13, fontWeight: FontWeight.w500),
               )
             : null,
-        trailing: const Icon(Icons.arrow_forward_ios_rounded,
-            color: Colors.black, size: 18),
+        trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.black, size: 18),
         onTap: onTap,
       ),
     );

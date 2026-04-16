@@ -17,6 +17,10 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  // Styling Constants for consistency
+  static const Color darkBorder = Color(0xFF1A1C1E);
+  static const double borderWidth = 3.0;
+
   int _selectedIndex = 0;
   String _displayName = 'User';
   String _userRole = 'student';
@@ -107,17 +111,35 @@ class _HomeScreenState extends State<HomeScreen> {
       PageRouteBuilder(
         opaque: false,
         barrierDismissible: true,
-        barrierColor: Colors.black26,
+        barrierColor: Colors.black.withValues(alpha: 0.5),
         pageBuilder: (_, ___, __) => MenuDrawer(isAdmin: _isAdmin),
         transitionsBuilder: (_, animation, __, child) {
           return SlideTransition(
             position: Tween<Offset>(
               begin: const Offset(1, 0),
               end: Offset.zero,
-            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutQuart)),
             child: child,
           );
         },
+      ),
+    );
+  }
+
+  /// Reusable Styled Menu Button
+  Widget _buildMenuButton() {
+    return GestureDetector(
+      onTap: () => openDrawer(context),
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: darkBorder, width: borderWidth),
+          boxShadow: const [
+            BoxShadow(color: darkBorder, offset: Offset(3, 3))
+          ],
+        ),
+        child: const Icon(Icons.menu, color: darkBorder, size: 30),
       ),
     );
   }
@@ -130,6 +152,7 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: const CustomBottomNav(),
       body: Column(
         children: [
+
           Expanded(
             child: SafeArea(
               bottom: false,
@@ -151,7 +174,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 "Welcome,",
                                 style: GoogleFonts.montserrat(
                                   fontSize: 28,
-                                  color: const Color(0xFF1A1D23),
+                                  color: darkBorder,
                                   fontWeight: FontWeight.w300,
                                   letterSpacing: -0.5,
                                 ),
@@ -164,7 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   fontSize: 48,
                                   fontWeight: FontWeight.w900,
                                   letterSpacing: -2.5,
-                                  color: const Color(0xFF1A1D23),
+                                  color: darkBorder,
                                   height: 1.0,
                                 ),
                               ),
@@ -172,29 +195,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         
-                        // Variable-width Menu Icon
-          GestureDetector(
-            onTap: () => openDrawer(context),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Container(
-                      width: 30,
-                      height: 4,
-                      decoration: BoxDecoration(
-                          color: Colors.black,
-                          borderRadius: BorderRadius.circular(2))),
-                  const SizedBox(height: 6),
-                  Container(
-                      width: 30,
-                      height: 4,
-                      decoration: BoxDecoration(
-                          color: Colors.black,
-                          borderRadius: BorderRadius.circular(2))),
-                ],
-              ),
-          ),
+                        // Updated Menu Icon Button
+                        _buildMenuButton(),
                       ],
                     ),
                   ),
@@ -203,9 +205,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   /// 3. HORIZONTAL COURSE SELECTOR
                   SizedBox(
-                    height: 110, // Set to handle wrapping text + shadow from your CourseChip
+                    height: 110,
                     child: _loadingCourses
-                        ? const Center(child: CircularProgressIndicator())
+                        ? const Center(child: CircularProgressIndicator(color: darkBorder))
                         : ListView.separated(
                             scrollDirection: Axis.horizontal,
                             physics: const BouncingScrollPhysics(),
@@ -228,32 +230,29 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 15),
 
                   /// 4. VERTICAL MODULE LIST
-                Expanded(
-                  child: _loadingModules
-                      ? const Center(child: CircularProgressIndicator())
-                      : _modules.isEmpty
-                          ? const Center(child: Text("No modules available"))
-                          : ListView.separated(
-                              physics: const BouncingScrollPhysics(),
-                              // Increased bottom padding to 120 to ensure 
-                              // the last card's shadow isn't cut off by the nav bar
-                              padding: const EdgeInsets.fromLTRB(20, 0, 20, 120), 
-                              itemCount: _modules.length,
-                              // CHANGE: Increased height from 16 to 25
-                              separatorBuilder: (_, __) => const SizedBox(height: 25), 
-                              itemBuilder: (_, index) {
-                                final colors = [const Color(0xFF00CBA9), const Color(0xFFFFBC1F)];
-                                
-                                return ModuleCard(
-                                  title: _modules[index]['title'] as String,
-                                  color: colors[index % colors.length],
-                                  courseId: _courses[_selectedIndex].id,
-                                  moduleId: _modules[index]['id'] as String,
-                                  courseName: _courses[_selectedIndex].title,
-                                );
-                              },
-                            ),
-                ),
+                  Expanded(
+                    child: _loadingModules
+                        ? const Center(child: CircularProgressIndicator(color: darkBorder))
+                        : _modules.isEmpty
+                            ? const Center(child: Text("No modules available"))
+                            : ListView.separated(
+                                physics: const BouncingScrollPhysics(),
+                                padding: const EdgeInsets.fromLTRB(20, 0, 20, 120), 
+                                itemCount: _modules.length,
+                                separatorBuilder: (_, __) => const SizedBox(height: 25), 
+                                itemBuilder: (_, index) {
+                                  final colors = [const Color(0xFF00CBA9), const Color(0xFFFFBC1F)];
+                                  
+                                  return ModuleCard(
+                                    title: _modules[index]['title'] as String,
+                                    color: colors[index % colors.length],
+                                    courseId: _courses[_selectedIndex].id,
+                                    moduleId: _modules[index]['id'] as String,
+                                    courseName: _courses[_selectedIndex].title,
+                                  );
+                                },
+                              ),
+                  ),
                 ],
               ),
             ),
