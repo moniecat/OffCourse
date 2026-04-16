@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../models/result.dart';
+//import '../models/result.dart';
 import '../models/best_score.dart';
 
 class ResultService {

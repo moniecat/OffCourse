@@ -1,30 +1,47 @@
 import 'package:flutter/material.dart';
-import '../screens/profile.dart'; 
+import '../screens/profile.dart';
+import '../screens/leaderboard_screen.dart';
+import '../screens/home.dart';
 
 class CustomBottomNav extends StatefulWidget {
-  const CustomBottomNav({super.key});
+  final int selectedIndex; // 👈 add this
+  const CustomBottomNav({super.key, this.selectedIndex = 1}); // default to home
 
   @override
   State<CustomBottomNav> createState() => _CustomBottomNavState();
 }
 
 class _CustomBottomNavState extends State<CustomBottomNav> {
-  // Default to index 1 (Modules/Book icon) to match your home screen focus
-  int _selectedIndex = 1;
+  late int _selectedIndex;
 
-  // Your Navigation Logic
-  void _openProfile(BuildContext context) {
-    Navigator.of(context).push(
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.selectedIndex; // 👈 initialize from widget
+  }
+
+  void _onTap(int index) {
+    if (index == _selectedIndex) return;
+
+    if (index == 0) {
+      _navigateTo(const LeaderboardScreen());
+    } else if (index == 1) {
+      _navigateTo(const HomeScreen());
+    } else if (index == 2) {
+      _navigateTo(const ProfileScreen());
+    }
+
+    setState(() => _selectedIndex = index);
+  }
+
+  void _navigateTo(Widget screen) {
+    Navigator.of(context).pushReplacement(
       PageRouteBuilder(
-        pageBuilder: (_, __, ___) => const ProfileScreen(),
+        pageBuilder: (_, __, ___) => screen,
         transitionsBuilder: (_, animation, __, child) {
-          // Slide up from bottom to top
-          return SlideTransition(
-            position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
-                .animate(CurvedAnimation(parent: animation, curve: Curves.easeInOutQuart)),
-            child: child,
-          );
+          return FadeTransition(opacity: animation, child: child);
         },
+        transitionDuration: const Duration(milliseconds: 200),
       ),
     );
   }
@@ -32,18 +49,15 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
   @override
   Widget build(BuildContext context) {
     const Color darkBorder = Color(0xFF1A1C1E);
-    const double thickness = 3.5; // Bold lines to match your module cards
+    const double thickness = 3.5;
 
     return Container(
-      // Outer height to ensure the "floating" icons don't get clipped
-      height: 110, 
+      height: 110,
       color: Colors.transparent,
       child: Container(
         decoration: const BoxDecoration(
           color: Colors.white,
-          border: Border(
-            top: BorderSide(color: darkBorder, width: thickness),
-          ),
+          border: Border(top: BorderSide(color: darkBorder, width: thickness)),
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(45),
             topRight: Radius.circular(45),
@@ -52,7 +66,7 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            _buildNavItem(0, Icons.home_rounded),
+            _buildNavItem(0, Icons.leaderboard_rounded),
             _buildNavItem(1, Icons.menu_book_rounded),
             _buildNavItem(2, Icons.person_rounded),
           ],
@@ -67,15 +81,7 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
 
     return Expanded(
       child: GestureDetector(
-        onTap: () {
-          if (index == 2) {
-            // Profile logic: Navigate to screen
-            _openProfile(context);
-          } else {
-            // Home/Modules logic: Change selection
-            setState(() => _selectedIndex = index);
-          }
-        },
+        onTap: () => _onTap(index),
         behavior: HitTestBehavior.opaque,
         child: Center(
           child: AnimatedContainer(
@@ -86,7 +92,6 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
                     color: Colors.white,
                     shape: BoxShape.circle,
                     border: Border.all(color: darkBorder, width: 3),
-                    // Hard shadow to create the "Floating Sticker" look
                     boxShadow: const [
                       BoxShadow(
                         color: darkBorder,
@@ -98,7 +103,7 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
                 : null,
             child: Icon(
               icon,
-              size: isActive ? 32 : 30, // Slight grow when active
+              size: isActive ? 32 : 30,
               color: darkBorder,
             ),
           ),
