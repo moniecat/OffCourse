@@ -54,7 +54,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         await user.updateDisplayName(name);
 
         // Create Firestore user document in background (no await for faster navigation)
-        _fs.addUser(user.uid, name, email);
+        _fs.addUser(user.uid, name, email, role: 'student');
 
         // Sign out so user can sign in properly
         await _auth.signOut();

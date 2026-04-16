@@ -19,6 +19,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   String _displayName = 'User';
+  String _userRole = 'student';
+
+  bool get _isAdmin => _userRole == 'admin';
 
   List<Course> _courses = [];
   bool _loadingCourses = true;
@@ -87,8 +90,12 @@ class _HomeScreenState extends State<HomeScreen> {
       if (doc.exists && mounted) {
         final data = doc.data() as Map<String, dynamic>;
         final name = data['name'] as String?;
+        final role = data['role'] as String?;
         if (name != null && name.isNotEmpty) {
           setState(() => _displayName = getFirstName(name));
+        }
+        if (role != null && role.isNotEmpty) {
+          setState(() => _userRole = role);
         }
       }
     } catch (_) {}
@@ -101,7 +108,7 @@ class _HomeScreenState extends State<HomeScreen> {
         opaque: false,
         barrierDismissible: true,
         barrierColor: Colors.black26,
-        pageBuilder: (_, ___, __) => const MenuDrawer(),
+        pageBuilder: (_, ___, __) => MenuDrawer(isAdmin: _isAdmin),
         transitionsBuilder: (_, animation, __, child) {
           return SlideTransition(
             position: Tween<Offset>(

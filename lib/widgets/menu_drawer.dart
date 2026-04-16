@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart'; // Import for Montserrat
+import '../screens/admin_panel.dart';
 import '../screens/home.dart';
 import '../screens/faq.dart';
 import '../screens/setting.dart';
@@ -8,7 +9,9 @@ import '../screens/logout.dart';
 
 
 class MenuDrawer extends StatefulWidget {
-  const MenuDrawer({super.key});
+  final bool isAdmin;
+
+  const MenuDrawer({super.key, this.isAdmin = false});
 
   @override
   State<MenuDrawer> createState() => _MenuDrawerState();
@@ -17,12 +20,18 @@ class MenuDrawer extends StatefulWidget {
 class _MenuDrawerState extends State<MenuDrawer> {
   int _activeIndex = 0; // "Home" is active by default
 
-  final List<_MenuItem> _menuItems = [
-    _MenuItem(label: 'Home', page: const HomeScreen()),
-    _MenuItem(label: 'FAQ', page: const FAQPage()),
-    _MenuItem(label: 'Setting', page: const SettingPage()),
-    _MenuItem(label: 'About', page: const AboutPage()),
-  ];
+  List<_MenuItem> get _menuItems {
+    final items = <_MenuItem>[
+      _MenuItem(label: 'Home', page: const HomeScreen()),
+      _MenuItem(label: 'FAQ', page: const FAQPage()),
+      _MenuItem(label: 'Setting', page: const SettingPage()),
+      _MenuItem(label: 'About', page: const AboutPage()),
+    ];
+    if (widget.isAdmin) {
+      items.insert(1, _MenuItem(label: 'Admin', page: const AdminPanelScreen()));
+    }
+    return items;
+  }
 
   void _navigateTo(BuildContext context, int index) {
     setState(() => _activeIndex = index);

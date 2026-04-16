@@ -6,11 +6,12 @@ final db = FirebaseFirestore.instance;
 class FirestoreService {
   // --- USERS ---
 
-  Future<void> addUser(String id, String name, String email) async {
+  Future<void> addUser(String id, String name, String email, {String role = 'student'}) async {
     await db.collection('users').doc(id).set(
       {
         'name': name,
         'email': email,
+        'role': role,
         'joinedAt': Timestamp.now(),
       },
       SetOptions(merge: true),
@@ -19,6 +20,12 @@ class FirestoreService {
 
   Future<DocumentSnapshot> getUser(String id) async {
     return await db.collection('users').doc(id).get();
+  }
+
+  Future<String?> getUserRole(String id) async {
+    final doc = await getUser(id);
+    if (!doc.exists) return null;
+    return (doc.data() as Map<String, dynamic>?)?['role'] as String?;
   }
 
   Future<void> updateUserProfile(
@@ -79,6 +86,20 @@ class FirestoreService {
 
   // --- MODULES ---
 
+  Future<void> addModule(
+    String courseId,
+    String title,
+    String description,
+    int order,
+  ) async {
+    await db.collection('courses').doc(courseId).collection('modules').add({
+      'title': title,
+      'description': description,
+      'order': order,
+      'createdAt': Timestamp.now(),
+    });
+  }
+
   Future<List<Map<String, dynamic>>> getModules(String courseId) async {
     final snapshot = await db
         .collection('courses')
@@ -90,6 +111,37 @@ class FirestoreService {
     return snapshot.docs
         .map((doc) => {'id': doc.id, ...doc.data()})
         .toList();
+  }
+
+  Future<void> addQuestion({
+    required String courseId,
+    required String moduleId,
+    required String questionType,
+    required String question,
+    required String optionA,
+    required String optionB,
+    required String optionC,
+    required String optionD,
+    required String correctAnswer,
+  }) async {
+    await db
+        .collection('courses')
+        .doc(courseId)
+        .collection('modules')
+        .doc(moduleId)
+        .collection('questions')
+        .add({
+      'courseId': courseId,
+      'moduleId': moduleId,
+      'questionType': questionType,
+      'question': question,
+      'optionA': optionA,
+      'optionB': optionB,
+      'optionC': optionC,
+      'optionD': optionD,
+      'correctAnswer': correctAnswer,
+      'createdAt': Timestamp.now(),
+    });
   }
 
   // --- SCHEDULES ---
