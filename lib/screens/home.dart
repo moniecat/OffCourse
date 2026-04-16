@@ -247,7 +247,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                   title: _modules[index]['title'] as String,
                                   color: colors[index % colors.length],
                                   courseId: _courses[_selectedIndex].id,
-                                  moduleId: _modules[index]['id'] as String, 
+                                  moduleId: _modules[index]['id'] as String,
+                                  courseName: _courses[_selectedIndex].title,
                                 );
                               },
                             ),

@@ -59,6 +59,14 @@ class FirestoreService {
         .toList();
   }
 
+  Future<Course?> getCourse(String courseId) async {
+    final doc = await db.collection('courses').doc(courseId).get();
+    if (doc.exists) {
+      return Course.fromMap(doc.id, doc.data()!);
+    }
+    return null;
+  }
+
   Stream<List<Course>> watchCourses() {
     return db
         .collection('courses')

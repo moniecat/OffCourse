@@ -5,11 +5,13 @@ import '../screens/brainstorming_screen.dart';
 class ModuleOneScreen extends StatelessWidget {
   final String moduleName;
   final String courseId; // ← was: int course
+  final String courseName;
 
   const ModuleOneScreen({
     super.key,
     required this.moduleName,
     required this.courseId, // ← was: int course
+    required this.courseName,
   });
 
   @override
@@ -81,8 +83,8 @@ class ModuleOneScreen extends StatelessWidget {
                     )
                   ],
                 ),
-                child: const Text(  // ← removed "Course $course" reference
-                  'Inquiries, Investigation\nand Immersion',
+                child: Text(  
+                  courseName,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 20,

@@ -12,6 +12,7 @@ class ModuleCard extends StatefulWidget {
   final Color color;
   final String courseId;
   final String moduleId; // 👈 new
+  final String courseName; // 👈 new
 
   const ModuleCard({
     super.key,
@@ -19,6 +20,7 @@ class ModuleCard extends StatefulWidget {
     required this.color,
     required this.courseId,
     required this.moduleId, // 👈 new
+    required this.courseName, // 👈 new
   });
 
   @override
@@ -68,6 +70,7 @@ class _ModuleCardState extends State<ModuleCard> {
             builder: (_) => ModuleOneScreen(
               moduleName: widget.title,
               courseId: widget.courseId,
+              courseName: widget.courseName,
             ),
           ),
         );
