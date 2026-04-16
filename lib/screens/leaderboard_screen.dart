@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../models/course.dart';
 import '../services/firestore_service.dart';
 import '../services/leaderboard_service.dart';
+import '../services/auth_service.dart'; // Required for role check
 import '../widgets/course_chip.dart';
 import '../widgets/custom_bottom_nav.dart';
 import '../widgets/menu_drawer.dart';
@@ -16,24 +17,55 @@ class LeaderboardScreen extends StatefulWidget {
 }
 
 class _LeaderboardScreenState extends State<LeaderboardScreen> {
+  // Styling Constants
   static const Color darkBorder = Color(0xFF1A1C1E);
   static const double borderWidth = 3.0;
   static const Offset shadowOffset = Offset(4, 4);
 
+  // Admin/Role Logic
+  String _userRole = 'student';
+  bool get _isAdmin => _userRole == 'admin';
+
+  // Data Variables
   List<Course> _courses = [];
   int _selectedCourseIndex = 0;
   List<Map<String, dynamic>> _modules = [];
   String? _selectedModuleId;
   List<LeaderboardEntry> _entries = [];
+  
+  // Loading States
   bool _loadingCourses = true;
   bool _loadingModules = false;
   bool _loadingLeaderboard = false;
+  
   final String _currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
 
   @override
   void initState() {
     super.initState();
+    _loadUserRole(); // Initialize role check
     _loadCourses();
+  }
+
+  /// Load user role from Firestore (Same as HomeScreen)
+  Future<void> _loadUserRole() async {
+    final user = AuthService().currentUser;
+    if (user == null) return;
+
+    try {
+      final doc = await FirestoreService().getUser(user.uid);
+      if (doc.exists && mounted) {
+        final data = doc.data() as Map<String, dynamic>;
+        final role = data['role'] as String?;
+        if (role != null && role.isNotEmpty) {
+          setState(() {
+            _userRole = role;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading role in Leaderboard: $e');
+    }
   }
 
   Future<void> _loadCourses() async {
@@ -92,7 +124,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         opaque: false,
         barrierDismissible: true,
         barrierColor: Colors.black.withValues(alpha: 0.5),
-        pageBuilder: (_, ___, __) => const MenuDrawer(),
+        // FIXED: Now passes _isAdmin to the drawer
+        pageBuilder: (_, ___, __) => MenuDrawer(isAdmin: _isAdmin),
         transitionsBuilder: (_, animation, __, child) {
           return SlideTransition(
             position: Tween<Offset>(
@@ -151,7 +184,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               color: darkBorder,
             ),
           ),
-          // Called the custom button here to fix the "unused_element" warning
           _buildMenuButton(),
         ],
       ),
@@ -164,13 +196,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Colors.white, // Fixed: undefined 'white'
-          border: Border.all(color: darkBorder, width: 3), // Fixed: undefined 'black'
+          color: Colors.white,
+          border: Border.all(color: darkBorder, width: 3),
           boxShadow: const [
-            BoxShadow(color: darkBorder, offset: Offset(3, 3)) // Fixed: undefined 'black'
+            BoxShadow(color: darkBorder, offset: Offset(3, 3))
           ],
         ),
-        child: const Icon(Icons.menu, color: darkBorder, size: 30), // Fixed: undefined 'black'
+        child: const Icon(Icons.menu, color: darkBorder, size: 30),
       ),
     );
   }
