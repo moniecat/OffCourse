@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 //import '../models/result.dart';
 import '../models/best_score.dart';
 
@@ -43,6 +44,7 @@ class ResultService {
         'total':     total,
         'updatedAt': Timestamp.now(),
       });
+      debugPrint('>>> SAVED new bestScore — moduleId: $moduleId, score: $score'); 
     } else {
       final doc          = bestQuery.docs.first;
       final existingBest = doc.data()['score'] as int? ?? 0;

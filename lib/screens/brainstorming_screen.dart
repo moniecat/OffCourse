@@ -8,12 +8,14 @@ import '../services/result_service.dart';
 
 class BrainstormingScreen extends StatefulWidget {
   final String moduleName;
-  final String courseId; // ← was: int course
+  final String courseId; 
+  final String moduleId;
 
   const BrainstormingScreen({
     super.key,
     required this.moduleName,
-    required this.courseId, // ← was: int course
+    required this.courseId,
+    required this.moduleId,
   });
 
   @override
@@ -78,7 +80,7 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
       // Save result before navigating
       ResultService.saveResult(
         courseId: widget.courseId,
-        moduleId: _questions.first.moduleId,
+        moduleId: widget.moduleId,
         score:    _score,
         total:    _questions.length,
       ).then((_) {

@@ -71,14 +71,22 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   Future<void> _loadLeaderboard(String moduleId) async {
     setState(() => _loadingLeaderboard = true);
     try {
+      // 1. Print what moduleId the leaderboard is querying
+      debugPrint('>>> LEADERBOARD moduleId: $moduleId');
+
       final entries = await LeaderboardService.getLeaderboard(moduleId);
+
+      // 2. Print how many entries came back
+      debugPrint('>>> LEADERBOARD entries count: ${entries.length}');
+
       if (mounted) {
         setState(() {
           _entries = entries;
           _loadingLeaderboard = false;
         });
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('>>> LEADERBOARD error: $e');
       if (mounted) setState(() => _loadingLeaderboard = false);
     }
   }

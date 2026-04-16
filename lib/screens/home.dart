@@ -243,6 +243,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               separatorBuilder: (_, __) => const SizedBox(height: 25), 
                               itemBuilder: (_, index) {
                                 final colors = [const Color(0xFF00CBA9), const Color(0xFFFFBC1F)];
+                                
                                 return ModuleCard(
                                   title: _modules[index]['title'] as String,
                                   color: colors[index % colors.length],

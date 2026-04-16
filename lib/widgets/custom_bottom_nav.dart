@@ -16,8 +16,13 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
 
   @override
   void initState() {
+<<<<<<< Updated upstream
     super.initState();
     _selectedIndex = widget.selectedIndex;
+=======
+    super.initState();https://dart.dev/diagnostics/ambiguous_import
+    _selectedIndex = widget.selectedIndex; // 👈 initialize from widget
+>>>>>>> Stashed changes
   }
 
   void _onTap(int index) {

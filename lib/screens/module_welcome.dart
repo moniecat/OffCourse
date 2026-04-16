@@ -6,12 +6,18 @@ class ModuleOneScreen extends StatelessWidget {
   final String moduleName;
   final String courseId;
   final String courseName;
+  final String moduleId;
 
   const ModuleOneScreen({
     super.key,
     required this.moduleName,
+<<<<<<< Updated upstream
     required this.courseId,
+=======
+    required this.courseId, 
+>>>>>>> Stashed changes
     required this.courseName,
+    required this.moduleId,
   });
 
   @override
@@ -134,6 +140,10 @@ class ModuleOneScreen extends StatelessWidget {
                       builder: (_) => BrainstormingScreen(
                         moduleName: moduleName,
                         courseId: courseId,
+<<<<<<< Updated upstream
+=======
+                        moduleId: moduleId,
+>>>>>>> Stashed changes
                       ),
                     ),
                   );

@@ -71,6 +71,7 @@ class _ModuleCardState extends State<ModuleCard> {
               moduleName: widget.title,
               courseId: widget.courseId,
               courseName: widget.courseName,
+              moduleId: widget.moduleId,
             ),
           ),
         );
