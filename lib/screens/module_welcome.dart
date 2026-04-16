@@ -40,7 +40,7 @@ class ModuleOneScreen extends StatelessWidget {
                     ),
                   ),
                   GestureDetector(
-                    onTap: () => Navigator.pop(context),
+                    onTap: () => Navigator.pop(context, false),
                     child: Container(
                       height: 46,
                       width: 46,
@@ -125,8 +125,8 @@ class ModuleOneScreen extends StatelessWidget {
               const Spacer(flex: 3),
 
               GestureDetector(
-                onTap: () {
-                  Navigator.push(
+                onTap: () async {
+                  final refreshed = await Navigator.push<bool>(
                     context,
                     MaterialPageRoute(
                       builder: (_) => BrainstormingScreen(
@@ -135,6 +135,10 @@ class ModuleOneScreen extends StatelessWidget {
                       ),
                     ),
                   );
+
+                  if (refreshed == true) {
+                    Navigator.pop(context, true);
+                  }
                 },
                 child: Container(
                   width: double.infinity,

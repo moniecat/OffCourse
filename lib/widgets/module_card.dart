@@ -63,8 +63,8 @@ class _ModuleCardState extends State<ModuleCard> {
     const double shadowOffset = 7.0;
     
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
+      onTap: () async {
+        final refreshed = await Navigator.push<bool>(
           context,
           MaterialPageRoute(
             builder: (_) => ModuleOneScreen(
@@ -74,6 +74,10 @@ class _ModuleCardState extends State<ModuleCard> {
             ),
           ),
         );
+
+        if (mounted && refreshed == true) {
+          _loadStats();
+        }
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: shadowOffset + 5),

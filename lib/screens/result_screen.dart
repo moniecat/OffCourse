@@ -16,15 +16,20 @@ class ResultScreen extends StatelessWidget {
     final percent = total > 0 ? (score / total * 100).round() : 0;
     final bool isPassed = percent >= 75;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF9F9F9), // Matching dashboard background
-      body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.pop(context, true);
+        return false;
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF9F9F9), // Matching dashboard background
+        body: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
                 // Chunky Title
                 Text(
                   "QUIZ COMPLETE!",
@@ -147,7 +152,7 @@ class ResultScreen extends StatelessWidget {
 
                 // Back Button (Neo-brutalist Yellow Button)
                 GestureDetector(
-                  onTap: () => Navigator.pop(context),
+                  onTap: () => Navigator.pop(context, true),
                   child: Container(
                     width: double.infinity,
                     height: 65,
@@ -178,6 +183,7 @@ class ResultScreen extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
