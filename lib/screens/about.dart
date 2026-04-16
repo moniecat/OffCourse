@@ -28,111 +28,111 @@ class AboutPage extends StatelessWidget {
   }
 
   // ── Contact Us dialog ──────────────────────────────────────────────────────
-void _showContactDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: const BorderSide(color: Colors.black, width: 2.5),
-      ),
-      titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-      contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-      actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
-      title: Row(
-        children: [
-          const Icon(
-            Icons.email_outlined,
-            color: Color(0xFFFFB82E),
-            size: 26,
-          ),
-          const SizedBox(width: 10),
-          Text(
-            'Contact Us',
-            style: GoogleFonts.montserrat(
-              fontWeight: FontWeight.w900,
-              fontSize: 22,
+  void _showContactDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: Colors.black, width: 2.5),
+        ),
+        titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+        contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+        actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+        title: Row(
+          children: [
+            const Icon(
+              Icons.email_outlined,
+              color: Color(0xFFFFB82E),
+              size: 26,
             ),
-          ),
-        ],
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Need help or have feedback?',
-            style: GoogleFonts.montserrat(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF9F9F9),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.black, width: 2),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.mail, size: 20),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'offcourse.support@gmail.com',
-                    style: GoogleFonts.montserrat(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Reach out to us anytime and we’ll do our best to respond promptly.',
-            style: GoogleFonts.montserrat(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: Colors.black54,
-              height: 1.5,
-            ),
-          ),
-        ],
-      ),
-      actions: [
-        GestureDetector(
-          onTap: () => Navigator.pop(ctx),
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 10,
-            ),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFC107),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.black, width: 2),
-              boxShadow: const [
-                BoxShadow(color: Colors.black, offset: Offset(0, 3)),
-              ],
-            ),
-            child: Text(
-              'Close',
+            const SizedBox(width: 10),
+            Text(
+              'Contact Us',
               style: GoogleFonts.montserrat(
                 fontWeight: FontWeight.w900,
-                color: Colors.black,
+                fontSize: 22,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Need help or have feedback?',
+              style: GoogleFonts.montserrat(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF9F9F9),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.black, width: 2),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.mail, size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'offcourse.support@gmail.com',
+                      style: GoogleFonts.montserrat(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Reach out to us anytime and we’ll do our best to respond promptly.',
+              style: GoogleFonts.montserrat(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: Colors.black54,
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          GestureDetector(
+            onTap: () => Navigator.pop(ctx),
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 10,
+              ),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFC107),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.black, width: 2),
+                boxShadow: const [
+                  BoxShadow(color: Colors.black, offset: Offset(0, 3)),
+                ],
+              ),
+              child: Text(
+                'Close',
+                style: GoogleFonts.montserrat(
+                  fontWeight: FontWeight.w900,
+                  color: Colors.black,
+                ),
               ),
             ),
           ),
-        ),
-      ],
-    ),
-  );
-}
+        ],
+      ),
+    );
+  }
 
   // ── Privacy Policy bottom sheet ────────────────────────────────────────────
   void _showPrivacyPolicy(BuildContext context) {
@@ -341,21 +341,21 @@ For questions regarding these terms, contact us at offcourse.support@gmail.com.'
 
           // Logo
           Center(
-  child: Container(
-    decoration: BoxDecoration(
-      shape: BoxShape.circle,
-      border: Border.all(color: Colors.black, width: 3),
-      boxShadow: const [
-        BoxShadow(color: Colors.black, offset: Offset(4, 4)),
-      ],
-    ),
-    child: const CircleAvatar(
-      radius: 46,
-      backgroundImage: AssetImage('assets/pics/logo3.png'),
-      backgroundColor: Colors.white,
-    ),
-  ),
-),
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.black, width: 3),
+                boxShadow: const [
+                  BoxShadow(color: Colors.black, offset: Offset(4, 4)),
+                ],
+              ),
+              child: const CircleAvatar(
+                radius: 46,
+                backgroundImage: AssetImage('assets/pics/logo3.png'),
+                backgroundColor: Colors.white,
+              ),
+            ),
+          ),
 
           const SizedBox(height: 32),
 
@@ -374,10 +374,10 @@ For questions regarding these terms, contact us at offcourse.support@gmail.com.'
 
           const SizedBox(height: 24),
 
-          _SectionLabel(label: 'WHAT YOU CAN DO'),
+          const _SectionLabel(label: 'WHAT YOU CAN DO'),
           const SizedBox(height: 12),
 
-          _FeatureTile(
+          const _FeatureTile(
             icon: Icons.menu_book_rounded,
             color: Colors.teal,
             title: 'Browse Modules',
@@ -391,7 +391,7 @@ For questions regarding these terms, contact us at offcourse.support@gmail.com.'
             description: 'Interactive exercises to sharpen critical thinking.',
           ),
           const SizedBox(height: 12),
-          _FeatureTile(
+          const _FeatureTile(
             icon: Icons.person_outline_rounded,
             color: Colors.black,
             title: 'Your Profile',
@@ -400,7 +400,7 @@ For questions regarding these terms, contact us at offcourse.support@gmail.com.'
 
           const SizedBox(height: 32),
 
-          _SectionLabel(label: 'GET IN TOUCH'),
+          const _SectionLabel(label: 'GET IN TOUCH'),
           const SizedBox(height: 12),
 
           _AboutTile(
@@ -437,43 +437,6 @@ For questions regarding these terms, contact us at offcourse.support@gmail.com.'
           ),
           const SizedBox(height: 24),
         ],
-      ),
-    );
-  }
-}
-
-// ── Reusable dialog text field ─────────────────────────────────────────────
-class _DialogTextField extends StatelessWidget {
-  final TextEditingController controller;
-  final String hintText;
-  final int maxLines;
-
-  const _DialogTextField({
-    required this.controller,
-    required this.hintText,
-    this.maxLines = 1,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      maxLines: maxLines,
-      style: GoogleFonts.montserrat(fontSize: 14, fontWeight: FontWeight.w600),
-      decoration: InputDecoration(
-        hintText: hintText,
-        hintStyle: GoogleFonts.montserrat(
-            color: Colors.black38, fontSize: 14, fontWeight: FontWeight.w500),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.black, width: 2),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.black, width: 2.5),
-        ),
       ),
     );
   }
@@ -547,7 +510,7 @@ class _FeatureTile extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
+              color: color.withAlpha(30),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: color, size: 24),

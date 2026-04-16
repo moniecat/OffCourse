@@ -66,9 +66,14 @@ class _AddModuleScreenState extends State<AddModuleScreen> {
     setState(() => _isLoading = true);
     try {
       await FirestoreService().addModule(course.id, title, description, order);
+      
+      // FIX: Guard with mounted check before using BuildContext across async gaps
+      if (!mounted) return;
+      
       _showMessage('Module added successfully.');
       Navigator.pop(context);
     } catch (e) {
+      if (!mounted) return;
       _showMessage('Failed to add module.');
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -76,6 +81,7 @@ class _AddModuleScreenState extends State<AddModuleScreen> {
   }
 
   void _showMessage(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
@@ -95,7 +101,8 @@ class _AddModuleScreenState extends State<AddModuleScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     DropdownButtonFormField<Course>(
-                      value: _selectedCourse,
+                      // FIX: Changed 'value' to 'initialValue' per deprecation notice
+                      initialValue: _selectedCourse,
                       decoration: InputDecoration(
                         labelText: 'Select course',
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),

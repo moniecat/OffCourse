@@ -16,13 +16,8 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
 
   @override
   void initState() {
-<<<<<<< Updated upstream
     super.initState();
-    _selectedIndex = widget.selectedIndex;
-=======
-    super.initState();https://dart.dev/diagnostics/ambiguous_import
-    _selectedIndex = widget.selectedIndex; // 👈 initialize from widget
->>>>>>> Stashed changes
+    _selectedIndex = widget.selectedIndex; // 👈 Removed the accidental URL here
   }
 
   void _onTap(int index) {
@@ -74,7 +69,7 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             _buildNavItem(0, Icons.leaderboard_rounded),
-            _buildNavItem(1, Icons.home_rounded), // 👈 Changed to Home Icon
+            _buildNavItem(1, Icons.home_rounded), 
             _buildNavItem(2, Icons.person_rounded),
           ],
         ),

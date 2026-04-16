@@ -61,6 +61,7 @@ class _AddQuestionScreenState extends State<AddQuestionScreen> {
   }
 
   Future<void> _loadModules(String courseId) async {
+    if (!mounted) return;
     setState(() {
       _loadingModules = true;
       _modules = [];
@@ -115,9 +116,14 @@ class _AddQuestionScreenState extends State<AddQuestionScreen> {
         optionD: optionD,
         correctAnswer: _correctAnswer,
       );
+
+      // FIX: Guard with mounted check before using context across async gaps
+      if (!mounted) return;
+      
       _showMessage('Question added successfully.');
       Navigator.pop(context);
     } catch (e) {
+      if (!mounted) return;
       _showMessage('Failed to add question.');
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -125,6 +131,7 @@ class _AddQuestionScreenState extends State<AddQuestionScreen> {
   }
 
   void _showMessage(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
@@ -136,7 +143,7 @@ class _AddQuestionScreenState extends State<AddQuestionScreen> {
         title: Text('Add Question', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900)),
       ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView( // Added scroll view to prevent overflow on small screens
           padding: const EdgeInsets.all(24),
           child: _loadingCourses
               ? const Center(child: CircularProgressIndicator())
@@ -144,7 +151,8 @@ class _AddQuestionScreenState extends State<AddQuestionScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     DropdownButtonFormField<Course>(
-                      value: _selectedCourse,
+                      // FIX: Changed 'value' to 'initialValue'
+                      initialValue: _selectedCourse,
                       decoration: InputDecoration(
                         labelText: 'Select course',
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
@@ -168,7 +176,8 @@ class _AddQuestionScreenState extends State<AddQuestionScreen> {
                             child: CircularProgressIndicator(),
                           ))
                         : DropdownButtonFormField<Map<String, dynamic>>(
-                            value: _selectedModule,
+                            // FIX: Changed 'value' to 'initialValue'
+                            initialValue: _selectedModule,
                             decoration: InputDecoration(
                               labelText: 'Select module',
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),

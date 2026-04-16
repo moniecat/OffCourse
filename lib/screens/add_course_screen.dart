@@ -37,9 +37,14 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
 
     try {
       await FirestoreService().addCourse(title, description, order);
+      
+      // FIX: Guard with mounted check before using BuildContext across async gaps
+      if (!mounted) return;
+
       _showMessage('Course added successfully.');
       Navigator.pop(context);
     } catch (e) {
+      if (!mounted) return;
       _showMessage('Failed to add course.');
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -47,6 +52,7 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
   }
 
   void _showMessage(String message) {
+    if (!mounted) return; // Extra safety check
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
@@ -60,7 +66,7 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
         title: Text('Add Course', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900)),
       ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView( // Added to prevent overflow when keyboard appears
           padding: const EdgeInsets.all(24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,

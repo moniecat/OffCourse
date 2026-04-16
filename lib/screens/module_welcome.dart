@@ -11,11 +11,7 @@ class ModuleOneScreen extends StatelessWidget {
   const ModuleOneScreen({
     super.key,
     required this.moduleName,
-<<<<<<< Updated upstream
     required this.courseId,
-=======
-    required this.courseId, 
->>>>>>> Stashed changes
     required this.courseName,
     required this.moduleId,
   });
@@ -140,10 +136,7 @@ class ModuleOneScreen extends StatelessWidget {
                       builder: (_) => BrainstormingScreen(
                         moduleName: moduleName,
                         courseId: courseId,
-<<<<<<< Updated upstream
-=======
                         moduleId: moduleId,
->>>>>>> Stashed changes
                       ),
                     ),
                   );
