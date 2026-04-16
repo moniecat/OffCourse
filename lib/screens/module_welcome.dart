@@ -4,13 +4,13 @@ import '../screens/brainstorming_screen.dart';
 
 class ModuleOneScreen extends StatelessWidget {
   final String moduleName;
-  final String courseId; // ← was: int course
+  final String courseId;
   final String courseName;
 
   const ModuleOneScreen({
     super.key,
     required this.moduleName,
-    required this.courseId, // ← was: int course
+    required this.courseId,
     required this.courseName,
   });
 
@@ -32,7 +32,7 @@ class ModuleOneScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Module',  // ← removed "Module $course" since courseId is now a string ID, not a display number
+                    'Module', 
                     style: GoogleFonts.montserrat(
                       fontWeight: FontWeight.w900,
                       fontSize: 24,
@@ -86,7 +86,7 @@ class ModuleOneScreen extends StatelessWidget {
                 child: Text(  
                   courseName,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
                     height: 1.3,
@@ -100,7 +100,7 @@ class ModuleOneScreen extends StatelessWidget {
               Column(
                 children: [
                   Text(
-                    'MODULE',  // ← removed "MODULE $course"
+                    'MODULE',
                     style: GoogleFonts.montserrat(
                       fontSize: 16,
                       letterSpacing: 2,
@@ -126,18 +126,21 @@ class ModuleOneScreen extends StatelessWidget {
 
               GestureDetector(
                 onTap: () async {
-                  final refreshed = await Navigator.push<bool>(
-                    context,
+                  // Capture navigator before async gap
+                  final navigator = Navigator.of(context);
+
+                  final refreshed = await navigator.push<bool>(
                     MaterialPageRoute(
                       builder: (_) => BrainstormingScreen(
                         moduleName: moduleName,
-                        courseId: courseId, // ← was: course: course
+                        courseId: courseId,
                       ),
                     ),
                   );
 
-                  if (refreshed == true) {
-                    Navigator.pop(context, true);
+                  // FIX: Check if context is still mounted before popping
+                  if (refreshed == true && context.mounted) {
+                    navigator.pop(true);
                   }
                 },
                 child: Container(

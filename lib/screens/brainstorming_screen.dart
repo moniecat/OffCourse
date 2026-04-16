@@ -82,9 +82,9 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
         score:    _score,
         total:    _questions.length,
       ).then((_) {
-        print('✅ Result saved successfully');
+        //print('✅ Result saved successfully');
       }).catchError((e) {
-        print('❌ Error saving result: $e');
+        //print('❌ Error saving result: $e');
       });
 
       Navigator.pushReplacement(

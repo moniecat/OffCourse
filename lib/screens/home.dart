@@ -123,13 +123,6 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: const CustomBottomNav(),
       body: Column(
         children: [
-          // 1. TOP DESIGN BAR
-          Container(
-            height: 6,
-            width: double.infinity,
-            color: const Color(0xFF1A1D23), // Matches your CourseChip darkOutline
-          ),
-
           Expanded(
             child: SafeArea(
               bottom: false,
