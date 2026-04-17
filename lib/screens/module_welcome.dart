@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../screens/brainstorming_screen.dart';
 
-class ModuleOneScreen extends StatelessWidget {
+class ModuleOneScreen extends StatefulWidget {
   final String moduleName;
   final String courseId;
   final String courseName;
@@ -15,6 +17,44 @@ class ModuleOneScreen extends StatelessWidget {
     required this.courseName,
     required this.moduleId,
   });
+
+  @override
+  State<ModuleOneScreen> createState() => _ModuleOneScreenState();
+}
+
+class _ModuleOneScreenState extends State<ModuleOneScreen> {
+  int _attemptCount = 0;
+  bool _isLoadingAttempts = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAttempts();
+  }
+
+  Future<void> _loadAttempts() async {
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) {
+        setState(() => _isLoadingAttempts = false);
+        return;
+      }
+
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('results')
+          .where('userId', isEqualTo: uid)
+          .where('moduleId', isEqualTo: widget.moduleId)
+          .get();
+
+      setState(() {
+        _attemptCount = querySnapshot.docs.length;
+        _isLoadingAttempts = false;
+      });
+    } catch (e) {
+      debugPrint('Error loading attempts: $e');
+      setState(() => _isLoadingAttempts = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +74,7 @@ class ModuleOneScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Module', 
+                    'Module',
                     style: GoogleFonts.montserrat(
                       fontWeight: FontWeight.w900,
                       fontSize: 24,
@@ -68,12 +108,11 @@ class ModuleOneScreen extends StatelessWidget {
                   ),
                 ],
               ),
-
               const SizedBox(height: 40),
-
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 35, horizontal: 20),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 35, horizontal: 20),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(24),
@@ -85,8 +124,8 @@ class ModuleOneScreen extends StatelessWidget {
                     )
                   ],
                 ),
-                child: Text(  
-                  courseName,
+                child: Text(
+                  widget.courseName,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 20,
@@ -96,9 +135,7 @@ class ModuleOneScreen extends StatelessWidget {
                   ),
                 ),
               ),
-
               const Spacer(flex: 2),
-
               Column(
                 children: [
                   Text(
@@ -112,7 +149,7 @@ class ModuleOneScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    moduleName,
+                    widget.moduleName,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.montserrat(
                       fontSize: 32,
@@ -121,11 +158,31 @@ class ModuleOneScreen extends StatelessWidget {
                       height: 1.1,
                     ),
                   ),
+                  const SizedBox(height: 12),
+                  _isLoadingAttempts
+                      ? SizedBox(
+                          height: 16,
+                          width: 120,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: darkBorder.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                        )
+                      : Text(
+                          _attemptCount == 0
+                              ? 'No attempts yet'
+                              : 'Attempts: $_attemptCount',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: darkBorder.withValues(alpha: 0.6),
+                          ),
+                        ),
                 ],
               ),
-
               const Spacer(flex: 3),
-
               GestureDetector(
                 onTap: () async {
                   // Capture navigator before async gap
@@ -134,15 +191,17 @@ class ModuleOneScreen extends StatelessWidget {
                   final refreshed = await navigator.push<bool>(
                     MaterialPageRoute(
                       builder: (_) => BrainstormingScreen(
-                        moduleName: moduleName,
-                        courseId: courseId,
-                        moduleId: moduleId,
+                        moduleName: widget.moduleName,
+                        courseId: widget.courseId,
+                        moduleId: widget.moduleId,
                       ),
                     ),
                   );
 
                   // FIX: Check if context is still mounted before popping
                   if (refreshed == true && context.mounted) {
+                    // Reload attempts count before popping back
+                    await _loadAttempts();
                     navigator.pop(true);
                   }
                 },

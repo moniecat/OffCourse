@@ -144,6 +144,58 @@ class FirestoreService {
     });
   }
 
+  // --- DELETE METHODS ---
+
+  Future<void> deleteCourse(String courseId) async {
+    // Delete all modules and their questions first
+    final modulesSnapshot = await db
+        .collection('courses')
+        .doc(courseId)
+        .collection('modules')
+        .get();
+
+    for (var moduleDoc in modulesSnapshot.docs) {
+      await deleteModule(courseId, moduleDoc.id);
+    }
+
+    // Delete the course
+    await db.collection('courses').doc(courseId).delete();
+  }
+
+  Future<void> deleteModule(String courseId, String moduleId) async {
+    // Delete all questions in the module first
+    final questionsSnapshot = await db
+        .collection('courses')
+        .doc(courseId)
+        .collection('modules')
+        .doc(moduleId)
+        .collection('questions')
+        .get();
+
+    for (var questionDoc in questionsSnapshot.docs) {
+      await deleteQuestion(courseId, moduleId, questionDoc.id);
+    }
+
+    // Delete the module
+    await db
+        .collection('courses')
+        .doc(courseId)
+        .collection('modules')
+        .doc(moduleId)
+        .delete();
+  }
+
+  Future<void> deleteQuestion(String courseId, String moduleId, String questionId) async {
+    await db
+        .collection('courses')
+        .doc(courseId)
+        .collection('modules')
+        .doc(moduleId)
+        .collection('questions')
+        .doc(questionId)
+        .delete();
+  }
+
   // --- SCHEDULES ---
 
   Future<void> addSchedule(String userId, String courseId, DateTime date) async {

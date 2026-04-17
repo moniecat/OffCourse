@@ -6,6 +6,9 @@ import '../services/firestore_service.dart';
 import 'add_course_screen.dart';
 import 'add_module_screen.dart';
 import 'add_question_screen.dart';
+import 'manage_courses_screen.dart';
+import 'manage_modules_screen.dart';
+import 'manage_questions_screen.dart';
 
 class AdminPanelScreen extends StatefulWidget {
   const AdminPanelScreen({super.key});
@@ -160,6 +163,57 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const AddQuestionScreen()),
+            ),
+          ),
+          const SizedBox(height: 48),
+
+          // Section Label for Management
+          Text(
+            'DELETE CONTENT',
+            style: GoogleFonts.montserrat(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: Colors.black,
+              letterSpacing: 1.5,
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          Text(
+            'Delete existing courses, modules and questions.',
+            style: GoogleFonts.montserrat(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: Colors.black54,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 32),
+
+          _AdminButton(
+            label: 'Delete Course',
+            icon: Icons.delete_rounded,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ManageCoursesScreen()),
+            ),
+          ),
+          const SizedBox(height: 20),
+          _AdminButton(
+            label: 'Delete Module',
+            icon: Icons.delete_outline_rounded,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ManageModulesScreen()),
+            ),
+          ),
+          const SizedBox(height: 20),
+          _AdminButton(
+            label: 'Delete Question',
+            icon: Icons.remove_circle_outline_rounded,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ManageQuestionsScreen()),
             ),
           ),
         ],
