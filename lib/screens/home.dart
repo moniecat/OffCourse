@@ -213,7 +213,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             physics: const BouncingScrollPhysics(),
                             padding: const EdgeInsets.symmetric(horizontal: 20),
                             itemCount: _courses.length,
-                            separatorBuilder: (_, __) => const SizedBox(width: 10),
+                            separatorBuilder: (_, __) => const SizedBox(width: 6),
                             itemBuilder: (_, index) {
                               return CourseChip(
                                 label: _courses[index].title,

@@ -26,10 +26,13 @@ class CourseChip extends StatelessWidget {
 
 // ... rest of the imports and class definition
 
+    final double labelWidth =
+        (MediaQuery.of(context).size.width / 3.4).clamp(90.0, 130.0);
+
     return GestureDetector(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+        padding: const EdgeInsets.symmetric(horizontal: 1.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -55,28 +58,29 @@ class CourseChip extends StatelessWidget {
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    Icon(Icons.star_rounded, color: darkOutline, size: isActive ? 48 : 42),
-                    Icon(Icons.star_rounded, color: starColor, size: isActive ? 36 : 30),
+                    Icon(Icons.star_rounded,
+                        color: darkOutline, size: isActive ? 48 : 42),
+                    Icon(Icons.star_rounded,
+                        color: starColor, size: isActive ? 36 : 30),
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 12),
-            // UPDATED SECTION:
             SizedBox(
-              width: 110, // INCREASED from 95 to 110
+              width: labelWidth,
               child: Text(
                 label,
                 textAlign: TextAlign.center,
                 maxLines: 2,
-                softWrap: true, // Ensures it tries to wrap at spaces first
-                overflow: TextOverflow.visible, // Changed to visible so it doesn't clip
+                softWrap: true,
+                overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.montserrat(
-                  fontSize: isActive ? 13 : 12, // DECREASED slightly to fit long words
+                  fontSize: isActive ? 11 : 10,
                   fontWeight: FontWeight.w900,
                   color: darkOutline,
-                  height: 1.0, 
-                  letterSpacing: -0.2, // Slightly tighter letters to save space
+                  height: 1.0,
+                  letterSpacing: -0.2,
                 ),
               ),
             ),
