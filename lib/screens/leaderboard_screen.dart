@@ -216,7 +216,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 20),
               itemCount: _courses.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              separatorBuilder: (_, __) => const SizedBox(width: 6),
               itemBuilder: (_, index) => CourseChip(
                 label: _courses[index].title,
                 isActive: index == _selectedCourseIndex,
