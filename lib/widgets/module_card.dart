@@ -58,9 +58,10 @@ class _ModuleCardState extends State<ModuleCard> {
 
   @override
   Widget build(BuildContext context) {
-    const Color darkBorder = Color(0xFF1A1A1A);
     const double thickness = 3.5;
     const double shadowOffset = 7.0;
+    const Color borderColor = Color(0xFF1A1C1E); // Fixed dark color for borders
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     
     return GestureDetector(
       onTap: () async {
@@ -83,13 +84,13 @@ class _ModuleCardState extends State<ModuleCard> {
       child: Container(
         margin: const EdgeInsets.only(bottom: shadowOffset + 5),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(30),
-          border: Border.all(color: darkBorder, width: thickness),
-          boxShadow: const [
+          border: Border.all(color: isDarkMode ? Colors.white : borderColor, width: thickness),
+          boxShadow: [
             BoxShadow(
-              color: darkBorder,
-              offset: Offset(0, shadowOffset),
+              color: isDarkMode ? Colors.white : borderColor,
+              offset: const Offset(0, shadowOffset),
               blurRadius: 0,
             ),
           ],
@@ -105,12 +106,12 @@ class _ModuleCardState extends State<ModuleCard> {
                 width: double.infinity,
                 decoration: BoxDecoration(
                   color: widget.color,
-                  border: const Border(
-                    bottom: BorderSide(color: darkBorder, width: thickness),
+                  border: Border(
+                    bottom: BorderSide(color: isDarkMode ? Colors.white : borderColor, width: thickness),
                   ),
                 ),
                 child: CustomPaint(
-                  painter: _BoldStickerPainter(darkBorder, thickness),
+                  painter: _BoldStickerPainter(borderColor, thickness, Theme.of(context).colorScheme.surface),
                 ),
               ),
 
@@ -128,7 +129,7 @@ class _ModuleCardState extends State<ModuleCard> {
                             style: GoogleFonts.montserrat(
                               fontSize: 24,
                               fontWeight: FontWeight.w900,
-                              color: darkBorder,
+                              color: Theme.of(context).colorScheme.onSurface,
                               height: 1.1,
                             ),
                           ),
@@ -138,7 +139,7 @@ class _ModuleCardState extends State<ModuleCard> {
                                 height: 13,
                                 width: 160,
                                 decoration: BoxDecoration(
-                                  color: Colors.black12,
+                                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                               )
@@ -149,7 +150,7 @@ class _ModuleCardState extends State<ModuleCard> {
                                 style: GoogleFonts.montserrat(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w700,
-                                  color: darkBorder.withValues(alpha: 0.6),
+                                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                                 ),
                               ),
                         ],
@@ -160,11 +161,11 @@ class _ModuleCardState extends State<ModuleCard> {
                       width: 46,
                       height: 46,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Theme.of(context).cardColor,
                         shape: BoxShape.circle,
-                        border: Border.all(color: darkBorder, width: thickness),
+                        border: Border.all(color: isDarkMode ? Colors.white : borderColor, width: thickness),
                       ),
-                      child: const Icon(Icons.arrow_forward_rounded, color: darkBorder, size: 26),
+                      child: Icon(Icons.arrow_forward_rounded, color: isDarkMode ? Colors.white : borderColor, size: 26),
                     ),
                   ],
                 ),
@@ -181,7 +182,8 @@ class _ModuleCardState extends State<ModuleCard> {
 class _BoldStickerPainter extends CustomPainter {
   final Color borderColor;
   final double thickness;
-  _BoldStickerPainter(this.borderColor, this.thickness);
+  final Color surfaceColor;
+  _BoldStickerPainter(this.borderColor, this.thickness, this.surfaceColor);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -199,8 +201,8 @@ class _BoldStickerPainter extends CustomPainter {
     final cy = h * 0.8;
 
     _drawStickerBook(canvas, w * 0.22, h * 0.4, 35, 45, -20, const Color(0xFF3DBFA8), fillPaint, paint);
-    _drawStickerBook(canvas, w * 0.38, h * 0.22, 30, 40, -5, Colors.white, fillPaint, paint);
-    _drawStickerBook(canvas, w * 0.68, h * 0.20, 40, 30, 15, Colors.white, fillPaint, paint);
+    _drawStickerBook(canvas, w * 0.38, h * 0.22, 30, 40, -5, surfaceColor, fillPaint, paint);
+    _drawStickerBook(canvas, w * 0.68, h * 0.20, 40, 30, 15, surfaceColor, fillPaint, paint);
     _drawStickerBook(canvas, w * 0.82, h * 0.45, 35, 45, 25, const Color(0xFF3DBFA8), fillPaint, paint);
 
     final bookPath = Path();
@@ -212,7 +214,7 @@ class _BoldStickerPainter extends CustomPainter {
     bookPath.lineTo(cx + (w * 0.35), cy + 10);
     bookPath.quadraticBezierTo(cx + 50, cy - 10, cx, cy);
 
-    canvas.drawPath(bookPath, fillPaint..color = Colors.white);
+    canvas.drawPath(bookPath, fillPaint..color = surfaceColor);
     canvas.drawPath(bookPath, paint);
     canvas.drawLine(Offset(cx, cy - 30), Offset(cx, cy), paint);
   }

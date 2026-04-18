@@ -18,7 +18,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   // Styling Constants for consistency
-  static const Color darkBorder = Color(0xFF1A1C1E);
   static const double borderWidth = 3.0;
 
   int _selectedIndex = 0;
@@ -111,7 +110,7 @@ class _HomeScreenState extends State<HomeScreen> {
       PageRouteBuilder(
         opaque: false,
         barrierDismissible: true,
-        barrierColor: Colors.black.withValues(alpha: 0.5),
+        barrierColor: Theme.of(context).colorScheme.scrim.withValues(alpha: 0.5),
         pageBuilder: (_, ___, __) => MenuDrawer(isAdmin: _isAdmin),
         transitionsBuilder: (_, animation, __, child) {
           return SlideTransition(
@@ -133,13 +132,13 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(color: darkBorder, width: borderWidth),
-          boxShadow: const [
-            BoxShadow(color: darkBorder, offset: Offset(3, 3))
+          color: Theme.of(context).cardColor,
+          border: Border.all(color: Theme.of(context).colorScheme.onSurface, width: borderWidth),
+          boxShadow: [
+            BoxShadow(color: Theme.of(context).colorScheme.onSurface, offset: const Offset(3, 3))
           ],
         ),
-        child: const Icon(Icons.menu, color: darkBorder, size: 30),
+        child: Icon(Icons.menu, color: Theme.of(context).colorScheme.onSurface, size: 30),
       ),
     );
   }
@@ -147,7 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFBFBFB),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       extendBody: true,
       bottomNavigationBar: const CustomBottomNav(),
       body: Column(
@@ -174,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 "Welcome,",
                                 style: GoogleFonts.montserrat(
                                   fontSize: 28,
-                                  color: darkBorder,
+                                  color: Theme.of(context).colorScheme.onSurface,
                                   fontWeight: FontWeight.w300,
                                   letterSpacing: -0.5,
                                 ),
@@ -187,7 +186,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   fontSize: 48,
                                   fontWeight: FontWeight.w900,
                                   letterSpacing: -2.5,
-                                  color: darkBorder,
+                                  color: Theme.of(context).colorScheme.onSurface,
                                   height: 1.0,
                                 ),
                               ),
@@ -207,7 +206,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   SizedBox(
                     height: 110,
                     child: _loadingCourses
-                        ? const Center(child: CircularProgressIndicator(color: darkBorder))
+                        ? Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.onSurface))
                         : ListView.separated(
                             scrollDirection: Axis.horizontal,
                             physics: const BouncingScrollPhysics(),
@@ -232,9 +231,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   /// 4. VERTICAL MODULE LIST
                   Expanded(
                     child: _loadingModules
-                        ? const Center(child: CircularProgressIndicator(color: darkBorder))
+                        ? Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.onSurface))
                         : _modules.isEmpty
-                            ? const Center(child: Text("No modules available"))
+                            ? Center(child: Text("No modules available", style: TextStyle(color: Theme.of(context).colorScheme.onSurface)))
                             : ListView.separated(
                                 physics: const BouncingScrollPhysics(),
                                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 120), 

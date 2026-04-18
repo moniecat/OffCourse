@@ -18,7 +18,6 @@ class MenuDrawer extends StatefulWidget {
 
 class _MenuDrawerState extends State<MenuDrawer> {
   // Consistency Constants
-  static const Color darkBorder = Color(0xFF1A1C1E);
   static const Color activeGold = Color(0xFFFFBC1F); // Matches ModuleCard yellow
   
   int _activeIndex = 0; 
@@ -52,7 +51,7 @@ class _MenuDrawerState extends State<MenuDrawer> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
 
@@ -75,7 +74,7 @@ class _MenuDrawerState extends State<MenuDrawer> {
                               width: 32, 
                               height: 4.5, 
                               decoration: BoxDecoration(
-                                color: darkBorder,
+                                color: Theme.of(context).colorScheme.onSurface,
                                 borderRadius: BorderRadius.circular(2)
                               ),
                             ),
@@ -84,7 +83,7 @@ class _MenuDrawerState extends State<MenuDrawer> {
                               width: 22, // Shorter second bar for a stylized look
                               height: 4.5, 
                               decoration: BoxDecoration(
-                                color: darkBorder,
+                                color: Theme.of(context).colorScheme.onSurface,
                                 borderRadius: BorderRadius.circular(2)
                               ),
                             ),
@@ -110,10 +109,10 @@ class _MenuDrawerState extends State<MenuDrawer> {
                               fontWeight: FontWeight.w900, 
                               height: 1.1,
                               letterSpacing: -2,
-                              color: isActive ? activeGold : darkBorder,
+                              color: isActive ? activeGold : Theme.of(context).colorScheme.onSurface,
                               // Added subtle text shadow for "pop"
                               shadows: isActive ? [
-                                const Shadow(color: darkBorder, offset: Offset(2, 2))
+                                Shadow(color: Theme.of(context).colorScheme.onSurface, offset: const Offset(2, 2))
                               ] : null,
                             ),
                           ),

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../widgets/menu_drawer.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
+import '../providers/theme_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 //import '../widgets/custom_bottom_nav.dart'; // Ensure consistency
 
@@ -15,14 +17,11 @@ class SettingPage extends StatefulWidget {
 
 class _SettingPageState extends State<SettingPage> {
   // Styling Constants (Identical to HomeScreen)
-  static const Color darkBorder = Color(0xFF1A1C1E);
   static const double borderWidth = 3.0;
-  static const Color bgColor = Color(0xFFFBFBFB);
   final Color themeYellow = const Color(0xFFFFB82E);
 
   // State Variables
   bool _notifications = true;
-  bool _darkMode = false;
   String _language = 'English';
   String _userRole = 'student';
 
@@ -77,13 +76,13 @@ class _SettingPageState extends State<SettingPage> {
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(color: darkBorder, width: borderWidth),
-          boxShadow: const [
-            BoxShadow(color: darkBorder, offset: Offset(3, 3))
+          color: Theme.of(context).cardColor,
+          border: Border.all(color: Theme.of(context).colorScheme.onSurface, width: borderWidth),
+          boxShadow: [
+            BoxShadow(color: Theme.of(context).colorScheme.onSurface, offset: const Offset(3, 3))
           ],
         ),
-        child: const Icon(Icons.menu, color: darkBorder, size: 30),
+        child: Icon(Icons.menu, color: Theme.of(context).colorScheme.onSurface, size: 30),
       ),
     );
   }
@@ -123,7 +122,7 @@ class _SettingPageState extends State<SettingPage> {
                 _showSnack('Password changed successfully!');
               } catch (e) { _showSnack('Error: ${e.toString()}'); }
             },
-            child: Text('Save', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
+            child: Text('Save', style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
           ),
         ],
       ),
@@ -135,7 +134,7 @@ class _SettingPageState extends State<SettingPage> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('Delete Account', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+        title: Text('Delete Account', style: TextStyle(color: Theme.of(context).colorScheme.error, fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -175,7 +174,7 @@ class _SettingPageState extends State<SettingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       // Removed AppBar to match HomeScreen's manual header structure
       body: SafeArea(
         child: Column(
@@ -192,7 +191,7 @@ class _SettingPageState extends State<SettingPage> {
                       fontSize: 48,
                       fontWeight: FontWeight.w900,
                       letterSpacing: -2.5,
-                      color: darkBorder,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   _buildMenuButton(),
@@ -214,11 +213,15 @@ class _SettingPageState extends State<SettingPage> {
                       onChanged: (v) => setState(() => _notifications = v),
                     ),
                     const Divider(height: 1, thickness: 1),
-                    _ToggleTile(
-                      label: 'Dark Mode',
-                      value: _darkMode,
-                      activeColor: themeYellow,
-                      onChanged: (v) => setState(() => _darkMode = v),
+                    Consumer<ThemeProvider>(
+                      builder: (context, themeProvider, child) {
+                        return _ToggleTile(
+                          label: 'Dark Mode',
+                          value: themeProvider.isDarkMode,
+                          activeColor: themeYellow,
+                          onChanged: (v) => themeProvider.setTheme(v),
+                        );
+                      },
                     ),
                   ]),
 
@@ -275,12 +278,12 @@ class _SettingSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(title.toUpperCase(),
-            style: GoogleFonts.montserrat(fontWeight: FontWeight.w800, fontSize: 13, color: Colors.black54)),
+            style: GoogleFonts.montserrat(fontWeight: FontWeight.w800, fontSize: 13, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5))),
         const SizedBox(height: 10),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(width: 3.0, color: const Color(0xFF1A1C1E)),
+            color: Theme.of(context).cardColor,
+            border: Border.all(width: 3.0, color: Theme.of(context).colorScheme.onSurface),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(children: children),
@@ -313,17 +316,18 @@ class _ToggleTile extends StatelessWidget {
 class _ActionTile extends StatelessWidget {
   final String label;
   final IconData icon;
-  final Color color;
+  final Color? color;
   final VoidCallback onTap;
 
-  const _ActionTile({required this.label, required this.icon, this.color = Colors.black, required this.onTap});
+  const _ActionTile({required this.label, required this.icon, this.color, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
+    final tileColor = color ?? Theme.of(context).colorScheme.onSurface;
     return ListTile(
-      leading: Icon(icon, color: color),
-      title: Text(label, style: GoogleFonts.montserrat(fontWeight: FontWeight.w700, color: color)),
-      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+      leading: Icon(icon, color: tileColor),
+      title: Text(label, style: GoogleFonts.montserrat(fontWeight: FontWeight.w700, color: tileColor)),
+      trailing: Icon(Icons.arrow_forward_ios, size: 16, color: tileColor),
       onTap: onTap,
     );
   }

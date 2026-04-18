@@ -18,7 +18,6 @@ class LeaderboardScreen extends StatefulWidget {
 
 class _LeaderboardScreenState extends State<LeaderboardScreen> {
   // Styling Constants
-  static const Color darkBorder = Color(0xFF1A1C1E);
   static const double borderWidth = 3.0;
   static const Offset shadowOffset = Offset(4, 4);
 
@@ -123,7 +122,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       PageRouteBuilder(
         opaque: false,
         barrierDismissible: true,
-        barrierColor: Colors.black.withValues(alpha: 0.5),
+        barrierColor: Theme.of(context).colorScheme.scrim.withValues(alpha: 0.5),
         // FIXED: Now passes _isAdmin to the drawer
         pageBuilder: (_, ___, __) => MenuDrawer(isAdmin: _isAdmin),
         transitionsBuilder: (_, animation, __, child) {
@@ -142,7 +141,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFBFBFB),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       extendBody: true,
       bottomNavigationBar: const CustomBottomNav(selectedIndex: 0),
       body: Column(
@@ -181,7 +180,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               fontSize: 38,
               fontWeight: FontWeight.w900,
               letterSpacing: -1.5,
-              color: darkBorder,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           _buildMenuButton(),
@@ -196,13 +195,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(color: darkBorder, width: 3),
-          boxShadow: const [
-            BoxShadow(color: darkBorder, offset: Offset(3, 3))
+          color: Theme.of(context).cardColor,
+          border: Border.all(color: Theme.of(context).colorScheme.onSurface, width: 3),
+          boxShadow: [
+            BoxShadow(color: Theme.of(context).colorScheme.onSurface, offset: const Offset(3, 3))
           ],
         ),
-        child: const Icon(Icons.menu, color: darkBorder, size: 30),
+        child: Icon(Icons.menu, color: Theme.of(context).colorScheme.onSurface, size: 30),
       ),
     );
   }
@@ -211,7 +210,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     return SizedBox(
       height: 110,
       child: _loadingCourses
-          ? const Center(child: CircularProgressIndicator(color: darkBorder))
+          ? Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary))
           : ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -233,24 +232,24 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: _loadingModules
-          ? const LinearProgressIndicator(color: darkBorder)
+          ? LinearProgressIndicator(color: Theme.of(context).colorScheme.primary)
           : Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: darkBorder, width: borderWidth),
-                boxShadow: const [BoxShadow(color: darkBorder, offset: shadowOffset)],
+                border: Border.all(color: Theme.of(context).colorScheme.onSurface, width: borderWidth),
+                boxShadow: [BoxShadow(color: Theme.of(context).colorScheme.onSurface, offset: shadowOffset)],
               ),
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
                   isExpanded: true,
                   value: _selectedModuleId,
-                  hint: Text("Select a Module", style: GoogleFonts.montserrat(fontWeight: FontWeight.w700)),
+                  hint: Text("Select a Module", style: GoogleFonts.montserrat(fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6))),
                   items: _modules
                       .map((m) => DropdownMenuItem(
                             value: m['id'] as String,
-                            child: Text(m['title'], style: GoogleFonts.montserrat(fontWeight: FontWeight.w700, fontSize: 14)),
+                            child: Text(m['title'], style: GoogleFonts.montserrat(fontWeight: FontWeight.w700, fontSize: 14, color: Theme.of(context).colorScheme.onSurface)),
                           ))
                       .toList(),
                   onChanged: (val) {
@@ -267,13 +266,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
   Widget _buildMainContent() {
     if (_selectedModuleId == null) {
-      return Expanded(child: Center(child: Text("Select a module to see rankings", style: GoogleFonts.montserrat(fontWeight: FontWeight.w600))));
+      return Expanded(child: Center(child: Text("Select a module to see rankings", style: GoogleFonts.montserrat(fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)))));
     }
     if (_loadingLeaderboard) {
-      return const Expanded(child: Center(child: CircularProgressIndicator(color: darkBorder)));
+      return Expanded(child: Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary)));
     }
     if (_entries.isEmpty) {
-      return Expanded(child: Center(child: Text("No scores recorded yet", style: GoogleFonts.montserrat(fontWeight: FontWeight.w600))));
+      return Expanded(child: Center(child: Text("No scores recorded yet", style: GoogleFonts.montserrat(fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)))));
     }
 
     return Expanded(
@@ -322,8 +321,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 Container(
                   margin: const EdgeInsets.only(bottom: 6),
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(4)),
-                  child: Text("YOU", style: GoogleFonts.montserrat(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900)),
+                  decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary, borderRadius: BorderRadius.circular(4)),
+                  child: Text("YOU", style: GoogleFonts.montserrat(color: Theme.of(context).colorScheme.onPrimary, fontSize: 10, fontWeight: FontWeight.w900)),
                 ),
               Stack(
                 alignment: Alignment.bottomCenter,
@@ -334,9 +333,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     height: avatarSize,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white,
-                      border: Border.all(color: isCurrentUser ? const Color(0xFF249780) : darkBorder, width: borderWidth),
-                      boxShadow: const [BoxShadow(color: darkBorder, offset: Offset(3, 3))],
+                      color: Theme.of(context).cardColor,
+                      border: Border.all(color: isCurrentUser ? const Color(0xFF249780) : Theme.of(context).colorScheme.onSurface, width: borderWidth),
+                      boxShadow: [BoxShadow(color: isCurrentUser ? const Color(0xFF249780) : Theme.of(context).colorScheme.onSurface, offset: const Offset(3, 3))],
                     ),
                     child: ClipOval(
                       child: Image.network(
@@ -350,10 +349,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     bottom: 4,
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-                      decoration: BoxDecoration(color: darkBorder, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.white, width: 1)),
+                      decoration: BoxDecoration(color: Theme.of(context).colorScheme.onSurface, borderRadius: BorderRadius.circular(20), border: Border.all(color: Theme.of(context).cardColor, width: 1)),
                       child: Text(
                         actualRank == 1 ? "1ST" : actualRank == 2 ? "2ND" : "3RD",
-                        style: GoogleFonts.montserrat(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900),
+                        style: GoogleFonts.montserrat(color: Theme.of(context).cardColor, fontSize: 10, fontWeight: FontWeight.w900),
                       ),
                     ),
                   ),
@@ -362,24 +361,24 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               const SizedBox(height: 8),
               Text(
                 entry.name.split(' ')[0],
-                style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: 14, color: isCurrentUser ? const Color(0xFF249780) : darkBorder),
+                style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: 14, color: isCurrentUser ? const Color(0xFF249780) : Theme.of(context).colorScheme.onSurface),
                 overflow: TextOverflow.ellipsis,
               ),
-              Text('${entry.score}/${entry.total}', style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.w700)),
+              Text('${entry.score}/${entry.total}', style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7))),
               const SizedBox(height: 10),
               Container(
                 height: blockHeight,
                 margin: const EdgeInsets.symmetric(horizontal: 5),
                 decoration: BoxDecoration(
                   color: podiumColor,
-                  border: Border.all(color: darkBorder, width: borderWidth),
+                  border: Border.all(color: Theme.of(context).colorScheme.onSurface, width: borderWidth),
                   borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
-                  boxShadow: const [BoxShadow(color: darkBorder, offset: Offset(4, 0))],
+                  boxShadow: [BoxShadow(color: Theme.of(context).colorScheme.onSurface, offset: const Offset(4, 0))],
                 ),
                 child: Center(
                   child: Icon(
                     actualRank == 1 ? Icons.star : (actualRank == 2 ? Icons.military_tech : Icons.emoji_events),
-                    color: darkBorder.withValues(alpha: 0.15),
+                    color: Colors.black.withValues(alpha: 0.3),
                     size: 40,
                   ),
                 ),
@@ -402,21 +401,44 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isCurrentUser ? const Color(0xFFE0F7F4) : Colors.white,
-          border: Border.all(color: isCurrentUser ? const Color(0xFF249780) : darkBorder, width: borderWidth),
+          color: isCurrentUser ? const Color(0xFFE0F7F4) : Theme.of(context).cardColor,
+          border: Border.all(color: isCurrentUser ? const Color(0xFF249780) : Theme.of(context).colorScheme.onSurface, width: borderWidth),
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: isCurrentUser ? const Color(0xFF249780) : darkBorder, offset: shadowOffset)],
+          boxShadow: [BoxShadow(color: isCurrentUser ? const Color(0xFF249780) : Theme.of(context).colorScheme.onSurface, offset: shadowOffset)],
         ),
         child: Row(
           children: [
             SizedBox(
               width: 30,
-              child: Text('${index + 4}', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: 16, color: darkBorder.withValues(alpha: 0.4))),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Text(
+                    '${index + 4}',
+                    style: GoogleFonts.montserrat(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 16,
+                      foreground: Paint()
+                        ..style = PaintingStyle.stroke
+                        ..strokeWidth = 2
+                        ..color = Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  Text(
+                    '${index + 4}',
+                    style: GoogleFonts.montserrat(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 16,
+                      color: Theme.of(context).colorScheme.surface,
+                    ),
+                  ),
+                ],
+              ),
             ),
             Container(
               width: 45,
               height: 45,
-              decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: darkBorder, width: 2), color: Colors.white),
+              decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Theme.of(context).colorScheme.onSurface, width: 2), color: Theme.of(context).cardColor),
               child: ClipOval(
                 child: Image.network(
                   (entry.profileImage != null && entry.profileImage!.isNotEmpty) ? entry.profileImage! : "https://api.dicebear.com/7.x/avataaars/png?seed=${entry.name}",
@@ -426,8 +448,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               ),
             ),
             const SizedBox(width: 15),
-            Expanded(child: Text(entry.name, style: GoogleFonts.montserrat(fontWeight: FontWeight.w800, fontSize: 16), overflow: TextOverflow.ellipsis)),
-            Text('${entry.score}/${entry.total}', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: 16)),
+            Expanded(child: Text(entry.name, style: GoogleFonts.montserrat(fontWeight: FontWeight.w800, fontSize: 16, color: isCurrentUser ? const Color(0xFF249780) : Theme.of(context).colorScheme.onSurface), overflow: TextOverflow.ellipsis)),
+            Text('${entry.score}/${entry.total}', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: 16, color: isCurrentUser ? const Color(0xFF249780) : Theme.of(context).colorScheme.onSurface)),
           ],
         ),
       );

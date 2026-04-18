@@ -99,9 +99,7 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
           }
 
           final courses = snapshot.data!;
-          if (_selectedCourseId == null) {
-            _selectedCourseId = courses.first.id;
-          }
+          _selectedCourseId ??= courses.first.id;
 
           return Column(
             children: [

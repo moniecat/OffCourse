@@ -15,7 +15,7 @@ class CourseChip extends StatelessWidget {
 
   static const Color brandYellow = Color(0xFFFFBC1F);
   static const Color brandTeal = Color(0xFF00CBA9);
-  static const Color darkOutline = Color(0xFF1A1D23);
+  static const Color starOutlineColor = Color(0xFF1A1C1E); // Fixed dark color for star outline
   static const double thickness = 3.0;
 
   @override
@@ -23,6 +23,7 @@ class CourseChip extends StatelessWidget {
     final Color bgColor = isActive ? brandYellow : brandTeal;
     final Color starColor = isActive ? brandTeal : brandYellow;
     final double size = isActive ? 68 : 62;
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
 // ... rest of the imports and class definition
 
@@ -45,10 +46,10 @@ class CourseChip extends StatelessWidget {
               decoration: BoxDecoration(
                 color: bgColor,
                 borderRadius: BorderRadius.circular(22),
-                border: Border.all(color: darkOutline, width: thickness),
+                border: Border.all(color: isDarkMode ? Colors.white : starOutlineColor, width: thickness),
                 boxShadow: [
                   BoxShadow(
-                    color: darkOutline,
+                    color: isDarkMode ? Colors.white : starOutlineColor,
                     offset: Offset(0, isActive ? 6 : 4),
                     blurRadius: 0,
                   ),
@@ -59,7 +60,7 @@ class CourseChip extends StatelessWidget {
                   alignment: Alignment.center,
                   children: [
                     Icon(Icons.star_rounded,
-                        color: darkOutline, size: isActive ? 48 : 42),
+                        color: starOutlineColor, size: isActive ? 48 : 42),
                     Icon(Icons.star_rounded,
                         color: starColor, size: isActive ? 36 : 30),
                   ],
@@ -78,7 +79,7 @@ class CourseChip extends StatelessWidget {
                 style: GoogleFonts.montserrat(
                   fontSize: isActive ? 11 : 10,
                   fontWeight: FontWeight.w900,
-                  color: darkOutline,
+                  color: isDarkMode ? Colors.white : Theme.of(context).colorScheme.onSurface,
                   height: 1.0,
                   letterSpacing: -0.2,
                 ),

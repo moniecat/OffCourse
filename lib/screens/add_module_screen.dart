@@ -21,7 +21,6 @@ class _AddModuleScreenState extends State<AddModuleScreen> {
   Course? _selectedCourse;
 
   // Styling Constants
-  static const Color darkBorder = Color(0xFF1A1C1E);
 
   @override
   void initState() {
@@ -86,8 +85,8 @@ class _AddModuleScreenState extends State<AddModuleScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        backgroundColor: darkBorder,
-        content: Text(message, style: GoogleFonts.montserrat()),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        content: Text(message, style: GoogleFonts.montserrat(color: Theme.of(context).colorScheme.onPrimary)),
       ),
     );
   }
@@ -100,13 +99,13 @@ class _AddModuleScreenState extends State<AddModuleScreen> {
         width: 45,
         height: 45,
         decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(color: Colors.black, width: 2.5),
-          boxShadow: const [
-            BoxShadow(color: Colors.black, offset: Offset(4, 4)),
+          color: Theme.of(context).cardColor,
+          border: Border.all(color: Theme.of(context).colorScheme.onSurface, width: 2.5),
+          boxShadow: [
+            BoxShadow(color: Theme.of(context).colorScheme.onSurface, offset: const Offset(4, 4)),
           ],
         ),
-        child: const Icon(Icons.arrow_back, color: Colors.black, size: 26),
+        child: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.onSurface, size: 26),
       ),
     );
   }
@@ -114,9 +113,9 @@ class _AddModuleScreenState extends State<AddModuleScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         toolbarHeight: 90,
         automaticallyImplyLeading: false,
@@ -128,7 +127,7 @@ class _AddModuleScreenState extends State<AddModuleScreen> {
         ),
       ),
       body: _loadingCourses
-          ? const Center(child: CircularProgressIndicator(color: darkBorder))
+          ? Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary))
           : SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
@@ -141,7 +140,7 @@ class _AddModuleScreenState extends State<AddModuleScreen> {
                       fontWeight: FontWeight.w900,
                       height: 1.0,
                       letterSpacing: -1.5,
-                      color: darkBorder,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 32),
@@ -152,18 +151,18 @@ class _AddModuleScreenState extends State<AddModuleScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).cardColor,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.black, width: 2.5),
-                      boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
+                      border: Border.all(color: Theme.of(context).colorScheme.onSurface, width: 2.5),
+                      boxShadow: [BoxShadow(color: Theme.of(context).colorScheme.onSurface, offset: const Offset(4, 4))],
                     ),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<Course>(
                         value: _selectedCourse,
                         isExpanded: true,
-                        icon: const Icon(Icons.keyboard_arrow_down, color: Colors.black),
+                        icon: Icon(Icons.keyboard_arrow_down, color: Theme.of(context).colorScheme.onSurface),
                         style: GoogleFonts.montserrat(
-                          color: Colors.black,
+                          color: Theme.of(context).colorScheme.onSurface,
                           fontWeight: FontWeight.w700,
                           fontSize: 16,
                         ),
@@ -208,18 +207,18 @@ class _AddModuleScreenState extends State<AddModuleScreen> {
                     child: Container(
                       height: 70,
                       decoration: BoxDecoration(
-                        color: darkBorder,
+                        color: Theme.of(context).colorScheme.primary,
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.black, width: 3),
-                        boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
+                        border: Border.all(color: Theme.of(context).colorScheme.onSurface, width: 3),
+                        boxShadow: [BoxShadow(color: Theme.of(context).colorScheme.onSurface, offset: const Offset(4, 4))],
                       ),
                       child: Center(
                         child: _isLoading
-                            ? const CircularProgressIndicator(color: Colors.white)
+                            ? CircularProgressIndicator(color: Theme.of(context).colorScheme.onPrimary)
                             : Text(
                                 'SAVE MODULE',
                                 style: GoogleFonts.montserrat(
-                                  color: Colors.white,
+                                  color: Theme.of(context).colorScheme.onPrimary,
                                   fontSize: 18,
                                   fontWeight: FontWeight.w900,
                                   letterSpacing: 1.2,
@@ -260,19 +259,19 @@ class _AddModuleScreenState extends State<AddModuleScreen> {
         const SizedBox(height: 10),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.black, width: 2.5),
-            boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
+            border: Border.all(color: Theme.of(context).colorScheme.onSurface, width: 2.5),
+            boxShadow: [BoxShadow(color: Theme.of(context).colorScheme.onSurface, offset: const Offset(4, 4))],
           ),
           child: TextField(
             controller: controller,
             maxLines: maxLines,
             keyboardType: keyboardType,
-            style: GoogleFonts.montserrat(fontWeight: FontWeight.w700),
+            style: GoogleFonts.montserrat(fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface),
             decoration: InputDecoration(
               hintText: hint,
-              hintStyle: GoogleFonts.montserrat(color: Colors.black26),
+              hintStyle: GoogleFonts.montserrat(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4)),
               contentPadding: const EdgeInsets.all(20),
               border: InputBorder.none,
             ),

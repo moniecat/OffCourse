@@ -49,19 +49,18 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
 
   @override
   Widget build(BuildContext context) {
-    const Color darkBorder = Color(0xFF1A1C1E);
     const double thickness = 3.5;
 
     return Container(
       height: 110,
       color: Colors.transparent,
       child: Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
           border: Border(
-            top: BorderSide(color: darkBorder, width: thickness),
+            top: BorderSide(color: Theme.of(context).colorScheme.onSurface, width: thickness),
           ),
-          borderRadius: BorderRadius.only(
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(45),
             topRight: Radius.circular(45),
           ),
@@ -80,7 +79,6 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
 
   Widget _buildNavItem(int index, IconData icon) {
     final bool isActive = _selectedIndex == index;
-    const Color darkBorder = Color(0xFF1A1C1E);
 
     return Expanded(
       child: GestureDetector(
@@ -92,13 +90,13 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
             padding: const EdgeInsets.all(12),
             decoration: isActive
                 ? BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     shape: BoxShape.circle,
-                    border: Border.all(color: darkBorder, width: 3),
-                    boxShadow: const [
+                    border: Border.all(color: Theme.of(context).colorScheme.onSurface, width: 3),
+                    boxShadow: [
                       BoxShadow(
-                        color: darkBorder,
-                        offset: Offset(0, 4),
+                        color: Theme.of(context).colorScheme.onSurface,
+                        offset: const Offset(0, 4),
                         blurRadius: 0,
                       ),
                     ],
@@ -107,7 +105,7 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
             child: Icon(
               icon,
               size: isActive ? 32 : 30,
-              color: darkBorder,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
         ),

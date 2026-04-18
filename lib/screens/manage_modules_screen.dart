@@ -100,9 +100,7 @@ class _ManageModulesScreenState extends State<ManageModulesScreen> {
               ? courses.firstWhere((c) => c.id == _selectedCourseId, orElse: () => courses.first)
               : courses.first;
 
-          if (_selectedCourseId == null) {
-            _selectedCourseId = selectedCourse.id;
-          }
+          _selectedCourseId ??= selectedCourse.id;
 
           return Column(
             children: [

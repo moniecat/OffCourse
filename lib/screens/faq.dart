@@ -13,7 +13,6 @@ class FAQPage extends StatefulWidget {
 
 class _FAQPageState extends State<FAQPage> {
   // Styling Constants from Home/Settings
-  static const Color darkBorder = Color(0xFF1A1C1E);
   static const double borderWidth = 3.0;
 
   // Role logic for the Drawer
@@ -54,7 +53,7 @@ class _FAQPageState extends State<FAQPage> {
       PageRouteBuilder(
         opaque: false,
         barrierDismissible: true,
-        barrierColor: Colors.black.withValues(alpha: 0.5),
+        barrierColor: Theme.of(context).colorScheme.scrim.withValues(alpha: 0.5),
         pageBuilder: (_, ___, __) => MenuDrawer(isAdmin: _isAdmin),
         transitionsBuilder: (_, animation, __, child) {
           return SlideTransition(
@@ -76,13 +75,13 @@ class _FAQPageState extends State<FAQPage> {
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(color: darkBorder, width: borderWidth),
-          boxShadow: const [
-            BoxShadow(color: darkBorder, offset: Offset(3, 3))
+          color: Theme.of(context).cardColor,
+          border: Border.all(color: Theme.of(context).colorScheme.onSurface, width: borderWidth),
+          boxShadow: [
+            BoxShadow(color: Theme.of(context).colorScheme.onSurface, offset: const Offset(3, 3))
           ],
         ),
-        child: const Icon(Icons.menu, color: darkBorder, size: 30),
+        child: Icon(Icons.menu, color: Theme.of(context).colorScheme.onSurface, size: 30),
       ),
     );
   }
@@ -90,9 +89,9 @@ class _FAQPageState extends State<FAQPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         toolbarHeight: 80,
         automaticallyImplyLeading: false,
@@ -116,7 +115,7 @@ class _FAQPageState extends State<FAQPage> {
                     fontWeight: FontWeight.w900,
                     height: 1.0,
                     letterSpacing: -1.5,
-                    color: darkBorder,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 30),
@@ -159,15 +158,15 @@ class _FAQTileState extends State<_FAQTile> {
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
       decoration: BoxDecoration(
-        color: Colors.black,
+        color: Theme.of(context).colorScheme.onSurface,
         borderRadius: BorderRadius.circular(25),
       ),
       child: Container(
         transform: Matrix4.translationValues(-1, -6, 0),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(25),
-          border: Border.all(color: Colors.black, width: 2.5),
+          border: Border.all(color: Theme.of(context).colorScheme.onSurface, width: 2.5),
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(22),
@@ -182,13 +181,13 @@ class _FAQTileState extends State<_FAQTile> {
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.black, width: 2),
+                      border: Border.all(color: Theme.of(context).colorScheme.onSurface, width: 2),
                     ),
                     child: Icon(
                       _expanded
                           ? Icons.keyboard_arrow_up
                           : Icons.keyboard_arrow_right,
-                      color: Colors.black,
+                      color: Theme.of(context).colorScheme.onSurface,
                       size: 20,
                     ),
                   ),
@@ -197,7 +196,7 @@ class _FAQTileState extends State<_FAQTile> {
                     style: GoogleFonts.montserrat(
                       fontWeight: FontWeight.w800,
                       fontSize: 17,
-                      color: Colors.black,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   children: [
@@ -208,7 +207,7 @@ class _FAQTileState extends State<_FAQTile> {
                         style: GoogleFonts.montserrat(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: Colors.grey[800],
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                         ),
                       ),
                     ),

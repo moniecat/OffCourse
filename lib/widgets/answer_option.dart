@@ -19,9 +19,9 @@ class AnswerOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color bgColor = Colors.white;
-    Color borderColor = Colors.black;
-    Color textColor = Colors.black;
+    Color bgColor = Theme.of(context).cardColor;
+    Color borderColor = Theme.of(context).colorScheme.onSurface;
+    Color textColor = Theme.of(context).colorScheme.onSurface;
 
     // Logic for states
     if (state == AnswerState.selected) {
@@ -50,7 +50,7 @@ class AnswerOption extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: borderColor, width: 2.5),
           boxShadow: state == AnswerState.idle 
-              ? const [BoxShadow(color: Colors.black, offset: Offset(4, 4))] 
+              ? [BoxShadow(color: Theme.of(context).colorScheme.onSurface, offset: const Offset(4, 4))] 
               : null,
         ),
         child: Padding(
@@ -62,7 +62,7 @@ class AnswerOption extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(color: borderColor, width: 2),
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                 ),
                 child: Center(
                   child: Text(label, style: GoogleFonts.montserrat(
