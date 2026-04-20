@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/firestore_service.dart';
 import '../models/course.dart';
+import '../widgets/admin_widgets.dart';
 
 class ManageModulesScreen extends StatefulWidget {
   const ManageModulesScreen({super.key});
@@ -13,47 +14,37 @@ class ManageModulesScreen extends StatefulWidget {
 class _ManageModulesScreenState extends State<ManageModulesScreen> {
   static const Color darkBorder = Color(0xFF1A1C1E);
   String? _selectedCourseId;
+  String _searchQuery = '';
 
   Future<void> _deleteModule(String courseId, String moduleId, String moduleName) async {
-    final confirmed = await showDialog<bool>(
+    showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Module'),
-        content: Text('Are you sure you want to delete "$moduleName"?\nThis will also delete all questions in this module.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
+      builder: (context) => AdminDeleteDialog(
+        title: 'Delete Module',
+        content: 'Are you sure you want to delete "$moduleName"?\nThis will also delete all questions in this module.',
+        onConfirm: () async {
+          try {
+            await FirestoreService().deleteModule(courseId, moduleId);
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Module "$moduleName" deleted successfully'),
+                backgroundColor: Colors.green,
+              ),
+            );
+            setState(() {});
+          } catch (e) {
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Failed to delete module'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
       ),
     );
-
-    if (confirmed != true) return;
-
-    try {
-      await FirestoreService().deleteModule(courseId, moduleId);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Module "$moduleName" deleted successfully'),
-          backgroundColor: Colors.green,
-        ),
-      );
-      setState(() {});
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to delete module'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
   }
 
   @override
@@ -92,7 +83,11 @@ class _ManageModulesScreenState extends State<ManageModulesScreen> {
           }
 
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No courses found'));
+            return AdminEmptyState(
+              title: 'No Courses Found',
+              subtitle: 'Create a course first to add modules',
+              icon: Icons.library_add_rounded,
+            );
           }
 
           final courses = snapshot.data!;
@@ -104,24 +99,24 @@ class _ManageModulesScreenState extends State<ManageModulesScreen> {
 
           return Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: DropdownButton<String>(
-                  value: _selectedCourseId,
-                  isExpanded: true,
-                  items: courses.map((course) {
-                    return DropdownMenuItem(
-                      value: course.id,
-                      child: Text(course.title),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedCourseId = value;
-                    });
-                  },
-                ),
+              AdminDropdown<String>(
+                label: 'SELECT COURSE',
+                hint: 'Choose a course',
+                value: _selectedCourseId,
+                items: courses.map((course) {
+                  return DropdownMenuItem(
+                    value: course.id,
+                    child: Text(course.title),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedCourseId = value;
+                    _searchQuery = '';
+                  });
+                },
               ),
+              const SizedBox(height: 12),
               Expanded(
                 child: FutureBuilder<List<Map<String, dynamic>>>(
                   future: FirestoreService().getModules(_selectedCourseId!),
@@ -131,64 +126,60 @@ class _ManageModulesScreenState extends State<ManageModulesScreen> {
                     }
 
                     if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return const Center(child: Text('No modules found'));
+                      return AdminEmptyState(
+                        title: 'No Modules Found',
+                        subtitle: 'Add your first module to this course',
+                        icon: Icons.layers_outlined,
+                      );
                     }
 
-                    final modules = snapshot.data!;
+                    final allModules = snapshot.data!;
+                    final filteredModules = allModules
+                        .where((module) =>
+                            (module['title'] ?? '')
+                                .toLowerCase()
+                                .contains(_searchQuery.toLowerCase()) ||
+                            (module['description'] ?? '')
+                                .toLowerCase()
+                                .contains(_searchQuery.toLowerCase()))
+                        .toList();
 
-                    return ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: modules.length,
-                      itemBuilder: (context, index) {
-                        final module = modules[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              border: Border.all(color: Colors.black, width: 2),
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(3, 3))],
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          module['title'] ?? 'Untitled',
-                                          style: GoogleFonts.montserrat(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        if (module['description'] != null)
-                                          Text(
-                                            module['description'],
-                                            style: GoogleFonts.montserrat(fontSize: 12, color: Colors.grey),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.delete, color: Colors.red),
-                                    onPressed: () => _deleteModule(
-                                      _selectedCourseId!,
-                                      module['id'],
-                                      module['title'] ?? 'Module',
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      },
+                    return Column(
+                      children: [
+                        AdminSearchBar(
+                          hint: 'Search modules...',
+                          value: _searchQuery,
+                          onChanged: (value) {
+                            setState(() => _searchQuery = value);
+                          },
+                        ),
+                        Expanded(
+                          child: filteredModules.isEmpty
+                              ? AdminEmptyState(
+                                  title: 'No Results',
+                                  subtitle: 'Try searching with different keywords',
+                                  icon: Icons.search_rounded,
+                                )
+                              : ListView.builder(
+                                  padding: const EdgeInsets.all(16),
+                                  itemCount: filteredModules.length,
+                                  itemBuilder: (context, index) {
+                                    final module = filteredModules[index];
+                                    return AdminListItem(
+                                      title: module['title'] ?? 'Untitled',
+                                      subtitle: module['description'] ?? 'No description',
+                                      badge: '${index + 1}/${filteredModules.length}',
+                                      accentColor: const Color(0xFFFFBC1F),
+                                      onDelete: () => _deleteModule(
+                                        _selectedCourseId!,
+                                        module['id'],
+                                        module['title'] ?? 'Module',
+                                      ),
+                                    );
+                                  },
+                                ),
+                        ),
+                      ],
                     );
                   },
                 ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/firestore_service.dart';
 import '../models/course.dart';
+import '../widgets/admin_widgets.dart';
 
 class ManageCoursesScreen extends StatefulWidget {
   const ManageCoursesScreen({super.key});
@@ -12,47 +13,37 @@ class ManageCoursesScreen extends StatefulWidget {
 
 class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
   static const Color darkBorder = Color(0xFF1A1C1E);
+  String _searchQuery = '';
 
   Future<void> _deleteCourse(String courseId, String courseName) async {
-    final confirmed = await showDialog<bool>(
+    showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Course'),
-        content: Text('Are you sure you want to delete "$courseName"?\nThis will also delete all modules and questions.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
+      builder: (context) => AdminDeleteDialog(
+        title: 'Delete Course',
+        content: 'Are you sure you want to delete "$courseName"?\nThis will also delete all modules and questions.',
+        onConfirm: () async {
+          try {
+            await FirestoreService().deleteCourse(courseId);
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Course "$courseName" deleted successfully'),
+                backgroundColor: Colors.green,
+              ),
+            );
+            setState(() {});
+          } catch (e) {
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Failed to delete course'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
       ),
     );
-
-    if (confirmed != true) return;
-
-    try {
-      await FirestoreService().deleteCourse(courseId);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Course "$courseName" deleted successfully'),
-          backgroundColor: Colors.green,
-        ),
-      );
-      setState(() {});
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to delete course'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
   }
 
   @override
@@ -91,60 +82,52 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
           }
 
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No courses found'));
+            return AdminEmptyState(
+              title: 'No Courses Found',
+              subtitle: 'Create your first course to get started',
+              icon: Icons.library_add_rounded,
+            );
           }
 
-          final courses = snapshot.data!;
+          final allCourses = snapshot.data!;
+          final filteredCourses = allCourses
+              .where((course) =>
+                  course.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                  (course.description?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false))
+              .toList();
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: courses.length,
-            itemBuilder: (context, index) {
-              final course = courses[index];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border.all(color: Colors.black, width: 2),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(3, 3))],
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                course.title,
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              if (course.description != null)
-                                Text(
-                                  course.description!,
-                                  style: GoogleFonts.montserrat(fontSize: 12, color: Colors.grey),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => _deleteCourse(course.id, course.title),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
+          return Column(
+            children: [
+              AdminSearchBar(
+                hint: 'Search courses...',
+                value: _searchQuery,
+                onChanged: (value) {
+                  setState(() => _searchQuery = value);
+                },
+              ),
+              Expanded(
+                child: filteredCourses.isEmpty
+                    ? AdminEmptyState(
+                        title: 'No Results',
+                        subtitle: 'Try searching with different keywords',
+                        icon: Icons.search_rounded,
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: filteredCourses.length,
+                        itemBuilder: (context, index) {
+                          final course = filteredCourses[index];
+                          return AdminListItem(
+                            title: course.title,
+                            subtitle: course.description ?? 'No description',
+                            badge: '${allCourses.indexOf(course) + 1}/${allCourses.length}',
+                            accentColor: const Color(0xFF00CBA9),
+                            onDelete: () => _deleteCourse(course.id, course.title),
+                          );
+                        },
+                      ),
+              ),
+            ],
           );
         },
       ),

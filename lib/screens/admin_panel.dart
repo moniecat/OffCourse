@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/menu_drawer.dart';
+import '../widgets/admin_widgets.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
 import 'add_course_screen.dart';
@@ -44,6 +45,27 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         });
       }
     } catch (_) {}
+  }
+
+  Future<Map<String, int>> _loadStats() async {
+    try {
+      final courses = await FirestoreService().getCourses();
+      int moduleCount = 0;
+      int questionCount = 0;
+
+      for (var course in courses) {
+        final modules = await FirestoreService().getModules(course.id);
+        moduleCount += modules.length;
+      }
+
+      return {
+        'courses': courses.length,
+        'modules': moduleCount,
+        'questions': questionCount,
+      };
+    } catch (e) {
+      return {'courses': 0, 'modules': 0, 'questions': 0};
+    }
   }
 
   void _openDrawer(BuildContext context) {
@@ -99,124 +121,186 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        children: [
-          // Header using your Montserrat style
-          Text(
-            'Admin\nPanel',
-            style: GoogleFonts.montserrat(
-              fontSize: 48,
-              fontWeight: FontWeight.w900,
-              height: 1.0,
-              letterSpacing: -1.5,
-              color: darkBorder,
-            ),
-          ),
-          const SizedBox(height: 30),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isSmallScreen = constraints.maxWidth < 400;
+          
+          return ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            children: [
+              // Header
+              Text(
+                'Admin\nPanel',
+                style: GoogleFonts.montserrat(
+                  fontSize: isSmallScreen ? 36 : 48,
+                  fontWeight: FontWeight.w900,
+                  height: 1.0,
+                  letterSpacing: -1.5,
+                  color: darkBorder,
+                ),
+              ),
+              const SizedBox(height: 24),
 
-          // Section Label
-          Text(
-            'CONTENT MANAGEMENT',
-            style: GoogleFonts.montserrat(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: Colors.black,
-              letterSpacing: 1.5,
-            ),
-          ),
-          const SizedBox(height: 12),
+              // Stats Section
+              Text(
+                'OVERVIEW',
+                style: GoogleFonts.montserrat(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.black,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              const SizedBox(height: 12),
 
-          Text(
-            'Create courses, modules and questions for the learning experience.',
-            style: GoogleFonts.montserrat(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-              color: Colors.black54,
-              height: 1.5,
-            ),
-          ),
-          const SizedBox(height: 32),
+              // Stats Cards Grid
+              FutureBuilder<Map<String, int>>(
+                future: _loadStats(),
+                builder: (context, snapshot) {
+                  final stats = snapshot.data ?? {'courses': 0, 'modules': 0, 'questions': 0};
+                  return GridView.count(
+                    crossAxisCount: 3,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    mainAxisSpacing: 8,
+                    crossAxisSpacing: 8,
+                    childAspectRatio: 1.4,
+                    children: [
+                      AdminStatCard(
+                        title: 'Courses',
+                        value: stats['courses'].toString(),
+                        icon: Icons.library_books_rounded,
+                        color: const Color(0xFF00CBA9),
+                      ),
+                      AdminStatCard(
+                        title: 'Modules',
+                        value: stats['modules'].toString(),
+                        icon: Icons.layers_rounded,
+                        color: const Color(0xFFFFBC1F),
+                      ),
+                      AdminStatCard(
+                        title: 'Questions',
+                        value: stats['questions'].toString(),
+                        icon: Icons.quiz_rounded,
+                        color: const Color(0xFF00CBA9),
+                      ),
+                    ],
+                  );
+                },
+              ),
+              const SizedBox(height: 40),
 
-          // Action Buttons
-          _AdminButton(
-            label: 'Add Course',
-            icon: Icons.library_add_rounded,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const AddCourseScreen()),
-            ),
-          ),
-          const SizedBox(height: 20),
-          _AdminButton(
-            label: 'Add Module',
-            icon: Icons.post_add_rounded,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const AddModuleScreen()),
-            ),
-          ),
-          const SizedBox(height: 20),
-          _AdminButton(
-            label: 'Add Question',
-            icon: Icons.quiz_rounded,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const AddQuestionScreen()),
-            ),
-          ),
-          const SizedBox(height: 48),
+              // Section Label
+              Text(
+                'CONTENT MANAGEMENT',
+                style: GoogleFonts.montserrat(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.black,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              const SizedBox(height: 12),
 
-          // Section Label for Management
-          Text(
-            'DELETE CONTENT',
-            style: GoogleFonts.montserrat(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: Colors.black,
-              letterSpacing: 1.5,
-            ),
-          ),
-          const SizedBox(height: 12),
+              Text(
+                'Create courses, modules and questions for the learning experience.',
+                style: GoogleFonts.montserrat(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black54,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 32),
 
-          Text(
-            'Delete existing courses, modules and questions.',
-            style: GoogleFonts.montserrat(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-              color: Colors.black54,
-              height: 1.5,
-            ),
-          ),
-          const SizedBox(height: 32),
+              // Action Buttons
+              _AdminButton(
+                label: 'Add Course',
+                icon: Icons.library_add_rounded,
+                color: const Color(0xFF00CBA9),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AddCourseScreen()),
+                ),
+              ),
+              const SizedBox(height: 20),
+              _AdminButton(
+                label: 'Add Module',
+                icon: Icons.post_add_rounded,
+                color: const Color(0xFFFFBC1F),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AddModuleScreen()),
+                ),
+              ),
+              const SizedBox(height: 20),
+              _AdminButton(
+                label: 'Add Question',
+                icon: Icons.quiz_rounded,
+                color: const Color(0xFF00CBA9),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AddQuestionScreen()),
+                ),
+              ),
+              const SizedBox(height: 48),
 
-          _AdminButton(
-            label: 'Delete Course',
-            icon: Icons.delete_rounded,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ManageCoursesScreen()),
-            ),
-          ),
-          const SizedBox(height: 20),
-          _AdminButton(
-            label: 'Delete Module',
-            icon: Icons.delete_outline_rounded,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ManageModulesScreen()),
-            ),
-          ),
-          const SizedBox(height: 20),
-          _AdminButton(
-            label: 'Delete Question',
-            icon: Icons.remove_circle_outline_rounded,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ManageQuestionsScreen()),
-            ),
-          ),
-        ],
+              // Section Label for Management
+              Text(
+                'MANAGE CONTENT',
+                style: GoogleFonts.montserrat(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.black,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              Text(
+                'Edit or delete existing courses, modules and questions.',
+                style: GoogleFonts.montserrat(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black54,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 32),
+
+              _AdminButton(
+                label: 'Manage Courses',
+                icon: Icons.folder_open_rounded,
+                color: const Color(0xFF00CBA9),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ManageCoursesScreen()),
+                ),
+              ),
+              const SizedBox(height: 20),
+              _AdminButton(
+                label: 'Manage Modules',
+                icon: Icons.edit_rounded,
+                color: const Color(0xFFFFBC1F),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ManageModulesScreen()),
+                ),
+              ),
+              const SizedBox(height: 20),
+              _AdminButton(
+                label: 'Manage Questions',
+                icon: Icons.help_outline_rounded,
+                color: const Color(0xFF00CBA9),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ManageQuestionsScreen()),
+                ),
+              ),
+              const SizedBox(height: 32),
+            ],
+          );
+        },
       ),
     );
   }
@@ -226,11 +310,13 @@ class _AdminButton extends StatelessWidget {
   final String label;
   final IconData icon;
   final VoidCallback onTap;
+  final Color color;
 
   const _AdminButton({
     required this.label,
     required this.icon,
     required this.onTap,
+    required this.color,
   });
 
   @override
@@ -254,11 +340,11 @@ class _AdminButton extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF0F0F0),
+                  color: color.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.black, width: 2),
+                  border: Border.all(color: color, width: 2),
                 ),
-                child: Icon(icon, color: Colors.black, size: 24),
+                child: Icon(icon, color: color, size: 24),
               ),
               const SizedBox(width: 20),
               Text(
@@ -270,7 +356,7 @@ class _AdminButton extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              const Icon(Icons.arrow_forward_ios_rounded, size: 18),
+              Icon(Icons.arrow_forward_ios_rounded, size: 18, color: color),
             ],
           ),
         ),

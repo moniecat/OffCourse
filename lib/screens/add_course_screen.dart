@@ -156,20 +156,20 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
               child: Container(
                 height: 70,
                 decoration: BoxDecoration(
-                  color: darkBorder,
+                  color: Theme.of(context).colorScheme.primary,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.black, width: 3),
-                  boxShadow: const [
-                    BoxShadow(color: Colors.black, offset: Offset(4, 4)),
+                  border: Border.all(color: Theme.of(context).colorScheme.onSurface, width: 3),
+                  boxShadow: [
+                    BoxShadow(color: Theme.of(context).colorScheme.onSurface, offset: const Offset(4, 4)),
                   ],
                 ),
                 child: Center(
                   child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
+                      ? CircularProgressIndicator(color: Theme.of(context).colorScheme.onPrimary)
                       : Text(
                           'SAVE COURSE',
                           style: GoogleFonts.montserrat(
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.onPrimary,
                             fontSize: 18,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 1.2,
