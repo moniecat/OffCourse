@@ -13,6 +13,7 @@ class ModuleCard extends StatefulWidget {
   final String courseId;
   final String moduleId; // 👈 new
   final String courseName; // 👈 new
+  final int courseIndex;
 
   const ModuleCard({
     super.key,
@@ -21,6 +22,7 @@ class ModuleCard extends StatefulWidget {
     required this.courseId,
     required this.moduleId, // 👈 new
     required this.courseName, // 👈 new
+    required this.courseIndex,
   });
 
   @override
@@ -64,8 +66,25 @@ class _ModuleCardState extends State<ModuleCard> {
     final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     
     return GestureDetector(
+      // onTap: () async {
+      //   final refreshed = await Navigator.push<bool>(
+      //     context,
+      //     MaterialPageRoute(
+      //       builder: (_) => ModuleOneScreen(
+      //         moduleName: widget.title,
+      //         courseId: widget.courseId,
+      //         courseName: widget.courseName,
+      //         moduleId: widget.moduleId,
+      //       ),
+      //     ),
+      //   );
+
+      //   if (mounted && refreshed == true) {
+      //     _loadStats();
+      //   }
+      // },
       onTap: () async {
-        final refreshed = await Navigator.push<bool>(
+        await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => ModuleOneScreen(
@@ -73,13 +92,11 @@ class _ModuleCardState extends State<ModuleCard> {
               courseId: widget.courseId,
               courseName: widget.courseName,
               moduleId: widget.moduleId,
+              courseIndex: widget.courseIndex,
             ),
           ),
         );
-
-        if (mounted && refreshed == true) {
-          _loadStats();
-        }
+        if (mounted) _loadStats();
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: shadowOffset + 5),

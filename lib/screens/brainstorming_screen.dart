@@ -10,12 +10,14 @@ class BrainstormingScreen extends StatefulWidget {
   final String moduleName;
   final String courseId; 
   final String moduleId;
+  final int courseIndex;
 
   const BrainstormingScreen({
     super.key,
     required this.moduleName,
     required this.courseId,
     required this.moduleId,
+    required this.courseIndex,
   });
 
   @override
@@ -87,7 +89,12 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => ResultScreen(score: _score, total: _questions.length),
+          builder: (_) => ResultScreen(
+            score:    _score,
+            total:    _questions.length,
+            courseId: widget.courseId, 
+            courseIndex: widget.courseIndex, 
+          ),
         ),
       );
     }

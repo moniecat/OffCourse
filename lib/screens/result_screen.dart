@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'home.dart';
+
 
 class ResultScreen extends StatelessWidget {
   final int score;
   final int total;
+  final String courseId;
+  final int courseIndex;
 
   const ResultScreen({
     super.key,
     required this.score,
     required this.total,
+    required this.courseId,
+    required this.courseIndex,
   });
 
   @override
@@ -160,7 +166,15 @@ class ResultScreen extends StatelessWidget {
 
                   // Back Button (Neo-brutalist Yellow Button)
                   GestureDetector(
-                    onTap: () => Navigator.pop(context, true),
+                    // onTap: () => Navigator.pop(context, true),
+                    onTap: () {
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(
+                          builder: (_) => HomeScreen(initialCourseIndex: courseIndex), // 👈
+                        ),
+                        (route) => false,
+                      );
+                    },
                     child: Container(
                       width: double.infinity,
                       height: 65,

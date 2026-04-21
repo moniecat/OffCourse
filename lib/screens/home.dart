@@ -10,7 +10,8 @@ import '../services/firestore_service.dart';
 import '../models/course.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final int initialCourseIndex; 
+  const HomeScreen({super.key, this.initialCourseIndex = 0});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -19,8 +20,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   // Styling Constants for consistency
   static const double borderWidth = 3.0;
+  late int _selectedIndex;
 
-  int _selectedIndex = 0;
   String _displayName = 'User';
   String _userRole = 'student';
 
@@ -35,6 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _selectedIndex = widget.initialCourseIndex;
     _loadUserName();
     _loadCourses();
   }
@@ -248,6 +250,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     courseId: _courses[_selectedIndex].id,
                                     moduleId: _modules[index]['id'] as String,
                                     courseName: _courses[_selectedIndex].title,
+                                    courseIndex: _selectedIndex,
                                   );
                                 },
                               ),

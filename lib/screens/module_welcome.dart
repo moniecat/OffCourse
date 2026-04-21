@@ -9,6 +9,7 @@ class ModuleOneScreen extends StatefulWidget {
   final String courseId;
   final String courseName;
   final String moduleId;
+  final int courseIndex;
 
   const ModuleOneScreen({
     super.key,
@@ -16,6 +17,7 @@ class ModuleOneScreen extends StatefulWidget {
     required this.courseId,
     required this.courseName,
     required this.moduleId,
+    required this.courseIndex,
   });
 
   @override
@@ -194,6 +196,7 @@ class _ModuleOneScreenState extends State<ModuleOneScreen> {
                         moduleName: widget.moduleName,
                         courseId: widget.courseId,
                         moduleId: widget.moduleId,
+                        courseIndex: widget.courseIndex,
                       ),
                     ),
                   );
