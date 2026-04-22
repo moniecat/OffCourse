@@ -19,11 +19,9 @@ class AdminPanelScreen extends StatefulWidget {
 }
 
 class _AdminPanelScreenState extends State<AdminPanelScreen> {
-  // Styling Constants
   static const Color darkBorder = Color(0xFF1A1C1E);
   static const double borderWidth = 3.0;
 
-  // Role logic
   String _userRole = 'student';
   bool get _isAdmin => _userRole == 'admin';
 
@@ -45,27 +43,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         });
       }
     } catch (_) {}
-  }
-
-  Future<Map<String, int>> _loadStats() async {
-    try {
-      final courses = await FirestoreService().getCourses();
-      int moduleCount = 0;
-      int questionCount = 0;
-
-      for (var course in courses) {
-        final modules = await FirestoreService().getModules(course.id);
-        moduleCount += modules.length;
-      }
-
-      return {
-        'courses': courses.length,
-        'modules': moduleCount,
-        'questions': questionCount,
-      };
-    } catch (e) {
-      return {'courses': 0, 'modules': 0, 'questions': 0};
-    }
   }
 
   void _openDrawer(BuildContext context) {
@@ -124,7 +101,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       body: LayoutBuilder(
         builder: (context, constraints) {
           final isSmallScreen = constraints.maxWidth < 400;
-          
           return ListView(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             children: [
@@ -153,10 +129,16 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
               ),
               const SizedBox(height: 12),
 
-              // Stats Cards Grid
-              FutureBuilder<Map<String, int>>(
-                future: _loadStats(),
+              // Real‑time stats using StreamBuilder
+              StreamBuilder<Map<String, int>>(
+                stream: FirestoreService().watchStats(),
                 builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  }
                   final stats = snapshot.data ?? {'courses': 0, 'modules': 0, 'questions': 0};
                   return GridView.count(
                     crossAxisCount: 3,
@@ -190,7 +172,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
               ),
               const SizedBox(height: 40),
 
-              // Section Label
+              // Content Management Section
               Text(
                 'CONTENT MANAGEMENT',
                 style: GoogleFonts.montserrat(
@@ -213,7 +195,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
               ),
               const SizedBox(height: 32),
 
-              // Action Buttons
               _AdminButton(
                 label: 'Add Course',
                 icon: Icons.library_add_rounded,
@@ -245,7 +226,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
               ),
               const SizedBox(height: 48),
 
-              // Section Label for Management
+              // Manage Content Section
               Text(
                 'MANAGE CONTENT',
                 style: GoogleFonts.montserrat(

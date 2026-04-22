@@ -66,14 +66,6 @@ class FirestoreService {
         .toList();
   }
 
-  Future<Course?> getCourse(String courseId) async {
-    final doc = await db.collection('courses').doc(courseId).get();
-    if (doc.exists) {
-      return Course.fromMap(doc.id, doc.data()!);
-    }
-    return null;
-  }
-
   Stream<List<Course>> watchCourses() {
     return db
         .collection('courses')
@@ -82,6 +74,14 @@ class FirestoreService {
         .map((snap) => snap.docs
             .map((doc) => Course.fromMap(doc.id, doc.data()))
             .toList());
+  }
+
+  Future<Course?> getCourse(String courseId) async {
+    final doc = await db.collection('courses').doc(courseId).get();
+    if (doc.exists) {
+      return Course.fromMap(doc.id, doc.data()!);
+    }
+    return null;
   }
 
   // --- MODULES ---
@@ -112,6 +112,20 @@ class FirestoreService {
         .map((doc) => {'id': doc.id, ...doc.data()})
         .toList();
   }
+
+  Stream<List<Map<String, dynamic>>> watchModules(String courseId) {
+    return db
+        .collection('courses')
+        .doc(courseId)
+        .collection('modules')
+        .orderBy('order')
+        .snapshots()
+        .map((snap) => snap.docs
+            .map((doc) => {'id': doc.id, ...doc.data()})
+            .toList());
+  }
+
+  // --- QUESTIONS ---
 
   Future<void> addQuestion({
     required String courseId,
@@ -144,10 +158,49 @@ class FirestoreService {
     });
   }
 
+  /// Stream that emits real‑time stats: number of courses, modules, and questions.
+  Stream<Map<String, int>> watchStats() async* {
+    // Listen to courses collection changes
+    await for (final coursesSnapshot in db.collection('courses').snapshots()) {
+      int courseCount = coursesSnapshot.docs.length;
+      int moduleCount = 0;
+      int questionCount = 0;
+
+      // For each course, fetch its modules and questions
+      for (final courseDoc in coursesSnapshot.docs) {
+        final courseId = courseDoc.id;
+        // Get modules of this course
+        final modulesSnapshot = await db
+            .collection('courses')
+            .doc(courseId)
+            .collection('modules')
+            .get();
+        moduleCount += modulesSnapshot.docs.length;
+
+        // For each module, count questions
+        for (final moduleDoc in modulesSnapshot.docs) {
+          final questionsSnapshot = await db
+              .collection('courses')
+              .doc(courseId)
+              .collection('modules')
+              .doc(moduleDoc.id)
+              .collection('questions')
+              .get();
+          questionCount += questionsSnapshot.docs.length;
+        }
+      }
+
+      yield {
+        'courses': courseCount,
+        'modules': moduleCount,
+        'questions': questionCount,
+      };
+    }
+  }
+
   // --- DELETE METHODS ---
 
   Future<void> deleteCourse(String courseId) async {
-    // Delete all modules and their questions first
     final modulesSnapshot = await db
         .collection('courses')
         .doc(courseId)
@@ -158,12 +211,10 @@ class FirestoreService {
       await deleteModule(courseId, moduleDoc.id);
     }
 
-    // Delete the course
     await db.collection('courses').doc(courseId).delete();
   }
 
   Future<void> deleteModule(String courseId, String moduleId) async {
-    // Delete all questions in the module first
     final questionsSnapshot = await db
         .collection('courses')
         .doc(courseId)
@@ -176,7 +227,6 @@ class FirestoreService {
       await deleteQuestion(courseId, moduleId, questionDoc.id);
     }
 
-    // Delete the module
     await db
         .collection('courses')
         .doc(courseId)
