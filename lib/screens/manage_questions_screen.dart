@@ -18,35 +18,67 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
   String? _selectedModuleId;
   String _searchQuery = '';
 
-  // Helper to delete questions
   Future<void> _deleteQuestion(String courseId, String moduleId, String questionId) async {
     final messenger = ScaffoldMessenger.of(context);
-
     showDialog(
       context: context,
       builder: (context) => AdminDeleteDialog(
         title: 'Delete Question',
-        content: 'Are you sure you want to delete this question? This action cannot be undone.',
+        content: 'Are you sure you want to delete this question?',
         onConfirm: () async {
           try {
             await FirestoreService().deleteQuestion(courseId, moduleId, questionId);
-            messenger.showSnackBar(
-              const SnackBar(
-                content: Text('Question deleted successfully'),
-                backgroundColor: Colors.green,
-              ),
-            );
-            // Refresh the UI
+            messenger.showSnackBar(const SnackBar(content: Text('Question deleted'), backgroundColor: Colors.green));
             setState(() {});
           } catch (e) {
-            messenger.showSnackBar(
-              const SnackBar(
-                content: Text('Failed to delete question'),
-                backgroundColor: Colors.red,
-              ),
-            );
+            messenger.showSnackBar(const SnackBar(content: Text('Failed to delete'), backgroundColor: Colors.red));
           }
         },
+      ),
+    );
+  }
+
+  Widget _buildBackButton() {
+    return GestureDetector(
+      onTap: () => Navigator.pop(context),
+      child: Container(
+        width: 45,
+        height: 45,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: Colors.black, width: 2.5),
+          boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
+        ),
+        child: const Icon(Icons.arrow_back, color: Colors.black, size: 26),
+      ),
+    );
+  }
+
+  Widget _buildLabel(String text) {
+    return Text(
+      text,
+      style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 1.2),
+    );
+  }
+
+  Widget _buildNeoDropdown<T>({required T? value, required List<DropdownMenuItem<T>> items, required ValueChanged<T?> onChanged}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.black, width: 2.5),
+        boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<T>(
+          value: value,
+          isExpanded: true,
+          icon: const Icon(Icons.keyboard_arrow_down, color: Colors.black),
+          style: GoogleFonts.montserrat(color: Colors.black, fontWeight: FontWeight.w700, fontSize: 16),
+          items: items,
+          onChanged: onChanged,
+        ),
       ),
     );
   }
@@ -58,24 +90,12 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: Container(
-            margin: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(color: Colors.black, width: 2.5),
-              boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(3, 3))],
-            ),
-            child: const Icon(Icons.arrow_back, color: Colors.black),
-          ),
-        ),
-        title: Text(
-          'Manage Questions',
-          style: GoogleFonts.montserrat(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: darkBorder,
+        toolbarHeight: 90,
+        automaticallyImplyLeading: false,
+        flexibleSpace: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.only(left: 24, top: 12),
+            child: Row(children: [_buildBackButton()]),
           ),
         ),
       ),
@@ -83,95 +103,110 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
         future: FirestoreService().getCourses(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator(color: darkBorder));
           }
 
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return AdminEmptyState(
-              title: 'No Courses Found',
-              subtitle: 'Create a course first to add questions',
-              icon: Icons.library_add_rounded,
-            );
-          }
-
-          final courses = snapshot.data!;
-          // Set initial course if none is selected
+          final courses = snapshot.data ?? [];
+          if (courses.isEmpty) return const Center(child: Text("No courses found"));
           _selectedCourseId ??= courses.first.id;
 
           return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // 1. COURSE DROPDOWN
-              AdminDropdown<String>(
-                label: 'SELECT COURSE',
-                hint: 'Choose a course',
-                value: _selectedCourseId,
-                items: courses.map((course) {
-                  return DropdownMenuItem(
-                    value: course.id,
-                    child: Text(course.title),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedCourseId = value;
-                    _selectedModuleId = null; // Reset module so logic below picks the first one
-                    _searchQuery = '';
-                  });
-                },
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Text(
+                  'Manage\nQuestions',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 48,
+                    fontWeight: FontWeight.w900,
+                    height: 1.0,
+                    letterSpacing: -1.5,
+                    color: darkBorder,
+                  ),
+                ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 24),
 
-              // 2. MODULE DROPDOWN & QUESTION LIST
+              // COURSE SELECTOR
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildLabel('SELECT COURSE'),
+                    const SizedBox(height: 10),
+                    _buildNeoDropdown<String>(
+                      value: _selectedCourseId,
+                      items: courses.map((c) => DropdownMenuItem(value: c.id, child: Text(c.title.toUpperCase()))).toList(),
+                      onChanged: (val) => setState(() {
+                        _selectedCourseId = val;
+                        _selectedModuleId = null;
+                      }),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // MODULE SELECTOR & LIST
               Expanded(
                 child: FutureBuilder<List<Map<String, dynamic>>>(
-                  // Using a unique key ensures this reloads completely when the course changes
                   key: ValueKey(_selectedCourseId),
                   future: FirestoreService().getModules(_selectedCourseId!),
-                  builder: (context, moduleSnapshot) {
-                    if (moduleSnapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
+                  builder: (context, modSnap) {
+                    if (modSnap.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+                    
+                    final modules = modSnap.data ?? [];
+                    if (modules.isEmpty) return const Center(child: Text("No modules in this course"));
 
-                    final modules = moduleSnapshot.data ?? [];
-                    if (modules.isEmpty) {
-                      return AdminEmptyState(
-                        title: 'No Modules Found',
-                        subtitle: 'Add modules to this course first',
-                        icon: Icons.layers_outlined,
-                      );
-                    }
-
-                    // Handle Module ID validation/selection
-                    bool currentIdIsValid = modules.any((m) => m['id'] == _selectedModuleId);
-                    if (!currentIdIsValid) {
-                      _selectedModuleId = modules.first['id'];
-                    }
+                    _selectedModuleId ??= modules.first['id'];
 
                     return Column(
                       children: [
-                        AdminDropdown<String>(
-                          label: 'SELECT MODULE',
-                          hint: 'Choose a module',
-                          value: _selectedModuleId,
-                          items: modules.map<DropdownMenuItem<String>>((module) {
-                            return DropdownMenuItem<String>(
-                              value: module['id'] as String,
-                              child: Text(module['title'] ?? 'Untitled'),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            setState(() {
-                              _selectedModuleId = value;
-                              _searchQuery = '';
-                            });
-                          },
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildLabel('SELECT MODULE'),
+                              const SizedBox(height: 10),
+                              _buildNeoDropdown<String>(
+                                value: _selectedModuleId,
+                                items: modules.map((m) => DropdownMenuItem(value: m['id'] as String, child: Text(m['title'].toString().toUpperCase()))).toList(),
+                                onChanged: (val) => setState(() => _selectedModuleId = val),
+                              ),
+                            ],
+                          ),
                         ),
-                        const SizedBox(height: 12),
-                        
-                        // 3. QUESTIONS LIST
-                        Expanded(
-                          child: _buildQuestionsList(),
+                        const SizedBox(height: 20),
+
+                        // SEARCH BAR
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: darkBorder, width: 2.5),
+                              boxShadow: const [BoxShadow(color: darkBorder, offset: Offset(4, 4))],
+                            ),
+                            child: TextField(
+                              onChanged: (val) => setState(() => _searchQuery = val),
+                              style: GoogleFonts.montserrat(fontWeight: FontWeight.w700),
+                              decoration: InputDecoration(
+                                hintText: 'Search questions...',
+                                prefixIcon: const Icon(Icons.search, color: darkBorder),
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.all(20),
+                              ),
+                            ),
+                          ),
                         ),
+                        const SizedBox(height: 20),
+
+                        // QUESTIONS LIST
+                        Expanded(child: _buildQuestionsList()),
                       ],
                     );
                   },
@@ -186,7 +221,6 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
 
   Widget _buildQuestionsList() {
     return FutureBuilder<List<Map<String, dynamic>>>(
-      // Key is essential: it tells Flutter to restart this Future when IDs change
       key: ValueKey('$_selectedCourseId-$_selectedModuleId'),
       future: FirebaseFirestore.instance
           .collection('courses')
@@ -197,61 +231,36 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
           .get()
           .then((snap) => snap.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList()),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
+        if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
 
-        final allQuestions = snapshot.data ?? [];
-        if (allQuestions.isEmpty) {
-          return AdminEmptyState(
-            title: 'No Questions Found',
-            subtitle: 'Add your first question to this module',
-            icon: Icons.quiz_outlined,
-          );
-        }
+        final questions = snapshot.data?.where((q) =>
+          (q['question'] ?? '').toLowerCase().contains(_searchQuery.toLowerCase())
+        ).toList() ?? [];
 
-        final filteredQuestions = allQuestions
-            .where((question) =>
-                (question['question'] ?? '').toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                (question['correctAnswer'] ?? '').toLowerCase().contains(_searchQuery.toLowerCase()))
-            .toList();
-
-        return Column(
-          children: [
-            AdminSearchBar(
-              hint: 'Search questions...',
-              value: _searchQuery,
-              onChanged: (value) {
-                setState(() => _searchQuery = value);
-              },
-            ),
-            Expanded(
-              child: filteredQuestions.isEmpty
-                  ? AdminEmptyState(
-                      title: 'No Results',
-                      subtitle: 'Try searching with different keywords',
-                      icon: Icons.search_rounded,
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: filteredQuestions.length,
-                      itemBuilder: (context, index) {
-                        final question = filteredQuestions[index];
-                        return AdminListItem(
-                          title: question['question'] ?? 'Untitled',
-                          subtitle: 'Answer: ${question['correctAnswer'] ?? 'N/A'}',
-                          badge: '${index + 1}/${filteredQuestions.length}',
-                          accentColor: const Color(0xFF00CBA9),
-                          onDelete: () => _deleteQuestion(
-                            _selectedCourseId!,
-                            _selectedModuleId!,
-                            question['id'],
-                          ),
-                        );
-                      },
-                    ),
-            ),
-          ],
+        return ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          itemCount: questions.length,
+          itemBuilder: (context, index) {
+            final q = questions[index];
+            return Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: darkBorder, width: 2.5),
+                boxShadow: const [BoxShadow(color: darkBorder, offset: Offset(4, 4))],
+              ),
+              child: ListTile(
+                contentPadding: const EdgeInsets.all(16),
+                title: Text(q['question'] ?? 'UNTITLED', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900)),
+                subtitle: Text('Correct: ${q['correctAnswer']}', style: GoogleFonts.montserrat(fontWeight: FontWeight.w600, color: Colors.green[700])),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                  onPressed: () => _deleteQuestion(_selectedCourseId!, _selectedModuleId!, q['id']),
+                ),
+              ),
+            );
+          },
         );
       },
     );
