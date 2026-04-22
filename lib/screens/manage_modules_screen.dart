@@ -17,6 +17,9 @@ class _ManageModulesScreenState extends State<ManageModulesScreen> {
   String _searchQuery = '';
 
   Future<void> _deleteModule(String courseId, String moduleId, String moduleName) async {
+    // Capture the messenger reference before the async operation
+    final messenger = ScaffoldMessenger.of(context);
+
     showDialog(
       context: context,
       builder: (context) => AdminDeleteDialog(
@@ -25,8 +28,10 @@ class _ManageModulesScreenState extends State<ManageModulesScreen> {
         onConfirm: () async {
           try {
             await FirestoreService().deleteModule(courseId, moduleId);
+            
             if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
+
+            messenger.showSnackBar(
               SnackBar(
                 content: Text('Module "$moduleName" deleted successfully'),
                 backgroundColor: Colors.green,
@@ -35,7 +40,8 @@ class _ManageModulesScreenState extends State<ManageModulesScreen> {
             setState(() {});
           } catch (e) {
             if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
+
+            messenger.showSnackBar(
               const SnackBar(
                 content: Text('Failed to delete module'),
                 backgroundColor: Colors.red,

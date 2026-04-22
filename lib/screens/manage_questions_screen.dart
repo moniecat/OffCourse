@@ -20,6 +20,9 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
   String _searchQuery = '';
 
   Future<void> _deleteQuestion(String courseId, String moduleId, String questionId) async {
+    // Capture messenger state before the async gap to avoid lint errors
+    final messenger = ScaffoldMessenger.of(context);
+
     showDialog(
       context: context,
       builder: (context) => AdminDeleteDialog(
@@ -28,8 +31,10 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
         onConfirm: () async {
           try {
             await FirestoreService().deleteQuestion(courseId, moduleId, questionId);
+            
             if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
+
+            messenger.showSnackBar(
               const SnackBar(
                 content: Text('Question deleted successfully'),
                 backgroundColor: Colors.green,
@@ -38,7 +43,8 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
             setState(() {});
           } catch (e) {
             if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
+
+            messenger.showSnackBar(
               const SnackBar(
                 content: Text('Failed to delete question'),
                 backgroundColor: Colors.red,
@@ -118,7 +124,9 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
               ),
               const SizedBox(height: 12),
               FutureBuilder<List<Map<String, dynamic>>>(
-                future: _selectedCourseId != null ? FirestoreService().getModules(_selectedCourseId!) : Future.value([]),
+                future: _selectedCourseId != null 
+                    ? FirestoreService().getModules(_selectedCourseId!) 
+                    : Future.value([]),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData || snapshot.data!.isEmpty) {
                     return Padding(
