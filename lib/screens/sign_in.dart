@@ -17,7 +17,10 @@ class _SignInScreenState extends State<SignInScreen> {
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  
   bool _isLoading = false;
+  String? _errorMessage;
+  bool _suggestSignUp = false; // Flag for "Account not found"
 
   @override
   void dispose() {
@@ -26,16 +29,33 @@ class _SignInScreenState extends State<SignInScreen> {
     super.dispose();
   }
 
+  // Clears errors when the user starts typing again
+  void _onTextChanged() {
+    if (_errorMessage != null || _suggestSignUp) {
+      setState(() {
+        _errorMessage = null;
+        _suggestSignUp = false;
+      });
+    }
+  }
+
   Future<void> _handleSignIn() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      _showSnack('Please enter email and password');
+      setState(() {
+        _errorMessage = 'Please enter both email and password';
+        _suggestSignUp = false;
+      });
       return;
     }
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+      _suggestSignUp = false;
+    });
 
     try {
       final user = await _auth.signIn(email, password);
@@ -49,12 +69,16 @@ class _SignInScreenState extends State<SignInScreen> {
       }
     } on FirebaseAuthException catch (e) {
       String message;
+      bool suggest = false;
+
       switch (e.code) {
         case 'user-not-found':
-          message = 'No account found for that email.';
+          message = 'No account exists for this email.';
+          suggest = true;
           break;
         case 'wrong-password':
         case 'invalid-credential':
+          // invalid-credential is the default for new Firebase security rules
           message = 'Incorrect email or password.';
           break;
         case 'user-disabled':
@@ -63,23 +87,24 @@ class _SignInScreenState extends State<SignInScreen> {
         case 'too-many-requests':
           message = 'Too many attempts. Try again later.';
           break;
+        case 'invalid-email':
+          message = 'The email address is not valid.';
+          break;
         default:
-          message = 'Sign in failed: ${e.message}';
+          message = 'Login failed. Please try again.';
       }
-      if (!mounted) return;
-      _showSnack(message);
+      
+      if (mounted) {
+        setState(() {
+          _errorMessage = message;
+          _suggestSignUp = suggest;
+        });
+      }
     } catch (e) {
-      if (!mounted) return;
-      _showSnack('An unexpected error occurred.');
+      if (mounted) setState(() => _errorMessage = 'An unexpected error occurred.');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
-  }
-
-  void _showSnack(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
   }
 
   @override
@@ -91,7 +116,6 @@ class _SignInScreenState extends State<SignInScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 40),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Image.asset(
                 'assets/pics/logo2.png',
@@ -100,47 +124,38 @@ class _SignInScreenState extends State<SignInScreen> {
                 fit: BoxFit.contain,
               ),
               const SizedBox(height: 10),
-              SizedBox(
-                width: double.infinity,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Login',
-                      style: GoogleFonts.montserrat(
-                        fontSize: 52,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.black,
-                        letterSpacing: -2,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Welcome back! Please enter your\ndetails to sign in.',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.montserrat(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF424242),
-                        height: 1.3,
-                      ),
-                    ),
-                  ],
+              Text(
+                'Login',
+                style: GoogleFonts.montserrat(
+                  fontSize: 52,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.black,
+                  letterSpacing: -2,
                 ),
               ),
+              const SizedBox(height: 12),
+              // Text(
+              //   'Welcome back! Please enter your\ndetails to sign in.',
+              //   textAlign: TextAlign.center,
+              //   style: GoogleFonts.montserrat(
+              //     fontSize: 18,
+              //     fontWeight: FontWeight.w600,
+              //     color: const Color(0xFF424242),
+              //     height: 1.3,
+              //   ),
+              // ),
               const SizedBox(height: 40),
               
-              // Email Field - Moves to NEXT field
               _buildTextField(
                 controller: _emailController,
                 hintText: 'Email address',
                 icon: Icons.person_outline,
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
+                onChanged: (_) => _onTextChanged(),
               ),
               const SizedBox(height: 20),
 
-              // Password Field - Submits the form
               _buildTextField(
                 controller: _passwordController,
                 hintText: '••••••••',
@@ -148,9 +163,14 @@ class _SignInScreenState extends State<SignInScreen> {
                 isPassword: true,
                 textInputAction: TextInputAction.done,
                 onSubmitted: (_) => _handleSignIn(),
+                onChanged: (_) => _onTextChanged(),
               ),
 
-              const SizedBox(height: 40),
+              // DYNAMIC ERROR BANNER
+              if (_errorMessage != null) _buildErrorBanner(),
+
+              const SizedBox(height: 30),
+
               GestureDetector(
                 onTap: _isLoading ? null : _handleSignIn,
                 child: Container(
@@ -194,9 +214,71 @@ class _SignInScreenState extends State<SignInScreen> {
                   ),
                 ],
               ),
+              const SizedBox(height: 20),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildErrorBanner() {
+    return Container(
+      margin: const EdgeInsets.only(top: 20),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFE0E0),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.red.shade900, width: 2.5),
+        boxShadow: [BoxShadow(color: Colors.red.shade900.withValues(alpha: 0.1), offset: const Offset(0, 4))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.red, size: 24),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  _errorMessage!,
+                  style: GoogleFonts.montserrat(
+                    color: Colors.red.shade900,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (_suggestSignUp) ...[
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const SignUpScreen()));
+              },
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade900,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.black, width: 1.5),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  "REGISTER THIS EMAIL",
+                  style: GoogleFonts.montserrat(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 12,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ),
+            ),
+          ]
+        ],
       ),
     );
   }
@@ -209,6 +291,7 @@ class _SignInScreenState extends State<SignInScreen> {
     TextInputType? keyboardType,
     TextInputAction? textInputAction,
     void Function(String)? onSubmitted,
+    void Function(String)? onChanged,
   }) {
     return TextField(
       controller: controller,
@@ -216,6 +299,7 @@ class _SignInScreenState extends State<SignInScreen> {
       keyboardType: keyboardType,
       textInputAction: textInputAction,
       onSubmitted: onSubmitted,
+      onChanged: onChanged,
       style: GoogleFonts.montserrat(fontSize: 18, fontWeight: FontWeight.w700),
       decoration: InputDecoration(
         filled: true,
