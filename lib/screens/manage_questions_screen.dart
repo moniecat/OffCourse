@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/firestore_service.dart';
 import '../models/course.dart';
 import '../widgets/admin_widgets.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ManageQuestionsScreen extends StatefulWidget {
   const ManageQuestionsScreen({super.key});
@@ -16,11 +16,10 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
   static const Color darkBorder = Color(0xFF1A1C1E);
   String? _selectedCourseId;
   String? _selectedModuleId;
-  List<Map<String, dynamic>> _modules = [];
   String _searchQuery = '';
 
+  // Helper to delete questions
   Future<void> _deleteQuestion(String courseId, String moduleId, String questionId) async {
-    // Capture messenger state before the async gap to avoid lint errors
     final messenger = ScaffoldMessenger.of(context);
 
     showDialog(
@@ -31,19 +30,15 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
         onConfirm: () async {
           try {
             await FirestoreService().deleteQuestion(courseId, moduleId, questionId);
-            
-            if (!mounted) return;
-
             messenger.showSnackBar(
               const SnackBar(
                 content: Text('Question deleted successfully'),
                 backgroundColor: Colors.green,
               ),
             );
+            // Refresh the UI
             setState(() {});
           } catch (e) {
-            if (!mounted) return;
-
             messenger.showSnackBar(
               const SnackBar(
                 content: Text('Failed to delete question'),
@@ -100,10 +95,12 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
           }
 
           final courses = snapshot.data!;
+          // Set initial course if none is selected
           _selectedCourseId ??= courses.first.id;
 
           return Column(
             children: [
+              // 1. COURSE DROPDOWN
               AdminDropdown<String>(
                 label: 'SELECT COURSE',
                 hint: 'Choose a course',
@@ -117,132 +114,146 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
                 onChanged: (value) {
                   setState(() {
                     _selectedCourseId = value;
-                    _selectedModuleId = null;
+                    _selectedModuleId = null; // Reset module so logic below picks the first one
                     _searchQuery = '';
                   });
                 },
               ),
               const SizedBox(height: 12),
-              FutureBuilder<List<Map<String, dynamic>>>(
-                future: _selectedCourseId != null 
-                    ? FirestoreService().getModules(_selectedCourseId!) 
-                    : Future.value([]),
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: AdminEmptyState(
+
+              // 2. MODULE DROPDOWN & QUESTION LIST
+              Expanded(
+                child: FutureBuilder<List<Map<String, dynamic>>>(
+                  // Using a unique key ensures this reloads completely when the course changes
+                  key: ValueKey(_selectedCourseId),
+                  future: FirestoreService().getModules(_selectedCourseId!),
+                  builder: (context, moduleSnapshot) {
+                    if (moduleSnapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    final modules = moduleSnapshot.data ?? [];
+                    if (modules.isEmpty) {
+                      return AdminEmptyState(
                         title: 'No Modules Found',
                         subtitle: 'Add modules to this course first',
                         icon: Icons.layers_outlined,
-                      ),
+                      );
+                    }
+
+                    // Handle Module ID validation/selection
+                    bool currentIdIsValid = modules.any((m) => m['id'] == _selectedModuleId);
+                    if (!currentIdIsValid) {
+                      _selectedModuleId = modules.first['id'];
+                    }
+
+                    return Column(
+                      children: [
+                        AdminDropdown<String>(
+                          label: 'SELECT MODULE',
+                          hint: 'Choose a module',
+                          value: _selectedModuleId,
+                          items: modules.map<DropdownMenuItem<String>>((module) {
+                            return DropdownMenuItem<String>(
+                              value: module['id'] as String,
+                              child: Text(module['title'] ?? 'Untitled'),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedModuleId = value;
+                              _searchQuery = '';
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        
+                        // 3. QUESTIONS LIST
+                        Expanded(
+                          child: _buildQuestionsList(),
+                        ),
+                      ],
                     );
-                  }
-
-                  _modules = snapshot.data!;
-                  if (_selectedModuleId == null && _modules.isNotEmpty) {
-                    _selectedModuleId = _modules.first['id'];
-                  }
-
-                  return AdminDropdown<String>(
-                    label: 'SELECT MODULE',
-                    hint: 'Choose a module',
-                    value: _selectedModuleId,
-                    items: _modules.map<DropdownMenuItem<String>>((module) {
-                      return DropdownMenuItem<String>(
-                        value: module['id'] as String,
-                        child: Text(module['title'] ?? 'Untitled'),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedModuleId = value;
-                        _searchQuery = '';
-                      });
-                    },
-                  );
-                },
-              ),
-              if (_selectedModuleId != null)
-                Expanded(
-                  child: FutureBuilder<List<Map<String, dynamic>>>(
-                    future: FirebaseFirestore.instance
-                        .collection('courses')
-                        .doc(_selectedCourseId!)
-                        .collection('modules')
-                        .doc(_selectedModuleId!)
-                        .collection('questions')
-                        .get()
-                        .then((snap) => snap.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList()),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-
-                      if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                        return AdminEmptyState(
-                          title: 'No Questions Found',
-                          subtitle: 'Add your first question to this module',
-                          icon: Icons.quiz_outlined,
-                        );
-                      }
-
-                      final allQuestions = snapshot.data!;
-                      final filteredQuestions = allQuestions
-                          .where((question) =>
-                              (question['question'] ?? '')
-                                  .toLowerCase()
-                                  .contains(_searchQuery.toLowerCase()) ||
-                              (question['correctAnswer'] ?? '')
-                                  .toLowerCase()
-                                  .contains(_searchQuery.toLowerCase()))
-                          .toList();
-
-                      return Column(
-                        children: [
-                          AdminSearchBar(
-                            hint: 'Search questions...',
-                            value: _searchQuery,
-                            onChanged: (value) {
-                              setState(() => _searchQuery = value);
-                            },
-                          ),
-                          Expanded(
-                            child: filteredQuestions.isEmpty
-                                ? AdminEmptyState(
-                                    title: 'No Results',
-                                    subtitle: 'Try searching with different keywords',
-                                    icon: Icons.search_rounded,
-                                  )
-                                : ListView.builder(
-                                    padding: const EdgeInsets.all(16),
-                                    itemCount: filteredQuestions.length,
-                                    itemBuilder: (context, index) {
-                                      final question = filteredQuestions[index];
-                                      return AdminListItem(
-                                        title: question['question'] ?? 'Untitled',
-                                        subtitle:
-                                            'Answer: ${question['correctAnswer'] ?? 'N/A'}',
-                                        badge: '${index + 1}/${filteredQuestions.length}',
-                                        accentColor: const Color(0xFF00CBA9),
-                                        onDelete: () => _deleteQuestion(
-                                          _selectedCourseId!,
-                                          _selectedModuleId!,
-                                          question['id'],
-                                        ),
-                                      );
-                                    },
-                                  ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
+                  },
                 ),
+              ),
             ],
           );
         },
       ),
+    );
+  }
+
+  Widget _buildQuestionsList() {
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      // Key is essential: it tells Flutter to restart this Future when IDs change
+      key: ValueKey('$_selectedCourseId-$_selectedModuleId'),
+      future: FirebaseFirestore.instance
+          .collection('courses')
+          .doc(_selectedCourseId!)
+          .collection('modules')
+          .doc(_selectedModuleId!)
+          .collection('questions')
+          .get()
+          .then((snap) => snap.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList()),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final allQuestions = snapshot.data ?? [];
+        if (allQuestions.isEmpty) {
+          return AdminEmptyState(
+            title: 'No Questions Found',
+            subtitle: 'Add your first question to this module',
+            icon: Icons.quiz_outlined,
+          );
+        }
+
+        final filteredQuestions = allQuestions
+            .where((question) =>
+                (question['question'] ?? '').toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                (question['correctAnswer'] ?? '').toLowerCase().contains(_searchQuery.toLowerCase()))
+            .toList();
+
+        return Column(
+          children: [
+            AdminSearchBar(
+              hint: 'Search questions...',
+              value: _searchQuery,
+              onChanged: (value) {
+                setState(() => _searchQuery = value);
+              },
+            ),
+            Expanded(
+              child: filteredQuestions.isEmpty
+                  ? AdminEmptyState(
+                      title: 'No Results',
+                      subtitle: 'Try searching with different keywords',
+                      icon: Icons.search_rounded,
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: filteredQuestions.length,
+                      itemBuilder: (context, index) {
+                        final question = filteredQuestions[index];
+                        return AdminListItem(
+                          title: question['question'] ?? 'Untitled',
+                          subtitle: 'Answer: ${question['correctAnswer'] ?? 'N/A'}',
+                          badge: '${index + 1}/${filteredQuestions.length}',
+                          accentColor: const Color(0xFF00CBA9),
+                          onDelete: () => _deleteQuestion(
+                            _selectedCourseId!,
+                            _selectedModuleId!,
+                            question['id'],
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
