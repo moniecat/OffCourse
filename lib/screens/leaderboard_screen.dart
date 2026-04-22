@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../models/course.dart';
 import '../services/firestore_service.dart';
 import '../services/leaderboard_service.dart';
-import '../services/auth_service.dart'; // Required for role check
+import '../services/auth_service.dart';
 import '../widgets/course_chip.dart';
 import '../widgets/custom_bottom_nav.dart';
 import '../widgets/menu_drawer.dart';
@@ -42,11 +42,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   @override
   void initState() {
     super.initState();
-    _loadUserRole(); // Initialize role check
+    _loadUserRole();
     _loadCourses();
   }
 
-  /// Load user role from Firestore (Same as HomeScreen)
   Future<void> _loadUserRole() async {
     final user = AuthService().currentUser;
     if (user == null) return;
@@ -63,7 +62,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         }
       }
     } catch (e) {
-      debugPrint('Error loading role in Leaderboard: $e');
+      debugPrint('Error loading role: $e');
     }
   }
 
@@ -75,29 +74,47 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           _courses = courses;
           _loadingCourses = false;
         });
-        _loadModules();
+        // Start loading modules for the first course
+        if (_courses.isNotEmpty) {
+          _loadModules();
+        }
       }
     } catch (_) {
       if (mounted) setState(() => _loadingCourses = false);
     }
   }
 
+  /// Fetches modules and automatically selects the first one
   Future<void> _loadModules() async {
     if (_courses.isEmpty) return;
+    
     setState(() {
       _loadingModules = true;
-      _selectedModuleId = null;
-      _entries = [];
+      _selectedModuleId = null; 
+      _entries = []; 
     });
+
     try {
       final modules = await FirestoreService().getModules(_courses[_selectedCourseIndex].id);
+      
       if (mounted) {
         setState(() {
           _modules = modules;
           _loadingModules = false;
+          
+          // AUTO-SELECT LOGIC: Pre-select the first module if it exists
+          if (_modules.isNotEmpty) {
+            _selectedModuleId = _modules.first['id'] as String;
+          }
         });
+
+        // Immediately fetch rankings for the auto-selected module
+        if (_selectedModuleId != null) {
+          _loadLeaderboard(_selectedModuleId!);
+        }
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Error loading modules: $e');
       if (mounted) setState(() => _loadingModules = false);
     }
   }
@@ -123,7 +140,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         opaque: false,
         barrierDismissible: true,
         barrierColor: Theme.of(context).colorScheme.scrim.withValues(alpha: 0.5),
-        // FIXED: Now passes _isAdmin to the drawer
         pageBuilder: (_, ___, __) => MenuDrawer(isAdmin: _isAdmin),
         transitionsBuilder: (_, animation, __, child) {
           return SlideTransition(
@@ -220,8 +236,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 label: _courses[index].title,
                 isActive: index == _selectedCourseIndex,
                 onTap: () {
+                  if (_selectedCourseIndex == index) return;
                   setState(() => _selectedCourseIndex = index);
-                  _loadModules();
+                  _loadModules(); // This now handles auto-selection of the first module
                 },
               ),
             ),
@@ -265,6 +282,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   }
 
   Widget _buildMainContent() {
+    if (_loadingModules) {
+       return const Expanded(child: Center(child: CircularProgressIndicator()));
+    }
     if (_selectedModuleId == null) {
       return Expanded(child: Center(child: Text("Select a module to see rankings", style: GoogleFonts.montserrat(fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)))));
     }
