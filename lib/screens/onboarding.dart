@@ -91,33 +91,44 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.dispose();
   }
 
+  /// Builds the 4 dots that are clickable.
   Widget _buildDots() {
     return Row(
       children: List.generate(_reelCount, (i) {
         final isActive = _reelIndex == i;
-        return Container(
-          margin: const EdgeInsets.only(right: 8),
-          child: AnimatedCrossFade(
-            duration: const Duration(milliseconds: 400),
-            crossFadeState: isActive
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
-            firstChild: Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(5),
-                border: Border.all(color: Colors.black, width: 1.5),
+        return GestureDetector(
+          onTap: () {
+            // Jump to the tapped dot's reel page (page index = i + 1)
+            if (_currentPage != i + 1) {
+              setState(() {
+                _currentPage = i + 1;
+              });
+            }
+          },
+          child: Container(
+            margin: const EdgeInsets.only(right: 8),
+            child: AnimatedCrossFade(
+              duration: const Duration(milliseconds: 400),
+              crossFadeState: isActive
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
+              firstChild: Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(5),
+                  border: Border.all(color: Colors.black, width: 1.5),
+                ),
               ),
-            ),
-            secondChild: Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(
-                color: primaryYellow,
-                borderRadius: BorderRadius.circular(5),
-                border: Border.all(color: Colors.black, width: 1.5),
+              secondChild: Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: primaryYellow,
+                  borderRadius: BorderRadius.circular(5),
+                  border: Border.all(color: Colors.black, width: 1.5),
+                ),
               ),
             ),
           ),
@@ -222,7 +233,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildDots(),
+                  _buildDots(),           // Now clickable
                   GestureDetector(
                     onTap: _nextPage,
                     child: Container(
