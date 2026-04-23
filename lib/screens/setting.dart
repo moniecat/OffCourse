@@ -55,7 +55,7 @@ class _SettingPageState extends State<SettingPage> {
         opaque: false,
         barrierDismissible: true,
         barrierColor: Colors.black.withValues(alpha: 0.5),
-        pageBuilder: (_, ___, __) => MenuDrawer(isAdmin: _isAdmin),
+        pageBuilder: (_, __, ___) => MenuDrawer(isAdmin: _isAdmin, currentScreen: 'Setting'),
         transitionsBuilder: (_, animation, __, child) {
           return SlideTransition(
             position: Tween<Offset>(
