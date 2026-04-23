@@ -29,12 +29,24 @@ class LeaderboardService {
 
     if (scoresSnap.docs.isEmpty) return [];
 
+    // Get real current total from questions collection
+    final firstDoc = scoresSnap.docs.first.data();
+    final courseId = firstDoc['courseId'] as String;
+    final totalSnap = await _db
+        .collection('courses')
+        .doc(courseId)
+        .collection('modules')
+        .doc(moduleId)
+        .collection('questions')
+        .count()
+        .get();
+    final currentTotal = totalSnap.count ?? 0;
+
     final entries = await Future.wait(
       scoresSnap.docs.map((doc) async {
         final data = doc.data();
         final userId = data['userId'] as String;
         final score = data['score'] as int? ?? 0;
-        final total = data['total'] as int? ?? 0;
 
         String name = 'Unknown';
         String? profileImage;
@@ -52,7 +64,7 @@ class LeaderboardService {
           userId: userId,
           name: name,
           score: score,
-          total: total,
+          total: currentTotal, // 👈 always use live total
           profileImage: profileImage,
         );
       }),
