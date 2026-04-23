@@ -9,8 +9,13 @@ import '../screens/logout.dart';
 
 class MenuDrawer extends StatefulWidget {
   final bool isAdmin;
+  final String currentScreen;
 
-  const MenuDrawer({super.key, this.isAdmin = false});
+  const MenuDrawer({
+    super.key, 
+    this.isAdmin = false,
+    this.currentScreen = 'Home',
+    });
 
   @override
   State<MenuDrawer> createState() => _MenuDrawerState();
@@ -20,7 +25,15 @@ class _MenuDrawerState extends State<MenuDrawer> {
   // Consistency Constants
   static const Color activeGold = Color(0xFFFFBC1F); // Matches ModuleCard yellow
   
-  int _activeIndex = 0; 
+  late int _activeIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    final items = _menuItems;
+    final idx = items.indexWhere((item) => item.label == widget.currentScreen);
+    _activeIndex = idx == -1 ? -1 : idx;
+  }
 
   List<_MenuItem> get _menuItems {
     final items = <_MenuItem>[
@@ -96,7 +109,7 @@ class _MenuDrawerState extends State<MenuDrawer> {
 
                     // Menu Items
                     ...List.generate(_menuItems.length, (index) {
-                      final isActive = index == _activeIndex;
+                      final isActive = index == _activeIndex && _activeIndex != -1;
                       return GestureDetector(
                         onTap: () => _navigateTo(context, index),
                         child: Padding(

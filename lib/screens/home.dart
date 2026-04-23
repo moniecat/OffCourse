@@ -113,7 +113,7 @@ class _HomeScreenState extends State<HomeScreen> {
         opaque: false,
         barrierDismissible: true,
         barrierColor: Theme.of(context).colorScheme.scrim.withValues(alpha: 0.5),
-        pageBuilder: (_, ___, __) => MenuDrawer(isAdmin: _isAdmin),
+        pageBuilder: (_, __, ___) => MenuDrawer(isAdmin: _isAdmin, currentScreen: 'Home'),
         transitionsBuilder: (_, animation, __, child) {
           return SlideTransition(
             position: Tween<Offset>(
