@@ -21,6 +21,7 @@ class AdminPanelScreen extends StatefulWidget {
 class _AdminPanelScreenState extends State<AdminPanelScreen> {
   static const Color darkBorder = Color(0xFF1A1C1E);
   static const double borderWidth = 3.0;
+  late Stream<Map<String, int>> _statsStream;
 
   String _userRole = 'student';
   bool get _isAdmin => _userRole == 'admin';
@@ -28,6 +29,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   @override
   void initState() {
     super.initState();
+    _statsStream = FirestoreService().watchStats();
     _loadUserRole();
   }
 
@@ -51,7 +53,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         opaque: false,
         barrierDismissible: true,
         barrierColor: Colors.black.withValues(alpha: 0.5),
-        pageBuilder: (_, __, ___) => MenuDrawer(isAdmin: _isAdmin),
+        pageBuilder: (_, __, ___) => MenuDrawer(isAdmin: _isAdmin, currentScreen: 'Admin'),
         transitionsBuilder: (_, animation, __, child) {
           return SlideTransition(
             position: Tween<Offset>(
@@ -131,7 +133,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
 
               // Real‑time stats using StreamBuilder
               StreamBuilder<Map<String, int>>(
-                stream: FirestoreService().watchStats(),
+                stream: _statsStream,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());

@@ -51,7 +51,7 @@ class _AboutPageState extends State<AboutPage> {
         opaque: false,
         barrierDismissible: true,
         barrierColor: Colors.black.withValues(alpha: 0.5),
-        pageBuilder: (_, __, ___) => MenuDrawer(isAdmin: _isAdmin),
+        pageBuilder: (_, __, ___) => MenuDrawer(isAdmin: _isAdmin, currentScreen: 'About'),
         transitionsBuilder: (_, animation, __, child) {
           return SlideTransition(
             position: Tween<Offset>(
