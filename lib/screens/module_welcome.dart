@@ -408,7 +408,7 @@ class _ModuleOneScreenState extends State<ModuleOneScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 4),
               GestureDetector(
                 onTap: () => _showCustomStartSheet(context),
                 child: Container(
