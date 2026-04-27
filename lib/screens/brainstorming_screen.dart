@@ -379,7 +379,10 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
           decoration: BoxDecoration(
             color: !canCheck ? Colors.grey[300] : const Color(0xFFFBB017),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.black, width: 3),
+            border: Border.all(
+              color: canCheck ? Colors.black : Colors.grey[400]!, // 👈 match disabled color
+              width: 3,
+            ),
             boxShadow: canCheck ? [const BoxShadow(color: Colors.black, offset: Offset(0, 6))] : null,
           ),
           child: Center(
