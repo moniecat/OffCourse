@@ -8,6 +8,7 @@ class ResultScreen extends StatelessWidget {
   final int total;
   final String courseId;
   final int courseIndex;
+  final bool isCustom;
 
   const ResultScreen({
     super.key,
@@ -15,6 +16,7 @@ class ResultScreen extends StatelessWidget {
     required this.total,
     required this.courseId,
     required this.courseIndex,
+    this.isCustom = false,
   });
 
   @override
@@ -91,6 +93,27 @@ class ResultScreen extends StatelessWidget {
                             ),
                           ),
                         ),
+                        if (isCustom)
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            color: const Color(0xFFFFF3CD),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.info_outline, size: 16, color: Color(0xFF856404)),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Practice Mode — Score not recorded',
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF856404),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
 
                         Padding(
                           padding: const EdgeInsets.all(32),

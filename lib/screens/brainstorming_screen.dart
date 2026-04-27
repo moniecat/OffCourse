@@ -11,6 +11,8 @@ class BrainstormingScreen extends StatefulWidget {
   final String courseId; 
   final String moduleId;
   final int courseIndex;
+  final bool isCustom;       
+  final int? maxQuestions;
 
   const BrainstormingScreen({
     super.key,
@@ -18,6 +20,8 @@ class BrainstormingScreen extends StatefulWidget {
     required this.courseId,
     required this.moduleId,
     required this.courseIndex,
+    this.isCustom = false,    
+    this.maxQuestions, 
   });
 
   @override
@@ -47,7 +51,10 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
       );
       questions.shuffle();
       setState(() {
-        _questions = questions;
+        // Slice to maxQuestions if custom
+        _questions = widget.maxQuestions != null
+            ? questions.take(widget.maxQuestions!).toList()
+            : questions;
         _isLoading = false;
       });
     } catch (e) {
@@ -80,21 +87,29 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
         _currentSelection = null;
       });
     } else {
-      ResultService.saveResult(
-        courseId: widget.courseId,
-        moduleId: widget.moduleId,
-        score:    _score,
-        total:    _questions.length,
-      );
+      // Only save if not custom session
+      if (!widget.isCustom) {
+        ResultService.saveResult(
+          courseId: widget.courseId,
+          moduleId: widget.moduleId,
+          score:    _score,
+          total:    _questions.length,
+        ).then((_) {
+          print('✅ Result saved');
+        }).catchError((e) {
+          print('❌ Error: $e');
+        });
+      }
 
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (_) => ResultScreen(
-            score:    _score,
-            total:    _questions.length,
-            courseId: widget.courseId, 
-            courseIndex: widget.courseIndex, 
+            score:       _score,
+            total:       _questions.length,
+            courseId:    widget.courseId,
+            courseIndex: widget.courseIndex,
+            isCustom:    widget.isCustom, // 👈 add
           ),
         ),
       );
@@ -131,56 +146,88 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9F9),
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildTopBar(),
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                  child: Column(
-                    children: [
-                      _buildHeader(),
-                      const SizedBox(height: 20),
-                      _buildProgressBar(),
-                      const SizedBox(height: 30),
-                      _buildQuestionCard(currentQuestion, isAnswered),
-                    ],
+      body: Column(
+        children: [
+          _buildTopBar(), // 👈 outside SafeArea
+          Expanded(
+            child: SafeArea(
+              top: false, // 👈 top already handled by banner
+              child: Column(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                        child: Column(
+                          children: [
+                            _buildHeader(),
+                            const SizedBox(height: 20),
+                            _buildProgressBar(),
+                            const SizedBox(height: 30),
+                            _buildQuestionCard(currentQuestion, isAnswered),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                  isAnswered ? _buildFeedbackOverlay(isCorrect) : _buildControlButtons(),
+                ],
               ),
             ),
-            isAnswered ? _buildFeedbackOverlay(isCorrect) : _buildControlButtons(),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildTopBar() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 10, 24, 0),
-      child: Align(
-        alignment: Alignment.topRight,
-        child: GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.black, width: 2.5),
-              boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(3, 3))],
+    return Column(
+      children: [
+        if (widget.isCustom)
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            color: const Color(0xFFFFF3CD),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.info_outline, size: 16, color: Color(0xFF856404)),
+                const SizedBox(width: 6),
+                Text(
+                  'Practice Mode — Score not recorded',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF856404),
+                  ),
+                ),
+              ],
             ),
-            child: const Icon(Icons.close, size: 20),
+          ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 10, 24, 0),
+          child: Align(
+            alignment: Alignment.topRight,
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.black, width: 2.5),
+                  boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(3, 3))],
+                ),
+                child: const Icon(Icons.close, size: 20),
+              ),
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
-
   Widget _buildHeader() {
     return Text(
       widget.moduleName.toUpperCase(),

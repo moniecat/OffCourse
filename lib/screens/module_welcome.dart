@@ -27,11 +27,28 @@ class ModuleOneScreen extends StatefulWidget {
 class _ModuleOneScreenState extends State<ModuleOneScreen> {
   int _attemptCount = 0;
   bool _isLoadingAttempts = true;
+  int _totalQuestions = 0;
+
 
   @override
   void initState() {
     super.initState();
     _loadAttempts();
+    _loadTotalQuestions();
+  }
+
+  Future<void> _loadTotalQuestions() async {
+    try {
+      final snap = await FirebaseFirestore.instance
+          .collection('courses')
+          .doc(widget.courseId)
+          .collection('modules')
+          .doc(widget.moduleId)
+          .collection('questions')
+          .count()
+          .get();
+      if (mounted) setState(() => _totalQuestions = snap.count ?? 0);
+    } catch (_) {}
   }
 
   Future<void> _loadAttempts() async {
@@ -56,6 +73,153 @@ class _ModuleOneScreenState extends State<ModuleOneScreen> {
       debugPrint('Error loading attempts: $e');
       setState(() => _isLoadingAttempts = false);
     }
+  }
+
+  void _showCustomStartSheet(BuildContext context) {
+    const Color darkBorder = Color(0xFF1A1C1E);
+    int selectedMax = _totalQuestions > 0 ? _totalQuestions : 1;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          return Container(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 40),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+              border: Border(top: BorderSide(color: darkBorder, width: 3)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Custom Start',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                    color: darkBorder,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Practice Mode — Score will not be recorded',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.orange.shade700,
+                  ),
+                ),
+                const SizedBox(height: 30),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Number of Questions',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: darkBorder,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFC01D),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: darkBorder, width: 2),
+                      ),
+                      child: Text(
+                        '$selectedMax',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                          color: darkBorder,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Slider(
+                  value: selectedMax.toDouble(),
+                  min: 1,
+                  max: _totalQuestions > 0 ? _totalQuestions.toDouble() : 1,
+                  divisions: _totalQuestions > 1 ? _totalQuestions - 1 : 1,
+                  activeColor: const Color(0xFF32C6AD),
+                  inactiveColor: darkBorder.withValues(alpha: 0.2),
+                  onChanged: (val) =>
+                      setSheetState(() => selectedMax = val.round()),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('1',
+                        style: GoogleFonts.montserrat(
+                            fontWeight: FontWeight.w700,
+                            color: darkBorder.withValues(alpha: 0.5))),
+                    Text('$_totalQuestions',
+                        style: GoogleFonts.montserrat(
+                            fontWeight: FontWeight.w700,
+                            color: darkBorder.withValues(alpha: 0.5))),
+                  ],
+                ),
+                const SizedBox(height: 30),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      this.context,
+                      MaterialPageRoute(
+                        builder: (_) => BrainstormingScreen(
+                          moduleName:   widget.moduleName,
+                          courseId:     widget.courseId,
+                          moduleId:     widget.moduleId,
+                          courseIndex:  widget.courseIndex,
+                          isCustom:     true,
+                          maxQuestions: selectedMax,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    height: 65,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFC01D),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: darkBorder, width: 3),
+                      boxShadow: const [
+                        BoxShadow(color: darkBorder, offset: Offset(0, 6)),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Start $selectedMax Question${selectedMax > 1 ? 's' : ''}',
+                          style: GoogleFonts.montserrat(
+                            color: darkBorder,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        const Icon(Icons.arrow_forward_rounded,
+                            size: 24, color: darkBorder),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
   }
 
   @override
@@ -240,6 +404,38 @@ class _ModuleOneScreenState extends State<ModuleOneScreen> {
                         size: 24,
                         color: Colors.white,
                       ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              GestureDetector(
+                onTap: () => _showCustomStartSheet(context),
+                child: Container(
+                  width: double.infinity,
+                  height: 55,
+                  margin: const EdgeInsets.only(bottom: 30),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: darkBorder, width: 3),
+                    boxShadow: const [
+                      BoxShadow(color: darkBorder, offset: Offset(0, 4)),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Custom Start',
+                        style: GoogleFonts.montserrat(
+                          color: darkBorder,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      const Icon(Icons.tune_rounded, size: 22, color: darkBorder),
                     ],
                   ),
                 ),
