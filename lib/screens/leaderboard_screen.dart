@@ -416,9 +416,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       int index = item.key;
       var entry = item.value;
       bool isCurrentUser = entry.userId == _currentUid;
+      bool isLast = index == rest.length - 1;
 
       return Container(
-        margin: const EdgeInsets.only(bottom: 12),
+        margin: EdgeInsets.only(bottom: isLast ? 20 : 12),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: isCurrentUser ? const Color(0xFFE0F7F4) : Theme.of(context).cardColor,
