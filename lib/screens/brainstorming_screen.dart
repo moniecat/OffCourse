@@ -45,6 +45,7 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
         widget.moduleName,
         widget.courseId,
       );
+      questions.shuffle();
       setState(() {
         _questions = questions;
         _isLoading = false;
