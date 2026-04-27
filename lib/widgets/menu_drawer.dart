@@ -22,8 +22,9 @@ class MenuDrawer extends StatefulWidget {
 }
 
 class _MenuDrawerState extends State<MenuDrawer> {
-  // Consistency Constants
-  static const Color activeGold = Color(0xFFFFBC1F); // Matches ModuleCard yellow
+  // Style Constants
+  static const Color activeGold = Color(0xFFFFBC1F); 
+  static const Color logoutRed = Color(0xFFE53935); 
   
   late int _activeIndex;
 
@@ -67,13 +68,12 @@ class _MenuDrawerState extends State<MenuDrawer> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
-
           Expanded(
             child: SafeArea(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end, // Right-aligned text
+                  crossAxisAlignment: CrossAxisAlignment.end, 
                   children: [
                     // Styled "Back/Close" Icon
                     Align(
@@ -93,7 +93,7 @@ class _MenuDrawerState extends State<MenuDrawer> {
                             ),
                             const SizedBox(height: 6),
                             Container(
-                              width: 22, // Shorter second bar for a stylized look
+                              width: 22, 
                               height: 4.5, 
                               decoration: BoxDecoration(
                                 color: Theme.of(context).colorScheme.onSurface,
@@ -123,9 +123,13 @@ class _MenuDrawerState extends State<MenuDrawer> {
                               height: 1.1,
                               letterSpacing: -2,
                               color: isActive ? activeGold : Theme.of(context).colorScheme.onSurface,
-                              // Added subtle text shadow for "pop"
+                              // Shadow logic: Black sharp shadow only if active
                               shadows: isActive ? [
-                                Shadow(color: Theme.of(context).colorScheme.onSurface, offset: const Offset(2, 2))
+                                const Shadow(
+                                  color: Colors.black, 
+                                  offset: Offset(3, 3),
+                                  blurRadius: 0, 
+                                )
                               ] : null,
                             ),
                           ),
@@ -135,23 +139,21 @@ class _MenuDrawerState extends State<MenuDrawer> {
 
                     const SizedBox(height: 20),
                     
-                    // Logout Button
+                    // Logout Button (No shadow because it is not the "active" screen)
                     GestureDetector(
                       onTap: () => _navigateToLogout(context),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFE5E5), // Light red tint
-                          border: Border.all(color: const Color(0xFFE53935), width: 2),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 20),
                         child: Text(
-                          'LOGOUT',
+                          'Logout',
+                          textAlign: TextAlign.right,
                           style: GoogleFonts.montserrat(
-                            fontSize: 20,
+                            fontSize: 52,
                             fontWeight: FontWeight.w900,
-                            color: const Color(0xFFE53935),
-                            letterSpacing: 1,
+                            height: 1.1,
+                            letterSpacing: -2,
+                            color: logoutRed,
+                            shadows: null, // Flat style to match inactive items
                           ),
                         ),
                       ),
