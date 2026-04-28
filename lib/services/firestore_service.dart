@@ -166,19 +166,22 @@ class FirestoreService {
       int moduleCount = 0;
       int questionCount = 0;
 
-      // For each course, fetch its modules and questions
-      for (final courseDoc in coursesSnapshot.docs) {
+      // Fetch all modules and questions in parallel using Future.wait
+      final courseFutures = coursesSnapshot.docs.map((courseDoc) async {
         final courseId = courseDoc.id;
+        int courseModuleCount = 0;
+        int courseQuestionCount = 0;
+
         // Get modules of this course
         final modulesSnapshot = await db
             .collection('courses')
             .doc(courseId)
             .collection('modules')
             .get();
-        moduleCount += modulesSnapshot.docs.length;
+        courseModuleCount = modulesSnapshot.docs.length;
 
-        // For each module, count questions
-        for (final moduleDoc in modulesSnapshot.docs) {
+        // Fetch questions for all modules in parallel
+        final moduleFutures = modulesSnapshot.docs.map((moduleDoc) async {
           final questionsSnapshot = await db
               .collection('courses')
               .doc(courseId)
@@ -186,8 +189,19 @@ class FirestoreService {
               .doc(moduleDoc.id)
               .collection('questions')
               .get();
-          questionCount += questionsSnapshot.docs.length;
-        }
+          return questionsSnapshot.docs.length;
+        });
+
+        final questionCounts = await Future.wait(moduleFutures);
+        courseQuestionCount = questionCounts.fold<int>(0, (sum, count) => sum + count);
+
+        return {'modules': courseModuleCount, 'questions': courseQuestionCount};
+      });
+
+      final results = await Future.wait(courseFutures);
+      for (final result in results) {
+        moduleCount += result['modules']!;
+        questionCount += result['questions']!;
       }
 
       yield {

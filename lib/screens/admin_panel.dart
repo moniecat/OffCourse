@@ -135,8 +135,9 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
               StreamBuilder<Map<String, int>>(
                 stream: _statsStream,
                 initialData: const {'courses': 0, 'modules': 0, 'questions': 0},
-                builder: (context, snapshot) { 
-                  final stats = snapshot.data!;
+                builder: (context, snapshot) {
+                  // Display initialData immediately, then update when stream emits
+                  final stats = snapshot.data ?? const {'courses': 0, 'modules': 0, 'questions': 0};
                   return GridView.count(
                     crossAxisCount: 3,
                     shrinkWrap: true,
