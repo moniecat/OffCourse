@@ -134,14 +134,9 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
               // Real‑time stats using StreamBuilder
               StreamBuilder<Map<String, int>>(
                 stream: _statsStream,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  }
-                  final stats = snapshot.data ?? {'courses': 0, 'modules': 0, 'questions': 0};
+                initialData: const {'courses': 0, 'modules': 0, 'questions': 0},
+                builder: (context, snapshot) { 
+                  final stats = snapshot.data!;
                   return GridView.count(
                     crossAxisCount: 3,
                     shrinkWrap: true,
