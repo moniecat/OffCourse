@@ -9,6 +9,7 @@ class ModuleOneScreen extends StatefulWidget {
   final String courseId;
   final String courseName;
   final String moduleId;
+  final String? description;
   final int courseIndex;
 
   const ModuleOneScreen({
@@ -17,6 +18,7 @@ class ModuleOneScreen extends StatefulWidget {
     required this.courseId,
     required this.courseName,
     required this.moduleId,
+    this.description,
     required this.courseIndex,
   });
 
@@ -73,6 +75,21 @@ class _ModuleOneScreenState extends State<ModuleOneScreen> {
       debugPrint('Error loading attempts: $e');
       setState(() => _isLoadingAttempts = false);
     }
+  }
+
+  /// Extract module number from the beginning of module name (e.g., "2.1" from "2.1 Hardware")
+  String _extractModuleNumber(String moduleName) {
+    final match = RegExp(r'^(\d+(?:\.\d+)?)').firstMatch(moduleName);
+    if (match != null) {
+      return 'MODULE ${match.group(1)}';
+    }
+    return 'MODULE';
+  }
+
+  /// Extract module name without the number prefix
+  String _extractModuleName(String moduleName) {
+    final noNumber = moduleName.replaceFirst(RegExp(r'^\d+(?:\.\d+)?\s*[-–]?\s*'), '').trim();
+    return noNumber.isEmpty ? moduleName : noNumber;
   }
 
   void _showCustomStartSheet(BuildContext context) {
@@ -231,12 +248,12 @@ class _ModuleOneScreenState extends State<ModuleOneScreen> {
     return Scaffold(
       backgroundColor: themeYellow,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            children: [
-              const SizedBox(height: 20),
-              Row(
+        child: Column(
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20),
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
@@ -274,174 +291,232 @@ class _ModuleOneScreenState extends State<ModuleOneScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 40),
-              Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(vertical: 35, horizontal: 20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: darkBorder, width: 3.5),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: darkBorder,
-                      offset: Offset(0, 8),
-                    )
-                  ],
-                ),
-                child: Text(
-                  widget.courseName,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    height: 1.3,
-                    color: darkBorder,
-                  ),
-                ),
-              ),
-              const Spacer(flex: 2),
-              Column(
-                children: [
-                  Text(
-                    'MODULE',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 16,
-                      letterSpacing: 2,
-                      fontWeight: FontWeight.w900,
-                      color: darkBorder.withValues(alpha: 0.5),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    widget.moduleName,
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.montserrat(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w900,
-                      color: darkBorder,
-                      height: 1.1,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _isLoadingAttempts
-                      ? SizedBox(
-                          height: 16,
-                          width: 120,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: darkBorder.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(4),
+            ),
+            // Center Content (Flexible)
+            Expanded(
+              flex: 1,
+              child: Center(
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // Course Name Chip
+                        Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: darkBorder, width: 3),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: darkBorder,
+                                offset: Offset(0, 4),
+                              )
+                            ],
+                          ),
+                          child: Text(
+                            widget.courseName,
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.montserrat(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              color: darkBorder,
                             ),
                           ),
-                        )
-                      : Text(
-                          _attemptCount == 0
-                              ? 'No attempts yet'
-                              : 'Attempts: $_attemptCount',
-                          style: GoogleFonts.montserrat(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: darkBorder.withValues(alpha: 0.6),
+                        ),
+                        const SizedBox(height: 24),
+                        // Module Number & Name (Separated)
+                        Container(
+                          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(color: darkBorder, width: 3),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: darkBorder,
+                                offset: Offset(0, 6),
+                              )
+                            ],
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Module Number (Extracted or placeholder)
+                              Text(
+                                _extractModuleNumber(widget.moduleName),
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: themeTeal,
+                                  letterSpacing: 1,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              // Module Name
+                              Text(
+                                _extractModuleName(widget.moduleName),
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.w900,
+                                  color: darkBorder,
+                                  height: 1.2,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                ],
+                        // Module Description (if present)
+                        if (widget.description != null && widget.description!.isNotEmpty) ...[
+                          const SizedBox(height: 20),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: Text(
+                              widget.description!,
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.montserrat(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                                color: darkBorder.withValues(alpha: 0.7),
+                                height: 1.6,
+                              ),
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 28),
+                        // Attempts Count
+                        _isLoadingAttempts
+                            ? SizedBox(
+                                height: 16,
+                                width: 120,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: darkBorder.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                ),
+                              )
+                            : Text(
+                                _attemptCount == 0
+                                    ? 'No attempts yet'
+                                    : 'Attempts: $_attemptCount',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: darkBorder.withValues(alpha: 0.6),
+                                ),
+                              ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
-              const Spacer(flex: 3),
-              GestureDetector(
-                onTap: () async {
-                  // Capture navigator before async gap
-                  final navigator = Navigator.of(context);
+            ),
+            // Buttons (Fixed at bottom)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                children: [
+                  GestureDetector(
+                    onTap: () async {
+                      // Capture navigator before async gap
+                      final navigator = Navigator.of(context);
 
-                  final refreshed = await navigator.push<bool>(
-                    MaterialPageRoute(
-                      builder: (_) => BrainstormingScreen(
-                        moduleName: widget.moduleName,
-                        courseId: widget.courseId,
-                        moduleId: widget.moduleId,
-                        courseIndex: widget.courseIndex,
+                      final refreshed = await navigator.push<bool>(
+                        MaterialPageRoute(
+                          builder: (_) => BrainstormingScreen(
+                            moduleName: widget.moduleName,
+                            courseId: widget.courseId,
+                            moduleId: widget.moduleId,
+                            courseIndex: widget.courseIndex,
+                          ),
+                        ),
+                      );
+
+                      // FIX: Check if context is still mounted before popping
+                      if (refreshed == true && context.mounted) {
+                        // Reload attempts count before popping back
+                        await _loadAttempts();
+                        navigator.pop(true);
+                      }
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      height: 65,
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: themeTeal,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: darkBorder, width: 3),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: darkBorder,
+                            offset: Offset(0, 6),
+                          )
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Start',
+                            style: GoogleFonts.montserrat(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          const Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 24,
+                            color: Colors.white,
+                          ),
+                        ],
                       ),
                     ),
-                  );
-
-                  // FIX: Check if context is still mounted before popping
-                  if (refreshed == true && context.mounted) {
-                    // Reload attempts count before popping back
-                    await _loadAttempts();
-                    navigator.pop(true);
-                  }
-                },
-                child: Container(
-                  width: double.infinity,
-                  height: 65,
-                  margin: const EdgeInsets.only(bottom: 30),
-                  decoration: BoxDecoration(
-                    color: themeTeal,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: darkBorder, width: 3),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: darkBorder,
-                        offset: Offset(0, 6),
-                      )
-                    ],
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Start',
-                        style: GoogleFonts.montserrat(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      const Icon(
-                        Icons.arrow_forward_rounded,
-                        size: 24,
+                  GestureDetector(
+                    onTap: () => _showCustomStartSheet(context),
+                    child: Container(
+                      width: double.infinity,
+                      height: 55,
+                      margin: const EdgeInsets.only(bottom: 30),
+                      decoration: BoxDecoration(
                         color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: darkBorder, width: 3),
+                        boxShadow: const [
+                          BoxShadow(color: darkBorder, offset: Offset(0, 4)),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 4),
-              GestureDetector(
-                onTap: () => _showCustomStartSheet(context),
-                child: Container(
-                  width: double.infinity,
-                  height: 55,
-                  margin: const EdgeInsets.only(bottom: 30),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: darkBorder, width: 3),
-                    boxShadow: const [
-                      BoxShadow(color: darkBorder, offset: Offset(0, 4)),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Custom Start',
-                        style: GoogleFonts.montserrat(
-                          color: darkBorder,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w900,
-                        ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Custom Start',
+                            style: GoogleFonts.montserrat(
+                              color: darkBorder,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          const Icon(Icons.tune_rounded, size: 22, color: darkBorder),
+                        ],
                       ),
-                      const SizedBox(width: 10),
-                      const Icon(Icons.tune_rounded, size: 22, color: darkBorder),
-                    ],
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

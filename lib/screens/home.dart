@@ -1,4 +1,3 @@
-//import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/course_chip.dart';
@@ -250,6 +249,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     courseId: _courses[_selectedIndex].id,
                                     moduleId: _modules[index]['id'] as String,
                                     courseName: _courses[_selectedIndex].title,
+                                    description: _modules[index]['description'] as String?,
                                     courseIndex: _selectedIndex,
                                   );
                                 },

@@ -13,6 +13,7 @@ class ModuleCard extends StatefulWidget {
   final String courseId;
   final String moduleId; // 👈 new
   final String courseName; // 👈 new
+  final String? description;
   final int courseIndex;
 
   const ModuleCard({
@@ -22,6 +23,7 @@ class ModuleCard extends StatefulWidget {
     required this.courseId,
     required this.moduleId, // 👈 new
     required this.courseName, // 👈 new
+    this.description,
     required this.courseIndex,
   });
 
@@ -92,6 +94,7 @@ class _ModuleCardState extends State<ModuleCard> {
               courseId: widget.courseId,
               courseName: widget.courseName,
               moduleId: widget.moduleId,
+              description: widget.description,
               courseIndex: widget.courseIndex,
             ),
           ),
