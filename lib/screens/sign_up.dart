@@ -50,13 +50,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
       final user = await _auth.signUp(email, password);
 
       if (user != null) {
-        // Update display name in Firebase Auth
         await user.updateDisplayName(name);
-
-        // Create Firestore user document
         await _fs.addUser(user.uid, name, email, role: 'student');
-
-        // Sign out so user can sign in properly (as per your logic)
         await _auth.signOut();
 
         if (!mounted) return;
@@ -102,7 +97,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
       backgroundColor: Colors.white,
       body: Row(
         children: [
-          // The vertical bar from the reference format
           Container(width: 6, color: Colors.white),
           Expanded(
             child: SingleChildScrollView(
@@ -111,13 +105,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 80),
-                  Text(
-                    'Sign up',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 48,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.black,
-                      letterSpacing: -1,
+                  // FIX: Wrapped in FittedBox to prevent title overflow
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      'Sign up',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 48,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.black,
+                        letterSpacing: -1,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 15),
@@ -159,7 +157,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                   const SizedBox(height: 40),
 
-                  // Sign Up Button with Neo-brutalism style
                   GestureDetector(
                     onTap: _isLoading ? null : _handleSignUp,
                     child: Container(
@@ -191,7 +188,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                   const SizedBox(height: 35),
 
-                  Row(
+                  // FIX: Replaced Row with Wrap to prevent footer overflow
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       Text(
                         'Already have account? ',

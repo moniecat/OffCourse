@@ -21,7 +21,6 @@ class _SignInScreenState extends State<SignInScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
 
-  // Separate Error Variables
   String? _emailError;
   String? _passwordError;
 
@@ -50,7 +49,6 @@ class _SignInScreenState extends State<SignInScreen> {
       _passwordError = null;
     });
 
-    // Local Validation
     if (email.isEmpty) {
       setState(() => _emailError = "Email address is required.");
       return;
@@ -75,12 +73,10 @@ class _SignInScreenState extends State<SignInScreen> {
     } on FirebaseAuthException catch (e) {
       if (mounted) {
         setState(() {
-          // Identify EXACTLY which field to blame
           if (e.code == 'user-not-found' || e.code == 'invalid-email') {
             _emailError = "The email you entered isn't connected to an account.";
           } 
           else if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
-            // This treats the generic 'invalid-credential' as a password error
             _passwordError = "The password you entered is incorrect.";
           } 
           else {
@@ -99,37 +95,40 @@ class _SignInScreenState extends State<SignInScreen> {
       backgroundColor: Colors.white,
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 40),
+          // Adjusted padding slightly for better fit on small screens
+          padding: const EdgeInsets.symmetric(horizontal: 30),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Image.asset('assets/pics/logo2.png', width: 120, height: 120),
               const SizedBox(height: 10),
-              Text(
-                'Login',
-                style: GoogleFonts.montserrat(
-                  fontSize: 52, 
-                  fontWeight: FontWeight.w900, 
-                  letterSpacing: -2
+              // FIX: Wrapped in FittedBox to prevent clipping on small devices
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  'Login',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 52, 
+                    fontWeight: FontWeight.w900, 
+                    letterSpacing: -2
+                  ),
                 ),
               ),
               const SizedBox(height: 40),
 
-              // EMAIL FIELD
               _buildTextField(
                 controller: _emailController,
                 hintText: 'Email address',
                 icon: Icons.person_outline,
                 hasError: _emailError != null,
                 keyboardType: TextInputType.emailAddress,
-                textInputAction: TextInputAction.next, // Keyboard "Next" moves focus
+                textInputAction: TextInputAction.next,
                 onChanged: (_) => _onTextChanged(),
               ),
               if (_emailError != null) _buildErrorLabel(_emailError!),
 
               const SizedBox(height: 20),
 
-              // PASSWORD FIELD
               _buildTextField(
                 controller: _passwordController,
                 hintText: 'Password',
@@ -137,10 +136,9 @@ class _SignInScreenState extends State<SignInScreen> {
                 isPassword: true,
                 obscureText: _obscurePassword,
                 hasError: _passwordError != null,
-                textInputAction: TextInputAction.done, // Keyboard "Done" triggers sign in
+                textInputAction: TextInputAction.done,
                 onSubmitted: (_) => _handleSignIn(),
                 onChanged: (_) => _onTextChanged(),
-                // Eye Icon Toggle
                 suffixIcon: IconButton(
                   icon: Icon(
                     _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
@@ -174,8 +172,11 @@ class _SignInScreenState extends State<SignInScreen> {
                 ),
               ),
               const SizedBox(height: 30),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              
+              // FIX: Replaced Row with Wrap to prevent Right Overflow
+              Wrap(
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   Text("New here? ", style: GoogleFonts.montserrat(color: Colors.black54, fontSize: 16, fontWeight: FontWeight.w600)),
                   GestureDetector(
@@ -195,8 +196,12 @@ class _SignInScreenState extends State<SignInScreen> {
     return Padding(
       padding: const EdgeInsets.only(top: 8, left: 5),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.error_outline, color: Colors.red, size: 16),
+          const Padding(
+            padding: EdgeInsets.only(top: 2),
+            child: Icon(Icons.error_outline, color: Colors.red, size: 16),
+          ),
           const SizedBox(width: 5),
           Expanded(
             child: Text(

@@ -74,7 +74,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           _courses = courses;
           _loadingCourses = false;
         });
-        // Start loading modules for the first course
         if (_courses.isNotEmpty) {
           _loadModules();
         }
@@ -84,7 +83,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     }
   }
 
-  /// Fetches modules and automatically selects the first one
   Future<void> _loadModules() async {
     if (_courses.isEmpty) return;
     
@@ -102,13 +100,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           _modules = modules;
           _loadingModules = false;
           
-          // AUTO-SELECT LOGIC: Pre-select the first module if it exists
           if (_modules.isNotEmpty) {
             _selectedModuleId = _modules.first['id'] as String;
           }
         });
 
-        // Immediately fetch rankings for the auto-selected module
         if (_selectedModuleId != null) {
           _loadLeaderboard(_selectedModuleId!);
         }
@@ -190,15 +186,21 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            'Leaderboard',
-            style: GoogleFonts.montserrat(
-              fontSize: 38,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -1.5,
-              color: Theme.of(context).colorScheme.onSurface,
+          // FIX: Wrapped in Expanded and added ellipsis to prevent horizontal overflow
+          Expanded(
+            child: Text(
+              'Leaderboard',
+              style: GoogleFonts.montserrat(
+                fontSize: 38,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -1.5,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
+          const SizedBox(width: 15),
           _buildMenuButton(),
         ],
       ),
@@ -238,7 +240,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 onTap: () {
                   if (_selectedCourseIndex == index) return;
                   setState(() => _selectedCourseIndex = index);
-                  _loadModules(); // This now handles auto-selection of the first module
+                  _loadModules();
                 },
               ),
             ),

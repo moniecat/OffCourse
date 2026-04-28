@@ -131,38 +131,38 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
               ),
               const SizedBox(height: 12),
 
-              // Real‑time stats using StreamBuilder
               StreamBuilder<Map<String, int>>(
                 stream: _statsStream,
                 initialData: const {'courses': 0, 'modules': 0, 'questions': 0},
                 builder: (context, snapshot) {
-                  // Display initialData immediately, then update when stream emits
                   final stats = snapshot.data ?? const {'courses': 0, 'modules': 0, 'questions': 0};
-                  return GridView.count(
-                    crossAxisCount: 3,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    mainAxisSpacing: 8,
-                    crossAxisSpacing: 8,
-                    childAspectRatio: 1.4,
+                  return Row(
                     children: [
-                      AdminStatCard(
-                        title: 'Courses',
-                        value: stats['courses'].toString(),
-                        icon: Icons.library_books_rounded,
-                        color: const Color(0xFF00CBA9),
+                      Expanded(
+                        child: AdminStatCard(
+                          title: 'Courses',
+                          value: stats['courses'].toString(),
+                          icon: Icons.library_books_rounded,
+                          color: const Color(0xFF00CBA9),
+                        ),
                       ),
-                      AdminStatCard(
-                        title: 'Modules',
-                        value: stats['modules'].toString(),
-                        icon: Icons.layers_rounded,
-                        color: const Color(0xFFFFBC1F),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: AdminStatCard(
+                          title: 'Modules',
+                          value: stats['modules'].toString(),
+                          icon: Icons.layers_rounded,
+                          color: const Color(0xFFFFBC1F),
+                        ),
                       ),
-                      AdminStatCard(
-                        title: 'Questions',
-                        value: stats['questions'].toString(),
-                        icon: Icons.quiz_rounded,
-                        color: const Color(0xFF00CBA9),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: AdminStatCard(
+                          title: 'Questions',
+                          value: stats['questions'].toString(),
+                          icon: Icons.quiz_rounded,
+                          color: const Color(0xFF00CBA9),
+                        ),
                       ),
                     ],
                   );
@@ -170,7 +170,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
               ),
               const SizedBox(height: 40),
 
-              // Content Management Section
               Text(
                 'CONTENT MANAGEMENT',
                 style: GoogleFonts.montserrat(
@@ -224,7 +223,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
               ),
               const SizedBox(height: 48),
 
-              // Manage Content Section
               Text(
                 'MANAGE CONTENT',
                 style: GoogleFonts.montserrat(
@@ -326,15 +324,20 @@ class _AdminButton extends StatelessWidget {
                 child: Icon(icon, color: color, size: 24),
               ),
               const SizedBox(width: 20),
-              Text(
-                label,
-                style: GoogleFonts.montserrat(
-                  color: Colors.black,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
+              // FIX: Wrapped text in Expanded to prevent horizontal overflow
+              Expanded(
+                child: Text(
+                  label,
+                  style: GoogleFonts.montserrat(
+                    color: Colors.black,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 10),
               Icon(Icons.arrow_forward_ios_rounded, size: 18, color: color),
             ],
           ),
