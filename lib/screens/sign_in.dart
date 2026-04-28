@@ -17,10 +17,13 @@ class _SignInScreenState extends State<SignInScreen> {
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  
+
   bool _isLoading = false;
-  String? _errorMessage;
-  bool _suggestSignUp = false; // Flag for "Account not found"
+  bool _obscurePassword = true;
+
+  // Separate Error Variables
+  String? _emailError;
+  String? _passwordError;
 
   @override
   void dispose() {
@@ -29,12 +32,11 @@ class _SignInScreenState extends State<SignInScreen> {
     super.dispose();
   }
 
-  // Clears errors when the user starts typing again
   void _onTextChanged() {
-    if (_errorMessage != null || _suggestSignUp) {
+    if (_emailError != null || _passwordError != null) {
       setState(() {
-        _errorMessage = null;
-        _suggestSignUp = false;
+        _emailError = null;
+        _passwordError = null;
       });
     }
   }
@@ -43,65 +45,49 @@ class _SignInScreenState extends State<SignInScreen> {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
-    if (email.isEmpty || password.isEmpty) {
-      setState(() {
-        _errorMessage = 'Please enter both email and password';
-        _suggestSignUp = false;
-      });
+    setState(() {
+      _emailError = null;
+      _passwordError = null;
+    });
+
+    // Local Validation
+    if (email.isEmpty) {
+      setState(() => _emailError = "Email address is required.");
+      return;
+    }
+    if (!email.contains('@')) {
+      setState(() => _emailError = "Please enter a valid email address.");
+      return;
+    }
+    if (password.isEmpty) {
+      setState(() => _passwordError = "Password is required.");
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-      _suggestSignUp = false;
-    });
+    setState(() => _isLoading = true);
 
     try {
       final user = await _auth.signIn(email, password);
-
       if (user != null) {
         if (!mounted) return;
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-        );
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomeScreen()));
       }
     } on FirebaseAuthException catch (e) {
-      String message;
-      bool suggest = false;
-
-      switch (e.code) {
-        case 'user-not-found':
-          message = 'No account exists for this email.';
-          suggest = true;
-          break;
-        case 'wrong-password':
-        case 'invalid-credential':
-          // invalid-credential is the default for new Firebase security rules
-          message = 'Incorrect email or password.';
-          break;
-        case 'user-disabled':
-          message = 'This account has been disabled.';
-          break;
-        case 'too-many-requests':
-          message = 'Too many attempts. Try again later.';
-          break;
-        case 'invalid-email':
-          message = 'The email address is not valid.';
-          break;
-        default:
-          message = 'Login failed. Please try again.';
-      }
-      
       if (mounted) {
         setState(() {
-          _errorMessage = message;
-          _suggestSignUp = suggest;
+          // Identify EXACTLY which field to blame
+          if (e.code == 'user-not-found' || e.code == 'invalid-email') {
+            _emailError = "The email you entered isn't connected to an account.";
+          } 
+          else if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
+            // This treats the generic 'invalid-credential' as a password error
+            _passwordError = "The password you entered is incorrect.";
+          } 
+          else {
+            _emailError = "Login failed. Please try again.";
+          }
         });
       }
-    } catch (e) {
-      if (mounted) setState(() => _errorMessage = 'An unexpected error occurred.');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -117,57 +103,53 @@ class _SignInScreenState extends State<SignInScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image.asset(
-                'assets/pics/logo2.png',
-                width: 150,
-                height: 150,
-                fit: BoxFit.contain,
-              ),
+              Image.asset('assets/pics/logo2.png', width: 120, height: 120),
               const SizedBox(height: 10),
               Text(
                 'Login',
                 style: GoogleFonts.montserrat(
-                  fontSize: 52,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.black,
-                  letterSpacing: -2,
+                  fontSize: 52, 
+                  fontWeight: FontWeight.w900, 
+                  letterSpacing: -2
                 ),
               ),
-              const SizedBox(height: 12),
-              // Text(
-              //   'Welcome back! Please enter your\ndetails to sign in.',
-              //   textAlign: TextAlign.center,
-              //   style: GoogleFonts.montserrat(
-              //     fontSize: 18,
-              //     fontWeight: FontWeight.w600,
-              //     color: const Color(0xFF424242),
-              //     height: 1.3,
-              //   ),
-              // ),
               const SizedBox(height: 40),
-              
+
+              // EMAIL FIELD
               _buildTextField(
                 controller: _emailController,
                 hintText: 'Email address',
                 icon: Icons.person_outline,
+                hasError: _emailError != null,
                 keyboardType: TextInputType.emailAddress,
-                textInputAction: TextInputAction.next,
+                textInputAction: TextInputAction.next, // Keyboard "Next" moves focus
                 onChanged: (_) => _onTextChanged(),
               ),
+              if (_emailError != null) _buildErrorLabel(_emailError!),
+
               const SizedBox(height: 20),
 
+              // PASSWORD FIELD
               _buildTextField(
                 controller: _passwordController,
-                hintText: '••••••••',
+                hintText: 'Password',
                 icon: Icons.lock_outline,
                 isPassword: true,
-                textInputAction: TextInputAction.done,
+                obscureText: _obscurePassword,
+                hasError: _passwordError != null,
+                textInputAction: TextInputAction.done, // Keyboard "Done" triggers sign in
                 onSubmitted: (_) => _handleSignIn(),
                 onChanged: (_) => _onTextChanged(),
+                // Eye Icon Toggle
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                    color: Colors.black,
+                  ),
+                  onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                ),
               ),
-
-              // DYNAMIC ERROR BANNER
-              if (_errorMessage != null) _buildErrorBanner(),
+              if (_passwordError != null) _buildErrorLabel(_passwordError!),
 
               const SizedBox(height: 30),
 
@@ -186,12 +168,8 @@ class _SignInScreenState extends State<SignInScreen> {
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.black)
                       : Text(
-                          'Sign in',
-                          style: GoogleFonts.montserrat(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.black,
-                          ),
+                          'Sign in', 
+                          style: GoogleFonts.montserrat(fontSize: 24, fontWeight: FontWeight.w900)
                         ),
                 ),
               ),
@@ -199,22 +177,13 @@ class _SignInScreenState extends State<SignInScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    "You are new? ",
-                    style: GoogleFonts.montserrat(color: Colors.black54, fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
+                  Text("New here? ", style: GoogleFonts.montserrat(color: Colors.black54, fontSize: 16, fontWeight: FontWeight.w600)),
                   GestureDetector(
-                    onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => const SignUpScreen()));
-                    },
-                    child: Text(
-                      'Create new',
-                      style: GoogleFonts.montserrat(color: Colors.teal, fontSize: 16, fontWeight: FontWeight.w900),
-                    ),
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SignUpScreen())),
+                    child: Text('Create account', style: GoogleFonts.montserrat(color: Colors.teal, fontSize: 16, fontWeight: FontWeight.w900)),
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -222,62 +191,23 @@ class _SignInScreenState extends State<SignInScreen> {
     );
   }
 
-  Widget _buildErrorBanner() {
-    return Container(
-      margin: const EdgeInsets.only(top: 20),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFE0E0),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.red.shade900, width: 2.5),
-        boxShadow: [BoxShadow(color: Colors.red.shade900.withValues(alpha: 0.1), offset: const Offset(0, 4))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildErrorLabel(String message) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8, left: 5),
+      child: Row(
         children: [
-          Row(
-            children: [
-              const Icon(Icons.error_outline, color: Colors.red, size: 24),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  _errorMessage!,
-                  style: GoogleFonts.montserrat(
-                    color: Colors.red.shade900,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          if (_suggestSignUp) ...[
-            const SizedBox(height: 12),
-            GestureDetector(
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => const SignUpScreen()));
-              },
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                decoration: BoxDecoration(
-                  color: Colors.red.shade900,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.black, width: 1.5),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  "REGISTER THIS EMAIL",
-                  style: GoogleFonts.montserrat(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 12,
-                    letterSpacing: 1,
-                  ),
-                ),
+          const Icon(Icons.error_outline, color: Colors.red, size: 16),
+          const SizedBox(width: 5),
+          Expanded(
+            child: Text(
+              message,
+              style: GoogleFonts.montserrat(
+                color: Colors.red, 
+                fontSize: 13, 
+                fontWeight: FontWeight.w700
               ),
             ),
-          ]
+          ),
         ],
       ),
     );
@@ -288,14 +218,17 @@ class _SignInScreenState extends State<SignInScreen> {
     required String hintText,
     required IconData icon,
     bool isPassword = false,
+    bool obscureText = false,
+    required bool hasError,
     TextInputType? keyboardType,
     TextInputAction? textInputAction,
     void Function(String)? onSubmitted,
     void Function(String)? onChanged,
+    Widget? suffixIcon,
   }) {
     return TextField(
       controller: controller,
-      obscureText: isPassword,
+      obscureText: isPassword ? obscureText : false,
       keyboardType: keyboardType,
       textInputAction: textInputAction,
       onSubmitted: onSubmitted,
@@ -307,14 +240,22 @@ class _SignInScreenState extends State<SignInScreen> {
         hintText: hintText,
         hintStyle: GoogleFonts.montserrat(color: Colors.black38, fontSize: 18),
         prefixIcon: Icon(icon, color: Colors.black, size: 28),
+        suffixIcon: suffixIcon,
         contentPadding: const EdgeInsets.symmetric(vertical: 22, horizontal: 20),
+        
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(22),
-          borderSide: const BorderSide(color: Colors.black, width: 2.2),
+          borderSide: BorderSide(
+            color: hasError ? Colors.red : Colors.black, 
+            width: 2.5
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(22),
-          borderSide: const BorderSide(color: Colors.black, width: 2.5),
+          borderSide: BorderSide(
+            color: hasError ? Colors.red : Colors.black, 
+            width: 3.0
+          ),
         ),
       ),
     );
