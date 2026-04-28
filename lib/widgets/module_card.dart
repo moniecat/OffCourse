@@ -11,8 +11,8 @@ class ModuleCard extends StatefulWidget {
   final String title;
   final Color color;
   final String courseId;
-  final String moduleId; // 👈 new
-  final String courseName; // 👈 new
+  final String moduleId; 
+  final String courseName; 
   final String? description;
   final int courseIndex;
 
@@ -21,8 +21,8 @@ class ModuleCard extends StatefulWidget {
     required this.title,
     required this.color,
     required this.courseId,
-    required this.moduleId, // 👈 new
-    required this.courseName, // 👈 new
+    required this.moduleId, 
+    required this.courseName, 
     this.description,
     required this.courseIndex,
   });
@@ -197,8 +197,6 @@ class _ModuleCardState extends State<ModuleCard> {
     );
   }
 }
-
-// ... Keep your _BoldStickerPainter class here ...
 class _BoldStickerPainter extends CustomPainter {
   final Color borderColor;
   final double thickness;
