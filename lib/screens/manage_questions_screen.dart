@@ -18,6 +18,143 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
   String? _selectedModuleId;
   String _searchQuery = '';
 
+  Future<void> _editQuestion(String courseId, String moduleId, Map<String, dynamic> question) async {
+    final questionController = TextEditingController(text: question['question'] ?? '');
+    final optionAController = TextEditingController(text: question['optionA'] ?? '');
+    final optionBController = TextEditingController(text: question['optionB'] ?? '');
+    final optionCController = TextEditingController(text: question['optionC'] ?? '');
+    final optionDController = TextEditingController(text: question['optionD'] ?? '');
+    String? selectedCorrect = question['correctAnswer'] ?? 'A';
+    bool isLoading = false;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text('Edit Question', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: questionController,
+                  decoration: InputDecoration(
+                    labelText: 'Question',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  maxLines: 3,
+                  style: GoogleFonts.montserrat(),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: optionAController,
+                  decoration: InputDecoration(
+                    labelText: 'Option A',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  style: GoogleFonts.montserrat(),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: optionBController,
+                  decoration: InputDecoration(
+                    labelText: 'Option B',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  style: GoogleFonts.montserrat(),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: optionCController,
+                  decoration: InputDecoration(
+                    labelText: 'Option C',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  style: GoogleFonts.montserrat(),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: optionDController,
+                  decoration: InputDecoration(
+                    labelText: 'Option D',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  style: GoogleFonts.montserrat(),
+                ),
+                const SizedBox(height: 16),
+                DropdownButton<String>(
+                  value: selectedCorrect,
+                  items: ['A', 'B', 'C', 'D']
+                      .map((e) => DropdownMenuItem(value: e, child: Text('Correct Answer: $e')))
+                      .toList(),
+                  onChanged: (val) => setDialogState(() => selectedCorrect = val),
+                  isExpanded: true,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel', style: GoogleFonts.montserrat()),
+            ),
+            ElevatedButton(
+              onPressed: isLoading
+                  ? null
+                  : () async {
+                      final q = questionController.text.trim();
+                      final a = optionAController.text.trim();
+                      final b = optionBController.text.trim();
+                      final c = optionCController.text.trim();
+                      final d = optionDController.text.trim();
+
+                      if (q.isEmpty || a.isEmpty || b.isEmpty || c.isEmpty || d.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('All fields required', style: GoogleFonts.montserrat())),
+                        );
+                        return;
+                      }
+
+                      setDialogState(() => isLoading = true);
+                      try {
+                        await FirestoreService().updateQuestion(
+                          courseId: courseId,
+                          moduleId: moduleId,
+                          questionId: question['id'],
+                          questionType: 'mcq',
+                          question: q,
+                          optionA: a,
+                          optionB: b,
+                          optionC: c,
+                          optionD: d,
+                          correctAnswer: selectedCorrect ?? 'A',
+                        );
+                        if (!mounted) return;
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Question updated', style: GoogleFonts.montserrat()),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                        setState(() {});
+                      } catch (e) {
+                        if (!mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Failed to update'), backgroundColor: Colors.red),
+                        );
+                      } finally {
+                        setDialogState(() => isLoading = false);
+                      }
+                    },
+              child: Text('Update', style: GoogleFonts.montserrat()),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _deleteQuestion(String courseId, String moduleId, String questionId) async {
     final messenger = ScaffoldMessenger.of(context);
     showDialog(
@@ -254,9 +391,18 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
                 contentPadding: const EdgeInsets.all(16),
                 title: Text(q['question'] ?? 'UNTITLED', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900)),
                 subtitle: Text('Correct: ${q['correctAnswer']}', style: GoogleFonts.montserrat(fontWeight: FontWeight.w600, color: Colors.green[700])),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.red),
-                  onPressed: () => _deleteQuestion(_selectedCourseId!, _selectedModuleId!, q['id']),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit_outlined, color: Colors.blue, size: 24),
+                      onPressed: () => _editQuestion(_selectedCourseId!, _selectedModuleId!, q),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline, color: Colors.red),
+                      onPressed: () => _deleteQuestion(_selectedCourseId!, _selectedModuleId!, q['id']),
+                    ),
+                  ],
                 ),
               ),
             );

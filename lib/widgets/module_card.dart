@@ -173,6 +173,19 @@ class _ModuleCardState extends State<ModuleCard> {
                                   color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                                 ),
                               ),
+                          if (widget.description != null && widget.description!.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              widget.description!,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.montserrat(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -197,6 +210,8 @@ class _ModuleCardState extends State<ModuleCard> {
     );
   }
 }
+
+// ... Keep your _BoldStickerPainter class here ...
 class _BoldStickerPainter extends CustomPainter {
   final Color borderColor;
   final double thickness;

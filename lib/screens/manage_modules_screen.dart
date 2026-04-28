@@ -16,6 +16,101 @@ class _ManageModulesScreenState extends State<ManageModulesScreen> {
   String? _selectedCourseId;
   String _searchQuery = '';
 
+  Future<void> _editModule(String courseId, Map<String, dynamic> module) async {
+    final titleController = TextEditingController(text: module['title'] ?? '');
+    final descriptionController = TextEditingController(text: module['description'] ?? '');
+    final orderController = TextEditingController(text: (module['order'] ?? 0).toString());
+    bool isLoading = false;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text('Edit Module', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: titleController,
+                  decoration: InputDecoration(
+                    labelText: 'Title',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  style: GoogleFonts.montserrat(),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: descriptionController,
+                  decoration: InputDecoration(
+                    labelText: 'Description',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  maxLines: 3,
+                  style: GoogleFonts.montserrat(),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: orderController,
+                  decoration: InputDecoration(
+                    labelText: 'Order',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  keyboardType: TextInputType.number,
+                  style: GoogleFonts.montserrat(),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel', style: GoogleFonts.montserrat()),
+            ),
+            ElevatedButton(
+              onPressed: isLoading
+                  ? null
+                  : () async {
+                      final title = titleController.text.trim();
+                      final description = descriptionController.text.trim();
+                      final order = int.tryParse(orderController.text.trim()) ?? 0;
+
+                      if (title.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Title is required', style: GoogleFonts.montserrat())),
+                        );
+                        return;
+                      }
+
+                      setDialogState(() => isLoading = true);
+                      try {
+                        await FirestoreService().updateModule(courseId, module['id'], title, description, order);
+                        if (!mounted) return;
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Module updated', style: GoogleFonts.montserrat()),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                        setState(() {});
+                      } catch (e) {
+                        if (!mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Failed to update'), backgroundColor: Colors.red),
+                        );
+                      } finally {
+                        setDialogState(() => isLoading = false);
+                      }
+                    },
+              child: Text('Update', style: GoogleFonts.montserrat()),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _deleteModule(String courseId, String moduleId, String moduleName) async {
     final messenger = ScaffoldMessenger.of(context);
     showDialog(
@@ -215,9 +310,18 @@ class _ManageModulesScreenState extends State<ManageModulesScreen> {
                               maxLines: 1,
                               style: GoogleFonts.montserrat(fontWeight: FontWeight.w600, color: Colors.black54),
                             ),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete_outline, color: Colors.red, size: 28),
-                              onPressed: () => _deleteModule(_selectedCourseId!, module['id'], module['title']),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.edit_outlined, color: Colors.blue, size: 24),
+                                  onPressed: () => _editModule(_selectedCourseId!, module),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete_outline, color: Colors.red, size: 28),
+                                  onPressed: () => _deleteModule(_selectedCourseId!, module['id'], module['title']),
+                                ),
+                              ],
                             ),
                           ),
                         );

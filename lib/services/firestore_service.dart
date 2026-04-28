@@ -84,6 +84,15 @@ class FirestoreService {
     return null;
   }
 
+  Future<void> updateCourse(String courseId, String title, String description, int order) async {
+    await db.collection('courses').doc(courseId).update({
+      'title': title,
+      'description': description.isEmpty ? null : description,
+      'order': order,
+      'updatedAt': Timestamp.now(),
+    });
+  }
+
   // --- MODULES ---
 
   Future<void> addModule(
@@ -125,6 +134,20 @@ class FirestoreService {
             .toList());
   }
 
+  Future<void> updateModule(String courseId, String moduleId, String title, String description, int order) async {
+    await db
+        .collection('courses')
+        .doc(courseId)
+        .collection('modules')
+        .doc(moduleId)
+        .update({
+          'title': title,
+          'description': description.isEmpty ? null : description,
+          'order': order,
+          'updatedAt': Timestamp.now(),
+        });
+  }
+
   // --- QUESTIONS ---
 
   Future<void> addQuestion({
@@ -156,6 +179,37 @@ class FirestoreService {
       'correctAnswer': correctAnswer,
       'createdAt': Timestamp.now(),
     });
+  }
+
+  Future<void> updateQuestion({
+    required String courseId,
+    required String moduleId,
+    required String questionId,
+    required String questionType,
+    required String question,
+    required String optionA,
+    required String optionB,
+    required String optionC,
+    required String optionD,
+    required String correctAnswer,
+  }) async {
+    await db
+        .collection('courses')
+        .doc(courseId)
+        .collection('modules')
+        .doc(moduleId)
+        .collection('questions')
+        .doc(questionId)
+        .update({
+          'questionType': questionType,
+          'question': question,
+          'optionA': optionA,
+          'optionB': optionB,
+          'optionC': optionC,
+          'optionD': optionD,
+          'correctAnswer': correctAnswer,
+          'updatedAt': Timestamp.now(),
+        });
   }
 
   /// Stream that emits real‑time stats: number of courses, modules, and questions.
