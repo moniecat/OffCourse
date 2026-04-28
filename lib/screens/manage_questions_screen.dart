@@ -29,7 +29,7 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
+      builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           title: Text('Edit Question', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900)),
           content: SingleChildScrollView(
@@ -95,7 +95,7 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(dialogContext),
               child: Text('Cancel', style: GoogleFonts.montserrat()),
             ),
             ElevatedButton(
@@ -116,6 +116,11 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
                       }
 
                       setDialogState(() => isLoading = true);
+
+                      // Capture Navigator and Messenger before async gap
+                      final navigator = Navigator.of(dialogContext);
+                      final messenger = ScaffoldMessenger.of(context);
+
                       try {
                         await FirestoreService().updateQuestion(
                           courseId: courseId,
@@ -129,18 +134,20 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
                           optionD: d,
                           correctAnswer: selectedCorrect ?? 'A',
                         );
+
                         if (!mounted) return;
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
+
+                        navigator.pop(); // Close dialog
+                        messenger.showSnackBar(
                           SnackBar(
                             content: Text('Question updated', style: GoogleFonts.montserrat()),
                             backgroundColor: Colors.green,
                           ),
                         );
-                        setState(() {});
+                        setState(() {}); // Refresh list
                       } catch (e) {
                         if (!mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
+                        messenger.showSnackBar(
                           const SnackBar(content: Text('Failed to update'), backgroundColor: Colors.red),
                         );
                       } finally {
@@ -157,6 +164,7 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
 
   Future<void> _deleteQuestion(String courseId, String moduleId, String questionId) async {
     final messenger = ScaffoldMessenger.of(context);
+    
     showDialog(
       context: context,
       builder: (context) => AdminDeleteDialog(
@@ -165,10 +173,21 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
         onConfirm: () async {
           try {
             await FirestoreService().deleteQuestion(courseId, moduleId, questionId);
-            messenger.showSnackBar(const SnackBar(content: Text('Question deleted'), backgroundColor: Colors.green));
+            
+            if (!mounted) return;
+
+            messenger.showSnackBar(
+              SnackBar(
+                content: Text('Question deleted', style: GoogleFonts.montserrat()), 
+                backgroundColor: Colors.green
+              )
+            );
             setState(() {});
           } catch (e) {
-            messenger.showSnackBar(const SnackBar(content: Text('Failed to delete'), backgroundColor: Colors.red));
+            if (!mounted) return;
+            messenger.showSnackBar(
+              const SnackBar(content: Text('Failed to delete'), backgroundColor: Colors.red)
+            );
           }
         },
       ),
@@ -265,7 +284,6 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
               ),
               const SizedBox(height: 24),
 
-              // COURSE SELECTOR
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(
@@ -286,13 +304,12 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
               ),
               const SizedBox(height: 20),
 
-              // MODULE SELECTOR & LIST
               Expanded(
                 child: FutureBuilder<List<Map<String, dynamic>>>(
                   key: ValueKey(_selectedCourseId),
                   future: FirestoreService().getModules(_selectedCourseId!),
                   builder: (context, modSnap) {
-                    if (modSnap.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+                    if (modSnap.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator(color: darkBorder));
                     
                     final modules = modSnap.data ?? [];
                     if (modules.isEmpty) return const Center(child: Text("No modules in this course"));
@@ -318,7 +335,6 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
                         ),
                         const SizedBox(height: 20),
 
-                        // SEARCH BAR
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 24),
                           child: Container(
@@ -342,7 +358,6 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
                         ),
                         const SizedBox(height: 20),
 
-                        // QUESTIONS LIST
                         Expanded(child: _buildQuestionsList()),
                       ],
                     );
@@ -368,14 +383,18 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
           .get()
           .then((snap) => snap.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList()),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+        if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator(color: darkBorder));
 
         final questions = snapshot.data?.where((q) =>
           (q['question'] ?? '').toLowerCase().contains(_searchQuery.toLowerCase())
         ).toList() ?? [];
 
+        if (questions.isEmpty) {
+          return Center(child: Text('No questions found.', style: GoogleFonts.montserrat(fontWeight: FontWeight.w600)));
+        }
+
         return ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
           itemCount: questions.length,
           itemBuilder: (context, index) {
             final q = questions[index];
@@ -399,7 +418,7 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
                       onPressed: () => _editQuestion(_selectedCourseId!, _selectedModuleId!, q),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.delete_outline, color: Colors.red),
+                      icon: const Icon(Icons.delete_outline, color: Colors.red, size: 24),
                       onPressed: () => _deleteQuestion(_selectedCourseId!, _selectedModuleId!, q['id']),
                     ),
                   ],

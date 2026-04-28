@@ -214,19 +214,16 @@ class FirestoreService {
 
   /// Stream that emits real‑time stats: number of courses, modules, and questions.
   Stream<Map<String, int>> watchStats() async* {
-    // Listen to courses collection changes
     await for (final coursesSnapshot in db.collection('courses').snapshots()) {
       int courseCount = coursesSnapshot.docs.length;
       int moduleCount = 0;
       int questionCount = 0;
 
-      // Fetch all modules and questions in parallel using Future.wait
       final courseFutures = coursesSnapshot.docs.map((courseDoc) async {
         final courseId = courseDoc.id;
         int courseModuleCount = 0;
         int courseQuestionCount = 0;
 
-        // Get modules of this course
         final modulesSnapshot = await db
             .collection('courses')
             .doc(courseId)
@@ -234,7 +231,6 @@ class FirestoreService {
             .get();
         courseModuleCount = modulesSnapshot.docs.length;
 
-        // Fetch questions for all modules in parallel
         final moduleFutures = modulesSnapshot.docs.map((moduleDoc) async {
           final questionsSnapshot = await db
               .collection('courses')
@@ -247,7 +243,9 @@ class FirestoreService {
         });
 
         final questionCounts = await Future.wait(moduleFutures);
-        courseQuestionCount = questionCounts.fold<int>(0, (sum, count) => sum + count);
+        
+        // FIXED: Renamed parameters to avoid collision with Firestore types 'sum' and 'count'
+        courseQuestionCount = questionCounts.fold<int>(0, (acc, value) => acc + value);
 
         return {'modules': courseModuleCount, 'questions': courseQuestionCount};
       });

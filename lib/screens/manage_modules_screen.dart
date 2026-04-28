@@ -24,7 +24,7 @@ class _ManageModulesScreenState extends State<ManageModulesScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
+      builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           title: Text('Edit Module', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900)),
           content: SingleChildScrollView(
@@ -64,7 +64,7 @@ class _ManageModulesScreenState extends State<ManageModulesScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(dialogContext),
               child: Text('Cancel', style: GoogleFonts.montserrat()),
             ),
             ElevatedButton(
@@ -83,11 +83,18 @@ class _ManageModulesScreenState extends State<ManageModulesScreen> {
                       }
 
                       setDialogState(() => isLoading = true);
+
+                      // Capture Navigator and Messenger before async gap
+                      final navigator = Navigator.of(dialogContext);
+                      final messenger = ScaffoldMessenger.of(context);
+
                       try {
                         await FirestoreService().updateModule(courseId, module['id'], title, description, order);
+                        
                         if (!mounted) return;
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
+
+                        navigator.pop();
+                        messenger.showSnackBar(
                           SnackBar(
                             content: Text('Module updated', style: GoogleFonts.montserrat()),
                             backgroundColor: Colors.green,
@@ -96,7 +103,7 @@ class _ManageModulesScreenState extends State<ManageModulesScreen> {
                         setState(() {});
                       } catch (e) {
                         if (!mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
+                        messenger.showSnackBar(
                           const SnackBar(content: Text('Failed to update'), backgroundColor: Colors.red),
                         );
                       } finally {
@@ -113,6 +120,7 @@ class _ManageModulesScreenState extends State<ManageModulesScreen> {
 
   Future<void> _deleteModule(String courseId, String moduleId, String moduleName) async {
     final messenger = ScaffoldMessenger.of(context);
+    
     showDialog(
       context: context,
       builder: (context) => AdminDeleteDialog(
@@ -121,19 +129,27 @@ class _ManageModulesScreenState extends State<ManageModulesScreen> {
         onConfirm: () async {
           try {
             await FirestoreService().deleteModule(courseId, moduleId);
+            
             if (!mounted) return;
-            messenger.showSnackBar(SnackBar(content: Text('Module deleted'), backgroundColor: Colors.green));
+            
+            messenger.showSnackBar(
+              SnackBar(
+                content: Text('Module deleted', style: GoogleFonts.montserrat()), 
+                backgroundColor: Colors.green
+              )
+            );
             setState(() {});
           } catch (e) {
             if (!mounted) return;
-            messenger.showSnackBar(const SnackBar(content: Text('Failed to delete'), backgroundColor: Colors.red));
+            messenger.showSnackBar(
+              const SnackBar(content: Text('Failed to delete'), backgroundColor: Colors.red)
+            );
           }
         },
       ),
     );
   }
 
-  /// Exact same back button from your sample
   Widget _buildBackButton() {
     return GestureDetector(
       onTap: () => Navigator.pop(context),
@@ -194,7 +210,6 @@ class _ManageModulesScreenState extends State<ManageModulesScreen> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // BOLD HEADER
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Text(
@@ -210,7 +225,6 @@ class _ManageModulesScreenState extends State<ManageModulesScreen> {
               ),
               const SizedBox(height: 32),
 
-              // COURSE SELECTOR DROPDOWN
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(
@@ -244,7 +258,6 @@ class _ManageModulesScreenState extends State<ManageModulesScreen> {
               ),
               const SizedBox(height: 24),
 
-              // SEARCH BAR
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Container(
@@ -269,7 +282,6 @@ class _ManageModulesScreenState extends State<ManageModulesScreen> {
               ),
               const SizedBox(height: 24),
 
-              // MODULES LIST
               Expanded(
                 child: FutureBuilder<List<Map<String, dynamic>>>(
                   future: FirestoreService().getModules(_selectedCourseId!),
@@ -287,7 +299,7 @@ class _ManageModulesScreenState extends State<ManageModulesScreen> {
                     }
 
                     return ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
                       itemCount: filteredModules.length,
                       itemBuilder: (context, index) {
                         final module = filteredModules[index];

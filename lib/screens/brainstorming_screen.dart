@@ -50,14 +50,15 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
         widget.courseId,
       );
       questions.shuffle();
+      if (!mounted) return;
       setState(() {
-        // Slice to maxQuestions if custom
         _questions = widget.maxQuestions != null
             ? questions.take(widget.maxQuestions!).toList()
             : questions;
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = e.toString();
         _isLoading = false;
@@ -80,26 +81,29 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
     });
   }
 
-  void _nextQuestion() {
+  Future<void> _nextQuestion() async {
     if (_currentIndex < _questions.length - 1) {
       setState(() {
         _currentIndex++;
         _currentSelection = null;
       });
     } else {
-      // Only save if not custom session
+      // Logic for ending the session
       if (!widget.isCustom) {
-        ResultService.saveResult(
-          courseId: widget.courseId,
-          moduleId: widget.moduleId,
-          score:    _score,
-          total:    _questions.length,
-        ).then((_) {
-          print('✅ Result saved');
-        }).catchError((e) {
-          print('❌ Error: $e');
-        });
+        try {
+          await ResultService.saveResult(
+            courseId: widget.courseId,
+            moduleId: widget.moduleId,
+            score:    _score,
+            total:    _questions.length,
+          );
+        } catch (e) {
+          debugPrint('❌ Error saving result: $e');
+        }
       }
+
+      // Check mounted before navigating after an await
+      if (!mounted) return;
 
       Navigator.pushReplacement(
         context,
@@ -109,15 +113,13 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
             total:       _questions.length,
             courseId:    widget.courseId,
             courseIndex: widget.courseIndex,
-            isCustom:    widget.isCustom, // 👈 add
+            isCustom:    widget.isCustom,
           ),
         ),
       );
     }
   }
 
-  // LOGIC: Turns option 0xFFFBB017 (Orange) when selected,
-  // then switches to Green/Red after checking.
   AnswerState _stateFor(String label) {
     final confirmedAnswer = _userAnswers[_currentIndex];
     
@@ -134,10 +136,26 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(child: CircularProgressIndicator(color: Colors.black)),
+      );
+    }
 
     if (_error != null || _questions.isEmpty) {
-      return Scaffold(body: Center(child: Text('Error: ${_error ?? "No questions"}')));
+      return Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Text(
+              _error ?? "No questions found for this module.",
+              textAlign: TextAlign.center,
+              style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ),
+      );
     }
 
     final currentQuestion = _questions[_currentIndex];
@@ -148,10 +166,10 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
       backgroundColor: const Color(0xFFF9F9F9),
       body: Column(
         children: [
-          _buildTopBar(), // 👈 outside SafeArea
+          _buildTopBar(),
           Expanded(
             child: SafeArea(
-              top: false, // 👈 top already handled by banner
+              top: false,
               child: Column(
                 children: [
                   Expanded(
@@ -187,7 +205,6 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
         if (widget.isCustom)
           Container(
             width: double.infinity,
-            margin: const EdgeInsets.only(bottom: 8),
             padding: const EdgeInsets.symmetric(vertical: 8),
             color: const Color(0xFFFFF3CD),
             child: Row(
@@ -207,7 +224,7 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
             ),
           ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(24, 10, 24, 0),
+          padding: const EdgeInsets.fromLTRB(24, 40, 24, 0),
           child: Align(
             alignment: Alignment.topRight,
             child: GestureDetector(
@@ -228,6 +245,7 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
       ],
     );
   }
+
   Widget _buildHeader() {
     return Text(
       widget.moduleName.toUpperCase(),
@@ -380,7 +398,7 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
             color: !canCheck ? Colors.grey[300] : const Color(0xFFFBB017),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: canCheck ? Colors.black : Colors.grey[400]!, // 👈 match disabled color
+              color: canCheck ? Colors.black : Colors.grey[400]!,
               width: 3,
             ),
             boxShadow: canCheck ? [const BoxShadow(color: Colors.black, offset: Offset(0, 6))] : null,

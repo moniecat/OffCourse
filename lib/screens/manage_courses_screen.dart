@@ -23,7 +23,7 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
+      builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           title: Text('Edit Course', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900)),
           content: SingleChildScrollView(
@@ -63,7 +63,7 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(dialogContext),
               child: Text('Cancel', style: GoogleFonts.montserrat()),
             ),
             ElevatedButton(
@@ -82,20 +82,28 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
                       }
 
                       setDialogState(() => isLoading = true);
+
+                      // Capture the Navigator and Messenger before the async gap
+                      final navigator = Navigator.of(dialogContext);
+                      final messenger = ScaffoldMessenger.of(context);
+
                       try {
                         await FirestoreService().updateCourse(course.id, title, description, order);
+                        
+                        // Check if the widget is still in the tree
                         if (!mounted) return;
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
+
+                        navigator.pop(); // Close dialog
+                        messenger.showSnackBar(
                           SnackBar(
                             content: Text('Course updated', style: GoogleFonts.montserrat()),
                             backgroundColor: Colors.green,
                           ),
                         );
-                        setState(() {});
+                        setState(() {}); // Refresh list
                       } catch (e) {
                         if (!mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
+                        messenger.showSnackBar(
                           const SnackBar(content: Text('Failed to update'), backgroundColor: Colors.red),
                         );
                       } finally {
@@ -121,14 +129,16 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
         onConfirm: () async {
           try {
             await FirestoreService().deleteCourse(courseId);
+            
             if (!mounted) return;
+
             messenger.showSnackBar(
               SnackBar(
                 content: Text('Course deleted', style: GoogleFonts.montserrat()),
                 backgroundColor: Colors.green,
               ),
             );
-            setState(() {});
+            setState(() {}); // Refresh list
           } catch (e) {
             if (!mounted) return;
             messenger.showSnackBar(
@@ -140,7 +150,6 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
     );
   }
 
-  // Exact same back button from your AddCourseScreen
   Widget _buildBackButton() {
     return GestureDetector(
       onTap: () => Navigator.pop(context),
@@ -176,7 +185,6 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // BOLD HEADER (Matches "Add Course" style)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Text(
@@ -191,8 +199,6 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
             ),
           ),
           const SizedBox(height: 24),
-
-          // STYLED SEARCH BAR
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Container(
@@ -216,14 +222,16 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
             ),
           ),
           const SizedBox(height: 24),
-
-          // LIST AREA
           Expanded(
             child: FutureBuilder<List<Course>>(
               future: FirestoreService().getCourses(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator(color: Colors.black));
+                }
+
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error loading courses', style: GoogleFonts.montserrat()));
                 }
 
                 final filteredCourses = snapshot.data?.where((course) =>
@@ -237,7 +245,7 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
                 }
 
                 return ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
                   itemCount: filteredCourses.length,
                   itemBuilder: (context, index) {
                     final course = filteredCourses[index];
