@@ -21,11 +21,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   static const double borderWidth = 3.0;
   static const Offset shadowOffset = Offset(4, 4);
 
-  // Admin/Role Logic
+  // Logic Variables
   String _userRole = 'student';
   bool get _isAdmin => _userRole == 'admin';
-
-  // Data Variables
   List<Course> _courses = [];
   int _selectedCourseIndex = 0;
   List<Map<String, dynamic>> _modules = [];
@@ -49,17 +47,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   Future<void> _loadUserRole() async {
     final user = AuthService().currentUser;
     if (user == null) return;
-
     try {
       final doc = await FirestoreService().getUser(user.uid);
       if (doc.exists && mounted) {
         final data = doc.data() as Map<String, dynamic>;
-        final role = data['role'] as String?;
-        if (role != null && role.isNotEmpty) {
-          setState(() {
-            _userRole = role;
-          });
-        }
+        setState(() => _userRole = data['role'] ?? 'student');
       }
     } catch (e) {
       debugPrint('Error loading role: $e');
@@ -74,9 +66,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           _courses = courses;
           _loadingCourses = false;
         });
-        if (_courses.isNotEmpty) {
-          _loadModules();
-        }
+        if (_courses.isNotEmpty) _loadModules();
       }
     } catch (_) {
       if (mounted) setState(() => _loadingCourses = false);
@@ -85,32 +75,22 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
   Future<void> _loadModules() async {
     if (_courses.isEmpty) return;
-    
     setState(() {
       _loadingModules = true;
       _selectedModuleId = null; 
       _entries = []; 
     });
-
     try {
       final modules = await FirestoreService().getModules(_courses[_selectedCourseIndex].id);
-      
       if (mounted) {
         setState(() {
           _modules = modules;
           _loadingModules = false;
-          
-          if (_modules.isNotEmpty) {
-            _selectedModuleId = _modules.first['id'] as String;
-          }
+          if (_modules.isNotEmpty) _selectedModuleId = _modules.first['id'];
         });
-
-        if (_selectedModuleId != null) {
-          _loadLeaderboard(_selectedModuleId!);
-        }
+        if (_selectedModuleId != null) _loadLeaderboard(_selectedModuleId!);
       }
     } catch (e) {
-      debugPrint('Error loading modules: $e');
       if (mounted) setState(() => _loadingModules = false);
     }
   }
@@ -135,17 +115,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       PageRouteBuilder(
         opaque: false,
         barrierDismissible: true,
-        barrierColor: Theme.of(context).colorScheme.scrim.withValues(alpha: 0.5),
+        barrierColor: Colors.black.withOpacity(0.5),
         pageBuilder: (_, __, ___) => MenuDrawer(isAdmin: _isAdmin, currentScreen: 'Home'),
-        transitionsBuilder: (_, animation, __, child) {
-          return SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(1, 0),
-              end: Offset.zero,
-            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutQuart)),
-            child: child,
-          );
-        },
+        transitionsBuilder: (_, animation, __, child) => SlideTransition(
+          position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero)
+              .animate(CurvedAnimation(parent: animation, curve: Curves.easeOutQuart)),
+          child: child,
+        ),
       ),
     );
   }
@@ -156,26 +132,20 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       extendBody: true,
       bottomNavigationBar: const CustomBottomNav(selectedIndex: 0),
-      body: Column(
-        children: [
-          Expanded(
-            child: SafeArea(
-              bottom: false,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeader(),
-                  const SizedBox(height: 10),
-                  _buildCourseSelector(),
-                  const SizedBox(height: 15),
-                  _buildModuleDropdown(),
-                  const SizedBox(height: 20),
-                  _buildMainContent(),
-                ],
-              ),
-            ),
-          ),
-        ],
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeader(),
+            const SizedBox(height: 10),
+            _buildCourseSelector(),
+            const SizedBox(height: 15),
+            _buildModuleDropdown(),
+            const SizedBox(height: 20),
+            _buildMainContent(),
+          ],
+        ),
       ),
     );
   }
@@ -186,7 +156,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // FIX: Wrapped in Expanded and added ellipsis to prevent horizontal overflow
           Expanded(
             child: Text(
               'Leaderboard',
@@ -200,7 +169,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          const SizedBox(width: 15),
           _buildMenuButton(),
         ],
       ),
@@ -215,9 +183,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
           border: Border.all(color: Theme.of(context).colorScheme.onSurface, width: 3),
-          boxShadow: [
-            BoxShadow(color: Theme.of(context).colorScheme.onSurface, offset: const Offset(3, 3))
-          ],
+          boxShadow: [BoxShadow(color: Theme.of(context).colorScheme.onSurface, offset: const Offset(3, 3))],
         ),
         child: Icon(Icons.menu, color: Theme.of(context).colorScheme.onSurface, size: 30),
       ),
@@ -264,13 +230,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 child: DropdownButton<String>(
                   isExpanded: true,
                   value: _selectedModuleId,
-                  hint: Text("Select a Module", style: GoogleFonts.montserrat(fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6))),
-                  items: _modules
-                      .map((m) => DropdownMenuItem(
-                            value: m['id'] as String,
-                            child: Text(m['title'], style: GoogleFonts.montserrat(fontWeight: FontWeight.w700, fontSize: 14, color: Theme.of(context).colorScheme.onSurface)),
-                          ))
-                      .toList(),
+                  hint: Text("Select a Module", style: GoogleFonts.montserrat(fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
+                  items: _modules.map((m) => DropdownMenuItem(
+                    value: m['id'] as String,
+                    child: Text(m['title'], style: GoogleFonts.montserrat(fontWeight: FontWeight.w700, fontSize: 14, color: Theme.of(context).colorScheme.onSurface)),
+                  )).toList(),
                   onChanged: (val) {
                     if (val != null) {
                       setState(() => _selectedModuleId = val);
@@ -284,18 +248,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   }
 
   Widget _buildMainContent() {
-    if (_loadingModules) {
-       return const Expanded(child: Center(child: CircularProgressIndicator()));
-    }
-    if (_selectedModuleId == null) {
-      return Expanded(child: Center(child: Text("Select a module to see rankings", style: GoogleFonts.montserrat(fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)))));
-    }
-    if (_loadingLeaderboard) {
-      return Expanded(child: Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary)));
-    }
-    if (_entries.isEmpty) {
-      return Expanded(child: Center(child: Text("No scores recorded yet", style: GoogleFonts.montserrat(fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)))));
-    }
+    if (_loadingModules || _loadingLeaderboard) return const Expanded(child: Center(child: CircularProgressIndicator()));
+    if (_selectedModuleId == null) return Expanded(child: Center(child: Text("Select a module", style: GoogleFonts.montserrat(fontWeight: FontWeight.w600))));
+    if (_entries.isEmpty) return Expanded(child: Center(child: Text("No scores recorded", style: GoogleFonts.montserrat(fontWeight: FontWeight.w600))));
 
     return Expanded(
       child: ListView(
@@ -312,28 +267,34 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
   Widget _buildPodium() {
     final top = _entries.take(3).toList();
-    List<LeaderboardEntry?> ordered = [
-      top.length > 1 ? top[1] : null,
-      top.isNotEmpty ? top[0] : null,
-      top.length > 2 ? top[2] : null,
-    ];
+    if (top.isEmpty) return const SizedBox.shrink();
+
+    // Determine order: [2nd, 1st, 3rd] depending on how many people there are
+    List<LeaderboardEntry> displayOrder = [];
+    if (top.length == 1) {
+      displayOrder = [top[0]];
+    } else if (top.length == 2) {
+      displayOrder = [top[1], top[0]]; // Showdown: 2nd on left, 1st on right
+    } else {
+      displayOrder = [top[1], top[0], top[2]]; // Standard 3-way
+    }
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
-      children: ordered.map((entry) {
-        if (entry == null) return Expanded(child: Container());
-
+      children: displayOrder.map((entry) {
         int actualRank = _entries.indexOf(entry) + 1;
         bool isCurrentUser = entry.userId == _currentUid;
 
-        double blockHeight = actualRank == 1 ? 130 : (actualRank == 2 ? 90 : 70);
-        double avatarSize = actualRank == 1 ? 95 : (actualRank == 2 ? 80 : 70);
+        // Heights adjust based on rank
+        double blockHeight = actualRank == 1 ? 140 : (actualRank == 2 ? 100 : 80);
+        
+        // Avatar and Text scale up if there are fewer people
+        double avatarSize = top.length < 3 ? 100 : (actualRank == 1 ? 90 : 75);
+        double nameSize = top.length < 3 ? 18 : 14;
 
-        Color podiumColor = actualRank == 1
-            ? const Color(0xFFFFC21C)
-            : actualRank == 2
-                ? const Color(0xFFD1D5DB)
-                : const Color(0xFFFF8C42);
+        Color podiumColor = actualRank == 1 
+            ? const Color(0xFFFFC21C) 
+            : actualRank == 2 ? const Color(0xFFD1D5DB) : const Color(0xFFFF8C42);
 
         return Expanded(
           child: Column(
@@ -342,10 +303,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               if (isCurrentUser)
                 Container(
                   margin: const EdgeInsets.only(bottom: 6),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary, borderRadius: BorderRadius.circular(4)),
-                  child: Text("YOU", style: GoogleFonts.montserrat(color: Theme.of(context).colorScheme.onPrimary, fontSize: 10, fontWeight: FontWeight.w900)),
-                ),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                  decoration: BoxDecoration(color: const Color(0xFF249780), borderRadius: BorderRadius.circular(4)),
+                  child: Text("YOU", style: GoogleFonts.montserrat(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900)),
+                )
+              else
+                const SizedBox(height: 20),
+              
               Stack(
                 alignment: Alignment.bottomCenter,
                 children: [
@@ -355,27 +319,23 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     height: avatarSize,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Theme.of(context).cardColor,
-                      border: Border.all(color: isCurrentUser ? const Color(0xFF249780) : Theme.of(context).colorScheme.onSurface, width: borderWidth),
-                      boxShadow: [BoxShadow(color: isCurrentUser ? const Color(0xFF249780) : Theme.of(context).colorScheme.onSurface, offset: const Offset(3, 3))],
+                      color: Colors.white,
+                      border: Border.all(color: isCurrentUser ? const Color(0xFF249780) : Colors.black, width: borderWidth),
+                      boxShadow: [BoxShadow(color: isCurrentUser ? const Color(0xFF249780) : Colors.black, offset: const Offset(3, 3))],
                     ),
                     child: ClipOval(
                       child: Image.network(
-                        (entry.profileImage != null && entry.profileImage!.isNotEmpty) ? entry.profileImage! : "https://api.dicebear.com/7.x/avataaars/png?seed=${entry.name}",
+                        entry.profileImage ?? "https://api.dicebear.com/7.x/avataaars/png?seed=${entry.name}",
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Image.network("https://api.dicebear.com/7.x/avataaars/png?seed=${entry.name}"),
                       ),
                     ),
                   ),
-                  Positioned(
-                    bottom: 4,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-                      decoration: BoxDecoration(color: Theme.of(context).colorScheme.onSurface, borderRadius: BorderRadius.circular(20), border: Border.all(color: Theme.of(context).cardColor, width: 1)),
-                      child: Text(
-                        actualRank == 1 ? "1ST" : actualRank == 2 ? "2ND" : "3RD",
-                        style: GoogleFonts.montserrat(color: Theme.of(context).cardColor, fontSize: 10, fontWeight: FontWeight.w900),
-                      ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                    decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.white, width: 1)),
+                    child: Text(
+                      actualRank == 1 ? "1ST" : actualRank == 2 ? "2ND" : "3RD",
+                      style: GoogleFonts.montserrat(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900),
                     ),
                   ),
                 ],
@@ -383,25 +343,25 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               const SizedBox(height: 8),
               Text(
                 entry.name.split(' ')[0],
-                style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: 14, color: isCurrentUser ? const Color(0xFF249780) : Theme.of(context).colorScheme.onSurface),
+                style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: nameSize, color: isCurrentUser ? const Color(0xFF249780) : Colors.black),
                 overflow: TextOverflow.ellipsis,
               ),
-              Text('${entry.score}/${entry.total}', style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7))),
+              Text('${entry.score}/${entry.total}', style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.black54)),
               const SizedBox(height: 10),
               Container(
                 height: blockHeight,
                 margin: const EdgeInsets.symmetric(horizontal: 5),
                 decoration: BoxDecoration(
                   color: podiumColor,
-                  border: Border.all(color: Theme.of(context).colorScheme.onSurface, width: borderWidth),
+                  border: Border.all(color: Colors.black, width: borderWidth),
                   borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
-                  boxShadow: [BoxShadow(color: Theme.of(context).colorScheme.onSurface, offset: const Offset(4, 0))],
+                  boxShadow: [const BoxShadow(color: Colors.black, offset: Offset(4, 0))],
                 ),
                 child: Center(
                   child: Icon(
                     actualRank == 1 ? Icons.star : (actualRank == 2 ? Icons.military_tech : Icons.emoji_events),
-                    color: Colors.black.withValues(alpha: 0.3),
-                    size: 40,
+                    color: Colors.black.withOpacity(0.2),
+                    size: top.length < 3 ? 50 : 40,
                   ),
                 ),
               ),
@@ -418,61 +378,27 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       int index = item.key;
       var entry = item.value;
       bool isCurrentUser = entry.userId == _currentUid;
-      bool isLast = index == rest.length - 1;
 
       return Container(
-        margin: EdgeInsets.only(bottom: isLast ? 20 : 12),
+        margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isCurrentUser ? const Color(0xFFE0F7F4) : Theme.of(context).cardColor,
-          border: Border.all(color: isCurrentUser ? const Color(0xFF249780) : Theme.of(context).colorScheme.onSurface, width: borderWidth),
+          color: isCurrentUser ? const Color(0xFFE0F7F4) : Colors.white,
+          border: Border.all(color: isCurrentUser ? const Color(0xFF249780) : Colors.black, width: borderWidth),
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: isCurrentUser ? const Color(0xFF249780) : Theme.of(context).colorScheme.onSurface, offset: shadowOffset)],
+          boxShadow: [BoxShadow(color: isCurrentUser ? const Color(0xFF249780) : Colors.black, offset: shadowOffset)],
         ),
         child: Row(
           children: [
-            SizedBox(
-              width: 30,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Text(
-                    '${index + 4}',
-                    style: GoogleFonts.montserrat(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 16,
-                      foreground: Paint()
-                        ..style = PaintingStyle.stroke
-                        ..strokeWidth = 2
-                        ..color = Theme.of(context).colorScheme.onSurface,
-                    ),
-                  ),
-                  Text(
-                    '${index + 4}',
-                    style: GoogleFonts.montserrat(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 16,
-                      color: Theme.of(context).colorScheme.surface,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            SizedBox(width: 35, child: Text('${index + 4}', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: 18))),
             Container(
-              width: 45,
-              height: 45,
-              decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Theme.of(context).colorScheme.onSurface, width: 2), color: Theme.of(context).cardColor),
-              child: ClipOval(
-                child: Image.network(
-                  (entry.profileImage != null && entry.profileImage!.isNotEmpty) ? entry.profileImage! : "https://api.dicebear.com/7.x/avataaars/png?seed=${entry.name}",
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Image.network("https://api.dicebear.com/7.x/avataaars/png?seed=${entry.name}"),
-                ),
-              ),
+              width: 45, height: 45,
+              decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.black, width: 2)),
+              child: ClipOval(child: Image.network(entry.profileImage ?? "https://api.dicebear.com/7.x/avataaars/png?seed=${entry.name}")),
             ),
             const SizedBox(width: 15),
-            Expanded(child: Text(entry.name, style: GoogleFonts.montserrat(fontWeight: FontWeight.w800, fontSize: 16, color: isCurrentUser ? const Color(0xFF249780) : Theme.of(context).colorScheme.onSurface), overflow: TextOverflow.ellipsis)),
-            Text('${entry.score}/${entry.total}', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: 16, color: isCurrentUser ? const Color(0xFF249780) : Theme.of(context).colorScheme.onSurface)),
+            Expanded(child: Text(entry.name, style: GoogleFonts.montserrat(fontWeight: FontWeight.w800, fontSize: 16))),
+            Text('${entry.score}/${entry.total}', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: 16)),
           ],
         ),
       );
