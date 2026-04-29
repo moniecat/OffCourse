@@ -65,24 +65,28 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
 
   /// Recreating the exact button from your image
   Widget _buildBackButton() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF2A2D2E) : Colors.white;
+    final iconColor = isDark ? Colors.white : Colors.black;
+
     return GestureDetector(
       onTap: () => Navigator.pop(context),
       child: Container(
         width: 45,
         height: 45,
         decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(color: Colors.black, width: 2.5),
-          boxShadow: const [
+          color: bgColor,
+          border: Border.all(color: iconColor, width: 2.5),
+          boxShadow: [
             BoxShadow(
-              color: Colors.black,
-              offset: Offset(4, 4), // The hard shadow from your image
+              color: iconColor,
+              offset: const Offset(4, 4),
             ),
           ],
         ),
-        child: const Icon(
+        child: Icon(
           Icons.arrow_back,
-          color: Colors.black,
+          color: iconColor,
           size: 26,
         ),
       ),
@@ -91,10 +95,14 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF1A1C1E) : Colors.white;
+    final textColor = isDark ? Colors.white : darkBorder;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: bgColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: bgColor,
         elevation: 0,
         toolbarHeight: 90,
         automaticallyImplyLeading: false,
@@ -103,7 +111,7 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
             padding: const EdgeInsets.only(left: 24, top: 12),
             child: Row(
               children: [
-                _buildBackButton(), // Your styled back button
+                _buildBackButton(),
               ],
             ),
           ),
@@ -114,7 +122,6 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header
             Text(
               'Add\nCourse',
               style: GoogleFonts.montserrat(
@@ -122,7 +129,7 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
                 fontWeight: FontWeight.w900,
                 height: 1.0,
                 letterSpacing: -1.5,
-                color: darkBorder,
+                color: textColor,
               ),
             ),
             const SizedBox(height: 32),
@@ -150,7 +157,6 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
             ),
             const SizedBox(height: 40),
 
-            // Save Button
             GestureDetector(
               onTap: _isLoading ? null : _saveCourse,
               child: Container(
@@ -158,9 +164,9 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.primary,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Theme.of(context).colorScheme.onSurface, width: 3),
+                  border: Border.all(color: textColor, width: 3),
                   boxShadow: [
-                    BoxShadow(color: Theme.of(context).colorScheme.onSurface, offset: const Offset(4, 4)),
+                    BoxShadow(color: textColor, offset: const Offset(4, 4)),
                   ],
                 ),
                 child: Center(
@@ -192,6 +198,11 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
     int maxLines = 1,
     TextInputType keyboardType = TextInputType.text,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF2A2D2E) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final hintColor = isDark ? Colors.white30 : Colors.black26;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -201,26 +212,27 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
             fontWeight: FontWeight.w900,
             fontSize: 13,
             letterSpacing: 1.2,
+            color: textColor,
           ),
         ),
         const SizedBox(height: 10),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: bgColor,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.black, width: 2.5),
-            boxShadow: const [
-              BoxShadow(color: Colors.black, offset: Offset(4, 4)),
+            border: Border.all(color: textColor, width: 2.5),
+            boxShadow: [
+              BoxShadow(color: textColor, offset: const Offset(4, 4)),
             ],
           ),
           child: TextField(
             controller: controller,
             maxLines: maxLines,
             keyboardType: keyboardType,
-            style: GoogleFonts.montserrat(fontWeight: FontWeight.w700),
+            style: GoogleFonts.montserrat(fontWeight: FontWeight.w700, color: textColor),
             decoration: InputDecoration(
               hintText: hint,
-              hintStyle: GoogleFonts.montserrat(color: Colors.black26),
+              hintStyle: GoogleFonts.montserrat(color: hintColor),
               contentPadding: const EdgeInsets.all(20),
               border: InputBorder.none,
             ),
