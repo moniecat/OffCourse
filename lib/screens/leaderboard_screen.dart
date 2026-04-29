@@ -317,8 +317,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: Colors.white,
-                      border: Border.all(color: Colors.black, width: borderWidth),
-                      boxShadow: [const BoxShadow(color: Colors.black, offset: Offset(3, 3))],
+                      border: Border.all(color: isCurrentUser ? brandGold : Colors.black, width: borderWidth),
+                      boxShadow: [BoxShadow(color: isCurrentUser ? brandGold : Colors.black, offset: const Offset(3, 3))],
                     ),
                     child: ClipOval(
                       child: Image.network(
@@ -340,7 +340,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               const SizedBox(height: 8),
               Text(
                 entry.name.split(' ')[0],
-                style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: nameSize, color: Colors.black),
+                style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: nameSize, color: isCurrentUser ? const Color(0xFFB48A00) : Colors.black),
                 overflow: TextOverflow.ellipsis,
               ),
               Text('${entry.score}/${entry.total}', style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.black54)),
@@ -381,13 +381,22 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor, 
+          // Container border is always BLACK
           border: Border.all(color: Colors.black, width: borderWidth),
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [const BoxShadow(color: Colors.black, offset: shadowOffset)],
+          boxShadow: const [BoxShadow(color: Colors.black, offset: shadowOffset)],
         ),
         child: Row(
           children: [
-            SizedBox(width: 35, child: Text('${index + 4}', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: 18, color: Colors.black))),
+            // Rank Number - always BLACK
+            SizedBox(
+              width: 35, 
+              child: Text(
+                '${index + 4}', 
+                style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: 18, color: Colors.black)
+              )
+            ),
+            // Avatar Border - always BLACK
             Container(
               width: 45, height: 45,
               decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.black, width: 2)),
@@ -403,7 +412,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                       style: GoogleFonts.montserrat(
                         fontWeight: FontWeight.w800, 
                         fontSize: 16,
-                        color: Colors.black
+                        color: Colors.black // Name is always BLACK
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -412,13 +421,25 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(color: brandGold, borderRadius: BorderRadius.circular(4)),
-                      child: Text("YOU", style: GoogleFonts.montserrat(color: Colors.white, fontSize: 8, fontWeight: FontWeight.w900)),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4),
+                        // The "YOU" tag border is GOLD
+                        border: Border.all(color: brandGold, width: 1), 
+                      ),
+                      child: Text(
+                        "YOU", 
+                        style: GoogleFonts.montserrat(
+                          color: brandGold, // The "YOU" text is GOLD
+                          fontSize: 8, 
+                          fontWeight: FontWeight.w900
+                        ),
+                      ),
                     ),
                   ]
                 ],
               ),
             ),
+            // Score - always BLACK
             Text(
               '${entry.score}/${entry.total}', 
               style: GoogleFonts.montserrat(
