@@ -229,6 +229,54 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   const SizedBox(height: 15),
 
+                  /// 3.5. COURSE DESCRIPTION
+                  if (_courses.isNotEmpty && _courses[_selectedIndex].description != null && _courses[_selectedIndex].description!.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.grey[900]
+                            : const Color(0xFFFFBC1F),
+                          border: Border.all(
+                            color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : const Color(0xFF1A1C1E),
+                            width: borderWidth,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Theme.of(context).brightness == Brightness.dark
+                                ? Colors.white
+                                : const Color(0xFF1A1C1E),
+                              offset: const Offset(4, 4),
+                            ),
+                          ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Text(
+                            _courses[_selectedIndex].description ?? '',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 14,
+                              height: 1.6,
+                              color: Theme.of(context).brightness == Brightness.dark
+                                ? Colors.white
+                                : const Color(0xFF1A1C1E),
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  if (_courses.isNotEmpty && (_courses[_selectedIndex].description == null || _courses[_selectedIndex].description!.isEmpty))
+                    const SizedBox(height: 0),
+
+                  const SizedBox(height: 15),
+
                   /// 4. VERTICAL MODULE LIST
                   Expanded(
                     child: _loadingModules
