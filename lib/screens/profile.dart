@@ -1,12 +1,11 @@
+import 'dart:typed_data';
+import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
-
-// Assumed imports based on your project structure
-// Ensure these paths match your project
+import '../widgets/image_crop_screen.dart';
 import '../screens/home.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
@@ -19,14 +18,11 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // ─── NEO-BRUTALIST DESIGN TOKENS (CLEANER STYLE) ───
   static const Color brandYellow = Color(0xFFFFC21C);
   static const Color bgWhite = Colors.white;
   static const Color textBlack = Color(0xFF000000);
   static const Color textGrey = Color(0xFF6B6B6B);
-  
-  // Reduced thicknesses for a "not so thick" look
-  static const double thickBorder = 2.5; 
+  static const double thickBorder = 2.5;
   static const double elementBorder = 2.0;
 
   late TextEditingController _nameController;
@@ -40,7 +36,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _fs = FirestoreService();
   User? _user;
 
-  // Cloudinary Config
   static const String cloudName = "dve0fnxd8";
   static const String uploadPreset = "profile_upload";
 
@@ -68,14 +63,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (doc.exists) {
         final data = doc.data() as Map<String, dynamic>;
         setState(() {
-          _nameController.text = _toTitleCase(data['name'] ?? _user!.displayName ?? 'User');
+          _nameController.text =
+              _toTitleCase(data['name'] ?? _user!.displayName ?? 'User');
           _bioController.text = data['bio'] ?? '';
           _profileImageUrl = data['profileImage'];
           _isLoading = false;
         });
       } else {
         setState(() {
-          _nameController.text = _toTitleCase(_user!.displayName ?? 'User');
+          _nameController.text =
+              _toTitleCase(_user!.displayName ?? 'User');
           _isLoading = false;
         });
       }
@@ -86,13 +83,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _pickAndUploadImage() async {
     if (_user == null) return;
+
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 90,
+    );
     if (pickedFile == null) return;
 
+    final imageBytes = await pickedFile.readAsBytes();
+
+    if (!mounted) return;
+
+    final croppedBytes = await showDialog<Uint8List?>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.7),
+      builder: (_) => ImageCropDialog(imageBytes: imageBytes),
+    );
+
+    if (croppedBytes == null) return;
+
     setState(() => _isSaving = true);
+
     try {
-      final imageUrl = await _uploadToCloudinary(pickedFile);
+      final imageUrl = await _uploadBytesToCloudinary(croppedBytes);
       if (imageUrl == null) throw Exception("Upload failed");
       await _fs.updateUserProfile(_user!.uid, profileImage: imageUrl);
       if (mounted) {
@@ -106,12 +120,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  Future<String?> _uploadToCloudinary(XFile file) async {
-    final url = Uri.parse("https://api.cloudinary.com/v1_1/$cloudName/image/upload");
-    final bytes = await file.readAsBytes();
+  Future<String?> _uploadBytesToCloudinary(Uint8List bytes) async {
+    final url = Uri.parse(
+        "https://api.cloudinary.com/v1_1/$cloudName/image/upload");
     final request = http.MultipartRequest("POST", url)
       ..fields['upload_preset'] = uploadPreset
-      ..files.add(http.MultipartFile.fromBytes('file', bytes, filename: 'profile.jpg'));
+      ..files.add(http.MultipartFile.fromBytes(
+        'file',
+        bytes,
+        filename: 'profile_cropped.png',
+      ));
+
     final response = await request.send();
     if (response.statusCode == 200) {
       final resData = await response.stream.bytesToString();
@@ -126,7 +145,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() => _isSaving = true);
     try {
       final formattedName = _toTitleCase(_nameController.text.trim());
-      await _fs.updateUserProfile(_user!.uid, name: formattedName, bio: _bioController.text.trim());
+      await _fs.updateUserProfile(_user!.uid,
+          name: formattedName, bio: _bioController.text.trim());
       await _user!.updateDisplayName(formattedName);
       await _user!.reload();
       _user = FirebaseAuth.instance.currentUser;
@@ -146,12 +166,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final Size size = MediaQuery.of(context).size;
-    final bool isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
+    final bool isKeyboardOpen =
+        MediaQuery.of(context).viewInsets.bottom > 0;
 
     if (_isLoading) {
       return const Scaffold(
           backgroundColor: brandYellow,
-          body: Center(child: CircularProgressIndicator(color: textBlack)));
+          body: Center(
+              child: CircularProgressIndicator(color: textBlack)));
     }
 
     return Scaffold(
@@ -168,40 +190,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
           // ── MAIN LAYOUT ──
           Column(
             children: [
-              // TOP HEADER SECTION
               AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
-                height: isKeyboardOpen ? size.height * 0.15 : size.height * 0.45,
+                height: isKeyboardOpen
+                    ? size.height * 0.15
+                    : size.height * 0.45,
                 child: SafeArea(
                   bottom: false,
                   child: Column(
                     children: [
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 10),
                         child: Align(
                           alignment: Alignment.centerLeft,
                           child: _buildCircularButton(
                             Icons.chevron_left,
                             onTap: () => Navigator.pushReplacement(
-                                context, MaterialPageRoute(builder: (context) => const HomeScreen())),
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        const HomeScreen())),
                           ),
                         ),
                       ),
                       if (!isKeyboardOpen) ...[
                         const Spacer(),
-                        // PROFILE IMAGE WITH VERTICAL SHADOW
                         GestureDetector(
-                          onTap: _isEditing ? _pickAndUploadImage : null,
+                          onTap:
+                              _isEditing ? _pickAndUploadImage : null,
                           child: Container(
                             width: 170,
                             height: 170,
                             decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: bgWhite,
-                                border: Border.all(color: textBlack, width: elementBorder),
+                                border: Border.all(
+                                    color: textBlack,
+                                    width: elementBorder),
                                 boxShadow: const [
-                                  // This creates the crescent bottom look from your screenshot
-                                  BoxShadow(color: textBlack, offset: Offset(0, 8))
+                                  BoxShadow(
+                                      color: textBlack,
+                                      offset: Offset(0, 8))
                                 ]),
                             child: ClipOval(
                               child: Stack(
@@ -215,11 +245,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           fit: BoxFit.contain,
                                           width: 170,
                                           height: 170),
+
+                                  // ── FULL CIRCLE DARK OVERLAY + CAMERA ──
                                   if (_isEditing)
                                     Container(
-                                        color: Colors.black45,
-                                        child: const Icon(Icons.camera_alt, color: Colors.white, size: 36)),
-                                  if (_isSaving && _isEditing) const CircularProgressIndicator(color: brandYellow),
+                                      width: 170,
+                                      height: 170,
+                                      color: Colors.black.withValues(alpha: 0.45),
+                                      child: const Icon(
+                                        Icons.camera_alt,
+                                        color: Colors.white,
+                                        size: 36,
+                                      ),
+                                    ),
+
+                                  if (_isSaving && _isEditing)
+                                    const CircularProgressIndicator(color: brandYellow),
                                 ],
                               ),
                             ),
@@ -233,17 +274,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
 
-              // BOTTOM CONTENT CARD
+              // ── BOTTOM CONTENT CARD ──
               Expanded(
                 child: Container(
                   width: double.infinity,
                   decoration: const BoxDecoration(
                     color: bgWhite,
-                    border: Border(top: BorderSide(color: textBlack, width: thickBorder)),
-                    borderRadius: BorderRadius.only(topLeft: Radius.circular(35), topRight: Radius.circular(35)),
+                    border: Border(
+                        top: BorderSide(
+                            color: textBlack, width: thickBorder)),
+                    borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(35),
+                        topRight: Radius.circular(35)),
                   ),
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(25, 45, 25, 20),
+                    padding:
+                        const EdgeInsets.fromLTRB(25, 45, 25, 20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -251,37 +297,61 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           controller: _nameController,
                           readOnly: !_isEditing,
                           maxLines: 1,
-                          textCapitalization: TextCapitalization.words,
+                          textCapitalization:
+                              TextCapitalization.words,
                           style: GoogleFonts.montserrat(
-                              fontSize: 28, fontWeight: FontWeight.w900, color: textBlack, letterSpacing: -0.5),
-                          decoration: const InputDecoration(border: InputBorder.none, isDense: true, contentPadding: EdgeInsets.zero),
+                              fontSize: 28,
+                              fontWeight: FontWeight.w900,
+                              color: textBlack,
+                              letterSpacing: -0.5),
+                          decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              isDense: true,
+                              contentPadding: EdgeInsets.zero),
                         ),
                         const SizedBox(height: 4),
                         Text(_user?.email ?? '',
-                            style: GoogleFonts.montserrat(fontSize: 14, color: textGrey, fontWeight: FontWeight.bold)),
+                            style: GoogleFonts.montserrat(
+                                fontSize: 14,
+                                color: textGrey,
+                                fontWeight: FontWeight.bold)),
                         const SizedBox(height: 35),
                         Text("ABOUT ME",
                             style: GoogleFonts.montserrat(
-                                fontSize: 12, fontWeight: FontWeight.w900, color: textBlack, letterSpacing: 2.0)),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w900,
+                                color: textBlack,
+                                letterSpacing: 2.0)),
                         const SizedBox(height: 12),
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color: bgWhite,
-                            border: Border.all(color: textBlack, width: elementBorder),
+                            border: Border.all(
+                                color: textBlack,
+                                width: elementBorder),
                             borderRadius: BorderRadius.circular(15),
-                            boxShadow: const [BoxShadow(color: textBlack, offset: Offset(0, 5))],
+                            boxShadow: const [
+                              BoxShadow(
+                                  color: textBlack,
+                                  offset: Offset(0, 5))
+                            ],
                           ),
                           child: TextField(
                             controller: _bioController,
                             readOnly: !_isEditing,
                             maxLines: null,
-                            style: GoogleFonts.montserrat(fontSize: 15, color: textBlack, height: 1.5, fontWeight: FontWeight.w500),
+                            style: GoogleFonts.montserrat(
+                                fontSize: 15,
+                                color: textBlack,
+                                height: 1.5,
+                                fontWeight: FontWeight.w500),
                             decoration: const InputDecoration(
                                 border: InputBorder.none,
                                 hintText: 'Share your story...',
-                                hintStyle: TextStyle(color: Colors.black26)),
+                                hintStyle: TextStyle(
+                                    color: Colors.black26)),
                           ),
                         ),
                         const SizedBox(height: 40),
@@ -293,7 +363,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
 
-          // EDIT/SAVE FLOATING BUTTON
+          // ── EDIT/SAVE FLOATING BUTTON ──
           if (!isKeyboardOpen)
             Positioned(
               top: (size.height * 0.45) - 28,
@@ -301,20 +371,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: GestureDetector(
                 onTap: () async {
                   if (_isEditing) await _saveProfile();
-                  if (mounted) setState(() => _isEditing = !_isEditing);
+                  if (mounted)
+                    setState(() => _isEditing = !_isEditing);
                 },
                 child: Container(
                   width: 56,
                   height: 56,
                   decoration: BoxDecoration(
-                    color: _isEditing ? const Color(0xFF00FF94) : brandYellow,
+                    color: _isEditing
+                        ? const Color(0xFF00FF94)
+                        : brandYellow,
                     shape: BoxShape.circle,
-                    border: Border.all(color: textBlack, width: thickBorder),
-                    boxShadow: const [BoxShadow(color: textBlack, offset: Offset(0, 5))],
+                    border: Border.all(
+                        color: textBlack, width: thickBorder),
+                    boxShadow: const [
+                      BoxShadow(
+                          color: textBlack, offset: Offset(0, 5))
+                    ],
                   ),
                   child: _isSaving
-                      ? const Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator(color: textBlack, strokeWidth: 2.5))
-                      : Icon(_isEditing ? Icons.check : Icons.edit, color: textBlack, size: 26),
+                      ? const Padding(
+                          padding: EdgeInsets.all(16),
+                          child: CircularProgressIndicator(
+                              color: textBlack, strokeWidth: 2.5))
+                      : Icon(
+                          _isEditing ? Icons.check : Icons.edit,
+                          color: textBlack,
+                          size: 26),
                 ),
               ),
             ),
@@ -323,7 +406,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // REUSABLE CIRCULAR BUTTON (Like the Home icon in your screenshot)
   Widget _buildCircularButton(IconData icon, {VoidCallback? onTap}) {
     return GestureDetector(
       onTap: onTap,
@@ -331,18 +413,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-            color: bgWhite, 
-            shape: BoxShape.circle, 
-            border: Border.all(color: textBlack, width: elementBorder),
-            boxShadow: const [BoxShadow(color: textBlack, offset: Offset(0, 4))]
-        ),
+            color: bgWhite,
+            shape: BoxShape.circle,
+            border:
+                Border.all(color: textBlack, width: elementBorder),
+            boxShadow: const [
+              BoxShadow(color: textBlack, offset: Offset(0, 4))
+            ]),
         child: Icon(icon, color: textBlack, size: 24),
       ),
     );
   }
 }
 
-// PAINTER FOR THE DOT GRID BACKGROUND
 class DotGridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -357,6 +440,7 @@ class DotGridPainter extends CustomPainter {
       }
     }
   }
+
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => false;
 }

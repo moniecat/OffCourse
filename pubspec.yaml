@@ -40,7 +40,10 @@ dependencies:
   http: ^1.2.1 
   provider: ^6.1.2
   shared_preferences: ^2.3.2 
-  image_cropper: ^12.2.1
+  image_cropper: ^5.0.1
+  crop_your_image: ^2.0.0
+  extended_image: ^8.3.0
+  extended_image_library: ^4.0.1
   
 dev_dependencies:
   flutter_test:
