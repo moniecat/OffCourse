@@ -195,17 +195,21 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
   }
 
   Widget _buildBackButton() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF2A2D2E) : Colors.white;
+    final iconColor = isDark ? Colors.white : Colors.black;
+
     return GestureDetector(
       onTap: () => Navigator.pop(context),
       child: Container(
         width: 45,
         height: 45,
         decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(color: Colors.black, width: 2.5),
-          boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
+          color: bgColor,
+          border: Border.all(color: iconColor, width: 2.5),
+          boxShadow: [BoxShadow(color: iconColor, offset: const Offset(4, 4))],
         ),
-        child: const Icon(Icons.arrow_back, color: Colors.black, size: 26),
+        child: Icon(Icons.arrow_back, color: iconColor, size: 26),
       ),
     );
   }
@@ -218,20 +222,24 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
   }
 
   Widget _buildNeoDropdown<T>({required T? value, required List<DropdownMenuItem<T>> items, required ValueChanged<T?> onChanged}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF2A2D2E) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: bgColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black, width: 2.5),
-        boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
+        border: Border.all(color: textColor, width: 2.5),
+        boxShadow: [BoxShadow(color: textColor, offset: const Offset(4, 4))],
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<T>(
           value: value,
           isExpanded: true,
-          icon: const Icon(Icons.keyboard_arrow_down, color: Colors.black),
-          style: GoogleFonts.montserrat(color: Colors.black, fontWeight: FontWeight.w700, fontSize: 16),
+          icon: Icon(Icons.keyboard_arrow_down, color: textColor),
+          style: GoogleFonts.montserrat(color: textColor, fontWeight: FontWeight.w700, fontSize: 16),
           items: items,
           onChanged: onChanged,
         ),
@@ -241,10 +249,15 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF1A1C1E) : Colors.white;
+    final textColor = isDark ? Colors.white : darkBorder;
+    final mutedTextColor = isDark ? Colors.white70 : Colors.black54;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: bgColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: bgColor,
         elevation: 0,
         toolbarHeight: 90,
         automaticallyImplyLeading: false,
@@ -259,11 +272,11 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
         future: FirestoreService().getCourses(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: darkBorder));
+            return Center(child: CircularProgressIndicator(color: textColor));
           }
 
           final courses = snapshot.data ?? [];
-          if (courses.isEmpty) return const Center(child: Text("No courses found"));
+          if (courses.isEmpty) return Center(child: Text("No courses found", style: TextStyle(color: textColor)));
           _selectedCourseId ??= courses.first.id;
 
           return Column(
@@ -278,7 +291,7 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
                     fontWeight: FontWeight.w900,
                     height: 1.0,
                     letterSpacing: -1.5,
-                    color: darkBorder,
+                    color: textColor,
                   ),
                 ),
               ),
@@ -309,10 +322,10 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
                   key: ValueKey(_selectedCourseId),
                   future: FirestoreService().getModules(_selectedCourseId!),
                   builder: (context, modSnap) {
-                    if (modSnap.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator(color: darkBorder));
+                    if (modSnap.connectionState == ConnectionState.waiting) return Center(child: CircularProgressIndicator(color: textColor));
                     
                     final modules = modSnap.data ?? [];
-                    if (modules.isEmpty) return const Center(child: Text("No modules in this course"));
+                    if (modules.isEmpty) return Center(child: Text("No modules in this course", style: TextStyle(color: textColor)));
 
                     _selectedModuleId ??= modules.first['id'];
 
@@ -339,17 +352,18 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 24),
                           child: Container(
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: bgColor,
                               borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: darkBorder, width: 2.5),
-                              boxShadow: const [BoxShadow(color: darkBorder, offset: Offset(4, 4))],
+                              border: Border.all(color: textColor, width: 2.5),
+                              boxShadow: [BoxShadow(color: textColor, offset: const Offset(4, 4))],
                             ),
                             child: TextField(
                               onChanged: (val) => setState(() => _searchQuery = val),
-                              style: GoogleFonts.montserrat(fontWeight: FontWeight.w700),
+                              style: GoogleFonts.montserrat(fontWeight: FontWeight.w700, color: textColor),
                               decoration: InputDecoration(
                                 hintText: 'Search questions...',
-                                prefixIcon: const Icon(Icons.search, color: darkBorder),
+                                hintStyle: TextStyle(color: mutedTextColor),
+                                prefixIcon: Icon(Icons.search, color: textColor),
                                 border: InputBorder.none,
                                 contentPadding: const EdgeInsets.all(20),
                               ),
@@ -372,6 +386,9 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
   }
 
   Widget _buildQuestionsList() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
+
     return FutureBuilder<List<Map<String, dynamic>>>(
       key: ValueKey('$_selectedCourseId-$_selectedModuleId'),
       future: FirebaseFirestore.instance
@@ -383,14 +400,14 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
           .get()
           .then((snap) => snap.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList()),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator(color: darkBorder));
+        if (snapshot.connectionState == ConnectionState.waiting) return Center(child: CircularProgressIndicator(color: textColor));
 
         final questions = snapshot.data?.where((q) =>
           (q['question'] ?? '').toLowerCase().contains(_searchQuery.toLowerCase())
         ).toList() ?? [];
 
         if (questions.isEmpty) {
-          return Center(child: Text('No questions found.', style: GoogleFonts.montserrat(fontWeight: FontWeight.w600)));
+          return Center(child: Text('No questions found.', style: GoogleFonts.montserrat(fontWeight: FontWeight.w600, color: textColor)));
         }
 
         return ListView.builder(
@@ -401,15 +418,15 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
             return Container(
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: isDark ? const Color(0xFF2A2D2E) : Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: darkBorder, width: 2.5),
-                boxShadow: const [BoxShadow(color: darkBorder, offset: Offset(4, 4))],
+                border: Border.all(color: textColor, width: 2.5),
+                boxShadow: [BoxShadow(color: textColor, offset: const Offset(4, 4))],
               ),
               child: ListTile(
                 contentPadding: const EdgeInsets.all(16),
-                title: Text(q['question'] ?? 'UNTITLED', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900)),
-                subtitle: Text('Correct: ${q['correctAnswer']}', style: GoogleFonts.montserrat(fontWeight: FontWeight.w600, color: Colors.green[700])),
+                title: Text(q['question'] ?? 'UNTITLED', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, color: textColor)),
+                subtitle: Text('Correct: ${q['correctAnswer']}', style: GoogleFonts.montserrat(fontWeight: FontWeight.w600, color: isDark ? Colors.lightGreen[400] : Colors.green[700])),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
