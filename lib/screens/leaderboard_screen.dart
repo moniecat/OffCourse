@@ -20,8 +20,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   // Styling Constants
   static const double borderWidth = 3.0;
   static const Offset shadowOffset = Offset(4, 4);
+  static const Color brandGold = Color(0xFFFFB01D);
 
-  // Logic Variables
+  // Data Variables
   String _userRole = 'student';
   bool get _isAdmin => _userRole == 'admin';
   List<Course> _courses = [];
@@ -115,7 +116,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       PageRouteBuilder(
         opaque: false,
         barrierDismissible: true,
-        barrierColor: Colors.black.withOpacity(0.5),
+        barrierColor: Colors.black.withValues(alpha: 0.5),
         pageBuilder: (_, __, ___) => MenuDrawer(isAdmin: _isAdmin, currentScreen: 'Home'),
         transitionsBuilder: (_, animation, __, child) => SlideTransition(
           position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero)
@@ -230,7 +231,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 child: DropdownButton<String>(
                   isExpanded: true,
                   value: _selectedModuleId,
-                  hint: Text("Select a Module", style: GoogleFonts.montserrat(fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
+                  hint: Text("Select a Module", style: GoogleFonts.montserrat(fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6))),
                   items: _modules.map((m) => DropdownMenuItem(
                     value: m['id'] as String,
                     child: Text(m['title'], style: GoogleFonts.montserrat(fontWeight: FontWeight.w700, fontSize: 14, color: Theme.of(context).colorScheme.onSurface)),
@@ -269,14 +270,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     final top = _entries.take(3).toList();
     if (top.isEmpty) return const SizedBox.shrink();
 
-    // Determine order: [2nd, 1st, 3rd] depending on how many people there are
     List<LeaderboardEntry> displayOrder = [];
     if (top.length == 1) {
       displayOrder = [top[0]];
     } else if (top.length == 2) {
-      displayOrder = [top[1], top[0]]; // Showdown: 2nd on left, 1st on right
+      displayOrder = [top[1], top[0]]; 
     } else {
-      displayOrder = [top[1], top[0], top[2]]; // Standard 3-way
+      displayOrder = [top[1], top[0], top[2]];
     }
 
     return Row(
@@ -285,15 +285,12 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         int actualRank = _entries.indexOf(entry) + 1;
         bool isCurrentUser = entry.userId == _currentUid;
 
-        // Heights adjust based on rank
         double blockHeight = actualRank == 1 ? 140 : (actualRank == 2 ? 100 : 80);
-        
-        // Avatar and Text scale up if there are fewer people
         double avatarSize = top.length < 3 ? 100 : (actualRank == 1 ? 90 : 75);
         double nameSize = top.length < 3 ? 18 : 14;
 
         Color podiumColor = actualRank == 1 
-            ? const Color(0xFFFFC21C) 
+            ? brandGold 
             : actualRank == 2 ? const Color(0xFFD1D5DB) : const Color(0xFFFF8C42);
 
         return Expanded(
@@ -304,7 +301,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 Container(
                   margin: const EdgeInsets.only(bottom: 6),
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                  decoration: BoxDecoration(color: const Color(0xFF249780), borderRadius: BorderRadius.circular(4)),
+                  decoration: BoxDecoration(color: brandGold, borderRadius: BorderRadius.circular(4)),
                   child: Text("YOU", style: GoogleFonts.montserrat(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900)),
                 )
               else
@@ -320,8 +317,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: Colors.white,
-                      border: Border.all(color: isCurrentUser ? const Color(0xFF249780) : Colors.black, width: borderWidth),
-                      boxShadow: [BoxShadow(color: isCurrentUser ? const Color(0xFF249780) : Colors.black, offset: const Offset(3, 3))],
+                      border: Border.all(color: Colors.black, width: borderWidth),
+                      boxShadow: [const BoxShadow(color: Colors.black, offset: Offset(3, 3))],
                     ),
                     child: ClipOval(
                       child: Image.network(
@@ -343,7 +340,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               const SizedBox(height: 8),
               Text(
                 entry.name.split(' ')[0],
-                style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: nameSize, color: isCurrentUser ? const Color(0xFF249780) : Colors.black),
+                style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: nameSize, color: Colors.black),
                 overflow: TextOverflow.ellipsis,
               ),
               Text('${entry.score}/${entry.total}', style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.black54)),
@@ -360,7 +357,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 child: Center(
                   child: Icon(
                     actualRank == 1 ? Icons.star : (actualRank == 2 ? Icons.military_tech : Icons.emoji_events),
-                    color: Colors.black.withOpacity(0.2),
+                    color: Colors.black.withValues(alpha: 0.2),
                     size: top.length < 3 ? 50 : 40,
                   ),
                 ),
@@ -383,22 +380,53 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isCurrentUser ? const Color(0xFFE0F7F4) : Colors.white,
-          border: Border.all(color: isCurrentUser ? const Color(0xFF249780) : Colors.black, width: borderWidth),
+          color: Theme.of(context).cardColor, 
+          border: Border.all(color: Colors.black, width: borderWidth),
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: isCurrentUser ? const Color(0xFF249780) : Colors.black, offset: shadowOffset)],
+          boxShadow: [const BoxShadow(color: Colors.black, offset: shadowOffset)],
         ),
         child: Row(
           children: [
-            SizedBox(width: 35, child: Text('${index + 4}', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: 18))),
+            SizedBox(width: 35, child: Text('${index + 4}', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: 18, color: Colors.black))),
             Container(
               width: 45, height: 45,
               decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.black, width: 2)),
               child: ClipOval(child: Image.network(entry.profileImage ?? "https://api.dicebear.com/7.x/avataaars/png?seed=${entry.name}")),
             ),
             const SizedBox(width: 15),
-            Expanded(child: Text(entry.name, style: GoogleFonts.montserrat(fontWeight: FontWeight.w800, fontSize: 16))),
-            Text('${entry.score}/${entry.total}', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: 16)),
+            Expanded(
+              child: Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      entry.name, 
+                      style: GoogleFonts.montserrat(
+                        fontWeight: FontWeight.w800, 
+                        fontSize: 16,
+                        color: Colors.black
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (isCurrentUser) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(color: brandGold, borderRadius: BorderRadius.circular(4)),
+                      child: Text("YOU", style: GoogleFonts.montserrat(color: Colors.white, fontSize: 8, fontWeight: FontWeight.w900)),
+                    ),
+                  ]
+                ],
+              ),
+            ),
+            Text(
+              '${entry.score}/${entry.total}', 
+              style: GoogleFonts.montserrat(
+                fontWeight: FontWeight.w900, 
+                fontSize: 16,
+                color: Colors.black
+              )
+            ),
           ],
         ),
       );
