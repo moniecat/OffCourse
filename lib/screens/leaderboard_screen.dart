@@ -300,9 +300,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               if (isCurrentUser)
                 Container(
                   margin: const EdgeInsets.only(bottom: 6),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                  decoration: BoxDecoration(color: brandGold, borderRadius: BorderRadius.circular(4)),
-                  child: Text("YOU", style: GoogleFonts.montserrat(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900)),
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(border: Border.all(color: brandGold, width: 1), borderRadius: BorderRadius.circular(4)),
+                  child: Text("YOU", style: GoogleFonts.montserrat(color: brandGold, fontSize: 12, fontWeight: FontWeight.w900)),
                 )
               else
                 const SizedBox(height: 20),
@@ -317,8 +317,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: Colors.white,
-                      border: Border.all(color: isCurrentUser ? brandGold : Colors.black, width: borderWidth),
-                      boxShadow: [BoxShadow(color: isCurrentUser ? brandGold : Colors.black, offset: const Offset(3, 3))],
+                      border: Border.all(color: isCurrentUser ? const Color.fromARGB(255, 0, 0, 0) : Colors.black, width: borderWidth),
+                      boxShadow: [BoxShadow(color: isCurrentUser ? const Color.fromARGB(255, 0, 0, 0) : Colors.black, offset: const Offset(3, 3))],
                     ),
                     child: ClipOval(
                       child: Image.network(
@@ -340,7 +340,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               const SizedBox(height: 8),
               Text(
                 entry.name.split(' ')[0],
-                style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: nameSize, color: isCurrentUser ? const Color(0xFFB48A00) : Colors.black),
+                style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: nameSize, color: isCurrentUser ? const Color.fromARGB(255, 0, 0, 0) : Colors.black),
                 overflow: TextOverflow.ellipsis,
               ),
               Text('${entry.score}/${entry.total}', style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.black54)),
@@ -427,7 +427,7 @@ List<Widget> _buildRestList() {
                         "YOU", 
                         style: GoogleFonts.montserrat(
                           color: brandGold, 
-                          fontSize: 8, 
+                          fontSize: 10, 
                           fontWeight: FontWeight.w900
                         ),
                       ),

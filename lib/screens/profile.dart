@@ -371,8 +371,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: GestureDetector(
                 onTap: () async {
                   if (_isEditing) await _saveProfile();
-                  if (mounted)
+                  if (mounted) {
                     setState(() => _isEditing = !_isEditing);
+                  }
                 },
                 child: Container(
                   width: 56,
