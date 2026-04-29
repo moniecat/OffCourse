@@ -279,6 +279,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       displayOrder = [top[1], top[0], top[2]];
     }
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final mutedTextColor = isDark ? Colors.white70 : Colors.black54;
+    final cardColor = Theme.of(context).cardColor;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: displayOrder.map((entry) {
@@ -291,7 +296,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
         Color podiumColor = actualRank == 1 
             ? brandGold 
-            : actualRank == 2 ? const Color(0xFFD1D5DB) : const Color(0xFFFF8C42);
+            : actualRank == 2 ? (isDark ? const Color(0xFF9CA3AF) : const Color(0xFFD1D5DB)) : (isDark ? const Color(0xFFE8713A) : const Color(0xFFFF8C42));
 
         return Expanded(
           child: Column(
@@ -316,9 +321,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     height: avatarSize,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white,
-                      border: Border.all(color: isCurrentUser ? const Color.fromARGB(255, 0, 0, 0) : Colors.black, width: borderWidth),
-                      boxShadow: [BoxShadow(color: isCurrentUser ? const Color.fromARGB(255, 0, 0, 0) : Colors.black, offset: const Offset(3, 3))],
+                      color: cardColor,
+                      border: Border.all(color: textColor, width: borderWidth),
+                      boxShadow: [BoxShadow(color: textColor, offset: const Offset(3, 3))],
                     ),
                     child: ClipOval(
                       child: Image.network(
@@ -329,10 +334,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-                    decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.white, width: 1)),
+                    decoration: BoxDecoration(color: textColor, borderRadius: BorderRadius.circular(20), border: Border.all(color: cardColor, width: 1)),
                     child: Text(
                       actualRank == 1 ? "1ST" : actualRank == 2 ? "2ND" : "3RD",
-                      style: GoogleFonts.montserrat(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900),
+                      style: GoogleFonts.montserrat(color: cardColor, fontSize: 10, fontWeight: FontWeight.w900),
                     ),
                   ),
                 ],
@@ -340,24 +345,24 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               const SizedBox(height: 8),
               Text(
                 entry.name.split(' ')[0],
-                style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: nameSize, color: isCurrentUser ? const Color.fromARGB(255, 0, 0, 0) : Colors.black),
+                style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: nameSize, color: textColor),
                 overflow: TextOverflow.ellipsis,
               ),
-              Text('${entry.score}/${entry.total}', style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.black54)),
+              Text('${entry.score}/${entry.total}', style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.w700, color: mutedTextColor)),
               const SizedBox(height: 10),
               Container(
                 height: blockHeight,
                 margin: const EdgeInsets.symmetric(horizontal: 5),
                 decoration: BoxDecoration(
                   color: podiumColor,
-                  border: Border.all(color: Colors.black, width: borderWidth),
+                  border: Border.all(color: textColor, width: borderWidth),
                   borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
-                  boxShadow: [const BoxShadow(color: Colors.black, offset: Offset(4, 0))],
+                  boxShadow: [BoxShadow(color: textColor, offset: const Offset(4, 0))],
                 ),
                 child: Center(
                   child: Icon(
                     actualRank == 1 ? Icons.star : (actualRank == 2 ? Icons.military_tech : Icons.emoji_events),
-                    color: Colors.black.withValues(alpha: 0.2),
+                    color: textColor.withValues(alpha: 0.2),
                     size: top.length < 3 ? 50 : 40,
                   ),
                 ),
@@ -371,20 +376,23 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
 List<Widget> _buildRestList() {
     final rest = _entries.skip(3).toList();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final cardColor = Theme.of(context).cardColor;
+
     return rest.asMap().entries.map((item) {
       int index = item.key;
       var entry = item.value;
       bool isCurrentUser = entry.userId == _currentUid;
 
       return Container(
-        // INCREASED SPACE: Changed bottom margin from 12 to 20
         margin: const EdgeInsets.only(bottom: 20), 
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor, 
-          border: Border.all(color: Colors.black, width: borderWidth),
+          color: cardColor, 
+          border: Border.all(color: textColor, width: borderWidth),
           borderRadius: BorderRadius.circular(16),
-          boxShadow: const [BoxShadow(color: Colors.black, offset: shadowOffset)],
+          boxShadow: [BoxShadow(color: textColor, offset: shadowOffset)],
         ),
         child: Row(
           children: [
@@ -392,12 +400,12 @@ List<Widget> _buildRestList() {
               width: 35, 
               child: Text(
                 '${index + 4}', 
-                style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: 18, color: Colors.black)
+                style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: 18, color: textColor)
               )
             ),
             Container(
               width: 45, height: 45,
-              decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.black, width: 2)),
+              decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: textColor, width: 2)),
               child: ClipOval(child: Image.network(entry.profileImage ?? "https://api.dicebear.com/7.x/avataaars/png?seed=${entry.name}")),
             ),
             const SizedBox(width: 15),
@@ -410,7 +418,7 @@ List<Widget> _buildRestList() {
                       style: GoogleFonts.montserrat(
                         fontWeight: FontWeight.w800, 
                         fontSize: 16,
-                        color: Colors.black
+                        color: textColor
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -441,7 +449,7 @@ List<Widget> _buildRestList() {
               style: GoogleFonts.montserrat(
                 fontWeight: FontWeight.w900, 
                 fontSize: 16,
-                color: Colors.black
+                color: textColor
               )
             ),
           ],
