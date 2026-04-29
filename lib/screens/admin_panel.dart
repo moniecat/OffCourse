@@ -68,28 +68,37 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   }
 
   Widget _buildMenuButton() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF2A2D2E) : Colors.white;
+    final borderColor = isDark ? Colors.white : darkBorder;
+
     return GestureDetector(
       onTap: () => _openDrawer(context),
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(color: darkBorder, width: borderWidth),
-          boxShadow: const [
-            BoxShadow(color: darkBorder, offset: Offset(3, 3))
+          color: bgColor,
+          border: Border.all(color: borderColor, width: borderWidth),
+          boxShadow: [
+            BoxShadow(color: borderColor, offset: const Offset(3, 3))
           ],
         ),
-        child: const Icon(Icons.menu, color: darkBorder, size: 30),
+        child: Icon(Icons.menu, color: borderColor, size: 30),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF1A1C1E) : Colors.white;
+    final textColor = isDark ? Colors.white : darkBorder;
+    final mutedTextColor = isDark ? Colors.white70 : Colors.black54;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: bgColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: bgColor,
         elevation: 0,
         toolbarHeight: 80,
         automaticallyImplyLeading: false,
@@ -114,7 +123,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                   fontWeight: FontWeight.w900,
                   height: 1.0,
                   letterSpacing: -1.5,
-                  color: darkBorder,
+                  color: textColor,
                 ),
               ),
               const SizedBox(height: 24),
@@ -125,7 +134,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                 style: GoogleFonts.montserrat(
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
-                  color: Colors.black,
+                  color: textColor,
                   letterSpacing: 1.5,
                 ),
               ),
@@ -175,7 +184,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                 style: GoogleFonts.montserrat(
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
-                  color: Colors.black,
+                  color: textColor,
                   letterSpacing: 1.5,
                 ),
               ),
@@ -186,7 +195,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                 style: GoogleFonts.montserrat(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
-                  color: Colors.black54,
+                  color: mutedTextColor,
                   height: 1.5,
                 ),
               ),
@@ -228,7 +237,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                 style: GoogleFonts.montserrat(
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
-                  color: Colors.black,
+                  color: textColor,
                   letterSpacing: 1.5,
                 ),
               ),
@@ -239,7 +248,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                 style: GoogleFonts.montserrat(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
-                  color: Colors.black54,
+                  color: mutedTextColor,
                   height: 1.5,
                 ),
               ),
@@ -298,16 +307,20 @@ class _AdminButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF2A2D2E) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         height: 80,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: bgColor,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.black, width: 3),
-          boxShadow: const [
-            BoxShadow(color: Colors.black, offset: Offset(4, 4)),
+          border: Border.all(color: textColor, width: 3),
+          boxShadow: [
+            BoxShadow(color: textColor, offset: const Offset(4, 4)),
           ],
         ),
         child: Padding(
@@ -324,12 +337,11 @@ class _AdminButton extends StatelessWidget {
                 child: Icon(icon, color: color, size: 24),
               ),
               const SizedBox(width: 20),
-              // FIX: Wrapped text in Expanded to prevent horizontal overflow
               Expanded(
                 child: Text(
                   label,
                   style: GoogleFonts.montserrat(
-                    color: Colors.black,
+                    color: textColor,
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
                   ),

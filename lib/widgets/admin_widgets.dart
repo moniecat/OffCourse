@@ -545,13 +545,18 @@ class AdminStatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF2A2D2E) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final mutedTextColor = isDark ? Colors.white70 : Colors.grey[600];
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: Colors.black, width: 2),
+        color: bgColor,
+        border: Border.all(color: textColor, width: 2),
         borderRadius: BorderRadius.circular(10),
-        boxShadow: const [
-          BoxShadow(color: Colors.black, offset: Offset(2, 2))
+        boxShadow: [
+          BoxShadow(color: textColor, offset: const Offset(2, 2))
         ],
       ),
       padding: const EdgeInsets.all(6),
@@ -575,7 +580,7 @@ class AdminStatCard extends StatelessWidget {
             style: GoogleFonts.montserrat(
               fontSize: 9,
               fontWeight: FontWeight.w600,
-              color: Colors.grey[600],
+              color: mutedTextColor,
               letterSpacing: 0.2,
             ),
             maxLines: 1,
@@ -587,7 +592,7 @@ class AdminStatCard extends StatelessWidget {
             style: GoogleFonts.montserrat(
               fontSize: 16,
               fontWeight: FontWeight.w900,
-              color: Colors.black,
+              color: textColor,
             ),
           ),
         ],
