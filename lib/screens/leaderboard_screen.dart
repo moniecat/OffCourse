@@ -369,7 +369,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     );
   }
 
-  List<Widget> _buildRestList() {
+List<Widget> _buildRestList() {
     final rest = _entries.skip(3).toList();
     return rest.asMap().entries.map((item) {
       int index = item.key;
@@ -377,18 +377,17 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       bool isCurrentUser = entry.userId == _currentUid;
 
       return Container(
-        margin: const EdgeInsets.only(bottom: 12),
+        // INCREASED SPACE: Changed bottom margin from 12 to 20
+        margin: const EdgeInsets.only(bottom: 20), 
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor, 
-          // Container border is always BLACK
           border: Border.all(color: Colors.black, width: borderWidth),
           borderRadius: BorderRadius.circular(16),
           boxShadow: const [BoxShadow(color: Colors.black, offset: shadowOffset)],
         ),
         child: Row(
           children: [
-            // Rank Number - always BLACK
             SizedBox(
               width: 35, 
               child: Text(
@@ -396,7 +395,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: 18, color: Colors.black)
               )
             ),
-            // Avatar Border - always BLACK
             Container(
               width: 45, height: 45,
               decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.black, width: 2)),
@@ -412,7 +410,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                       style: GoogleFonts.montserrat(
                         fontWeight: FontWeight.w800, 
                         fontSize: 16,
-                        color: Colors.black // Name is always BLACK
+                        color: Colors.black
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -423,13 +421,12 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(4),
-                        // The "YOU" tag border is GOLD
-                        border: Border.all(color: brandGold, width: 1), 
+                        border: Border.all(color: brandGold, width: 1),
                       ),
                       child: Text(
                         "YOU", 
                         style: GoogleFonts.montserrat(
-                          color: brandGold, // The "YOU" text is GOLD
+                          color: brandGold, 
                           fontSize: 8, 
                           fontWeight: FontWeight.w900
                         ),
@@ -439,7 +436,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 ],
               ),
             ),
-            // Score - always BLACK
             Text(
               '${entry.score}/${entry.total}', 
               style: GoogleFonts.montserrat(
