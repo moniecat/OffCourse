@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../models/question_model.dart';
+import '../providers/theme_provider.dart';
 import '../services/question_service.dart';
 import '../widgets/answer_option.dart';
 import 'result_screen.dart';
@@ -36,6 +38,18 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
   String? _error;
   int _currentIndex = 0;
   int _score = 0;
+
+  // Theme-aware color getters
+  Color get _borderColor => Theme.of(context).colorScheme.onSurface;
+  Color get _backgroundColor => Theme.of(context).scaffoldBackgroundColor;
+  Color get _cardBackground => Theme.of(context).cardColor;
+  Color get _textColor => Theme.of(context).colorScheme.onSurface;
+  Color get _hintColor => Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6);
+
+  // Accent colors (branding - keep as-is)
+  final Color themeTeal = const Color(0xFF249780);
+  final Color themeYellow = const Color(0xFFFBB017);
+  final Color errorRed = const Color(0xFFE74C3C);
 
   @override
   void initState() {
@@ -136,22 +150,26 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Watch theme changes
+    context.watch<ThemeProvider>().isDarkMode;
+
     if (_isLoading) {
-      return const Scaffold(
-        backgroundColor: Colors.white,
-        body: Center(child: CircularProgressIndicator(color: Colors.black)),
+      return Scaffold(
+        backgroundColor: _backgroundColor,
+        body: Center(child: CircularProgressIndicator(color: _borderColor)),
       );
     }
 
     if (_error != null || _questions.isEmpty) {
       return Scaffold(
+        backgroundColor: _backgroundColor,
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24.0),
             child: Text(
               _error ?? "No questions found for this module.",
               textAlign: TextAlign.center,
-              style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
+              style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, color: _textColor),
             ),
           ),
         ),
@@ -163,7 +181,7 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
     final bool isCorrect = isAnswered && currentQuestion.isCorrect(_userAnswers[_currentIndex]!);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F9F9),
+      backgroundColor: _backgroundColor,
       body: Column(
         children: [
           _buildTopBar(),
@@ -232,12 +250,12 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: _cardBackground,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.black, width: 2.5),
-                  boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(3, 3))],
+                  border: Border.all(color: _borderColor, width: 2.5),
+                  boxShadow: [BoxShadow(color: _borderColor, offset: const Offset(3, 3))],
                 ),
-                child: const Icon(Icons.close, size: 20),
+                child: Icon(Icons.close, size: 20, color: _borderColor),
               ),
             ),
           ),
@@ -251,7 +269,7 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
       widget.moduleName.toUpperCase(),
       textAlign: TextAlign.center,
       style: GoogleFonts.montserrat(
-        fontSize: 26, fontWeight: FontWeight.w900, letterSpacing: -1,
+        fontSize: 26, fontWeight: FontWeight.w900, letterSpacing: -1, color: _textColor,
       ),
     );
   }
@@ -264,8 +282,8 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
           height: 14,
           width: 300,
           decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(color: Colors.black, width: 2.5),
+            color: _cardBackground,
+            border: Border.all(color: _borderColor, width: 2.5),
             borderRadius: BorderRadius.circular(10),
           ),
           child: ClipRRect(
@@ -273,14 +291,14 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
             child: LinearProgressIndicator(
               value: progress,
               backgroundColor: Colors.transparent,
-              color: const Color(0xFFFBB017),
+              color: themeYellow,
             ),
           ),
         ),
         const SizedBox(height: 8),
         Text(
           "Question ${_currentIndex + 1} of ${_questions.length}",
-          style: GoogleFonts.montserrat(fontWeight: FontWeight.w700, fontSize: 13),
+          style: GoogleFonts.montserrat(fontWeight: FontWeight.w700, fontSize: 13, color: _hintColor),
         ),
       ],
     );
@@ -289,23 +307,23 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
   Widget _buildQuestionCard(QuestionModel question, bool isAnswered) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _cardBackground,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.black, width: 3),
-        boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(0, 8))],
+        border: Border.all(color: _borderColor, width: 3),
+        boxShadow: [BoxShadow(color: _borderColor, offset: const Offset(0, 8))],
       ),
       child: Column(
         children: [
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 14),
-            decoration: const BoxDecoration(
-              color: Color(0xFF249780),
-              borderRadius: BorderRadius.only(
+            decoration: BoxDecoration(
+              color: themeTeal,
+              borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(20),
                 topRight: Radius.circular(20),
               ),
-              border: Border(bottom: BorderSide(color: Colors.black, width: 3)),
+              border: Border(bottom: BorderSide(color: _borderColor, width: 3)),
             ),
             child: Text(
               question.questionType.toUpperCase(),
@@ -323,7 +341,7 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
                   question.question,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.montserrat(
-                    fontSize: 18, fontWeight: FontWeight.w800, height: 1.3,
+                    fontSize: 18, fontWeight: FontWeight.w800, height: 1.3, color: _textColor,
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -352,9 +370,9 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
         width: double.infinity,
         padding: const EdgeInsets.fromLTRB(24, 20, 24, 40),
         decoration: BoxDecoration(
-          color: isCorrect ? const Color(0xFF249780) : const Color(0xFFE74C3C),
+          color: isCorrect ? themeTeal : errorRed,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-          border: const Border(top: BorderSide(color: Colors.black, width: 4)),
+          border: Border(top: BorderSide(color: _borderColor, width: 4)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -395,20 +413,20 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
           height: 65,
           width: double.infinity,
           decoration: BoxDecoration(
-            color: !canCheck ? Colors.grey[300] : const Color(0xFFFBB017),
+            color: !canCheck ? _hintColor : themeYellow,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: canCheck ? Colors.black : Colors.grey[400]!,
+              color: canCheck ? _borderColor : _hintColor,
               width: 3,
             ),
-            boxShadow: canCheck ? [const BoxShadow(color: Colors.black, offset: Offset(0, 6))] : null,
+            boxShadow: canCheck ? [BoxShadow(color: _borderColor, offset: const Offset(0, 6))] : null,
           ),
           child: Center(
             child: Text(
               "CHECK ANSWER",
               style: GoogleFonts.montserrat(
                 fontWeight: FontWeight.w900, fontSize: 18,
-                color: canCheck ? Colors.black : Colors.grey[600],
+                color: canCheck ? _borderColor : _hintColor,
               ),
             ),
           ),

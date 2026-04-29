@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 import 'home.dart';
 
 
-class ResultScreen extends StatelessWidget {
+class ResultScreen extends StatefulWidget {
   final int score;
   final int total;
   final String courseId;
@@ -20,8 +22,29 @@ class ResultScreen extends StatelessWidget {
   });
 
   @override
+  State<ResultScreen> createState() => _ResultScreenState();
+}
+
+class _ResultScreenState extends State<ResultScreen> {
+  // Theme-aware color getters
+  Color get _borderColor => Theme.of(context).colorScheme.onSurface;
+  Color get _backgroundColor => Theme.of(context).scaffoldBackgroundColor;
+  Color get _cardBackground => Theme.of(context).cardColor;
+  Color get _textColor => Theme.of(context).colorScheme.onSurface;
+  Color get _hintColor => Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6);
+
+  // Accent colors (branding - keep as-is)
+  final Color themeTeal = const Color(0xFF249780);
+  final Color themeYellow = const Color(0xFFFBB017);
+  final Color passGreen = const Color(0xFFC8E6C9);
+  final Color failRed = const Color(0xFFFFCDD2);
+
+  @override
   Widget build(BuildContext context) {
-    final percent = total > 0 ? (score / total * 100).round() : 0;
+    // Watch theme changes
+    context.watch<ThemeProvider>().isDarkMode;
+
+    final percent = widget.total > 0 ? (widget.score / widget.total * 100).round() : 0;
     final bool isPassed = percent >= 75;
 
     return PopScope(
@@ -32,7 +55,7 @@ class ResultScreen extends StatelessWidget {
         Navigator.pop(context, true);
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFF9F9F9),
+        backgroundColor: _backgroundColor,
         body: SafeArea(
           child: Center(
             child: Padding(
@@ -47,6 +70,7 @@ class ResultScreen extends StatelessWidget {
                       fontSize: 32,
                       fontWeight: FontWeight.w900,
                       letterSpacing: -1,
+                      color: _textColor,
                     ),
                   ),
 
@@ -56,13 +80,13 @@ class ResultScreen extends StatelessWidget {
                   Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: _cardBackground,
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: Colors.black, width: 3),
-                      boxShadow: const [
+                      border: Border.all(color: _borderColor, width: 3),
+                      boxShadow: [
                         BoxShadow(
-                          color: Colors.black,
-                          offset: Offset(0, 8),
+                          color: _borderColor,
+                          offset: const Offset(0, 8),
                           blurRadius: 0,
                         ),
                       ],
@@ -73,14 +97,14 @@ class ResultScreen extends StatelessWidget {
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF249780), // Teal
-                            borderRadius: BorderRadius.only(
+                          decoration: BoxDecoration(
+                            color: themeTeal,
+                            borderRadius: const BorderRadius.only(
                               topLeft: Radius.circular(20),
                               topRight: Radius.circular(20),
                             ),
                             border: Border(
-                              bottom: BorderSide(color: Colors.black, width: 3),
+                              bottom: BorderSide(color: _borderColor, width: 3),
                             ),
                           ),
                           child: Text(
@@ -93,7 +117,7 @@ class ResultScreen extends StatelessWidget {
                             ),
                           ),
                         ),
-                        if (isCustom)
+                        if (widget.isCustom)
                           Container(
                             width: double.infinity,
                             padding: const EdgeInsets.symmetric(vertical: 8),
@@ -121,11 +145,11 @@ class ResultScreen extends StatelessWidget {
                             children: [
                               // Big Score Text
                               Text(
-                                "$score / $total",
+                                "${widget.score} / ${widget.total}",
                                 style: GoogleFonts.montserrat(
                                   fontSize: 56,
                                   fontWeight: FontWeight.w900,
-                                  color: Colors.black,
+                                  color: _textColor,
                                 ),
                               ),
 
@@ -137,11 +161,11 @@ class ResultScreen extends StatelessWidget {
                                     horizontal: 20, vertical: 8),
                                 decoration: BoxDecoration(
                                   color: isPassed
-                                      ? const Color(0xFFC8E6C9)
-                                      : const Color(0xFFFFCDD2),
+                                      ? passGreen
+                                      : failRed,
                                   borderRadius: BorderRadius.circular(30),
                                   border:
-                                      Border.all(color: Colors.black, width: 2),
+                                      Border.all(color: _borderColor, width: 2),
                                 ),
                                 child: Text(
                                   "$percent%",
@@ -162,6 +186,7 @@ class ResultScreen extends StatelessWidget {
                                 style: GoogleFonts.montserrat(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w800,
+                                  color: _textColor,
                                 ),
                               ),
 
@@ -175,7 +200,7 @@ class ResultScreen extends StatelessWidget {
                                 style: GoogleFonts.montserrat(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
-                                  color: Colors.black54,
+                                  color: _hintColor,
                                 ),
                               ),
                             ],
@@ -189,11 +214,10 @@ class ResultScreen extends StatelessWidget {
 
                   // Back Button (Neo-brutalist Yellow Button)
                   GestureDetector(
-                    // onTap: () => Navigator.pop(context, true),
                     onTap: () {
                       Navigator.of(context).pushAndRemoveUntil(
                         MaterialPageRoute(
-                          builder: (_) => HomeScreen(initialCourseIndex: courseIndex), // 👈
+                          builder: (_) => HomeScreen(initialCourseIndex: widget.courseIndex),
                         ),
                         (route) => false,
                       );
@@ -202,13 +226,13 @@ class ResultScreen extends StatelessWidget {
                       width: double.infinity,
                       height: 65,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFBB017), // Yellow
+                        color: themeYellow,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.black, width: 3),
-                        boxShadow: const [
+                        border: Border.all(color: _borderColor, width: 3),
+                        boxShadow: [
                           BoxShadow(
-                            color: Colors.black,
-                            offset: Offset(4, 4),
+                            color: _borderColor,
+                            offset: const Offset(4, 4),
                           ),
                         ],
                       ),
@@ -218,6 +242,7 @@ class ResultScreen extends StatelessWidget {
                           style: GoogleFonts.montserrat(
                             fontSize: 18,
                             fontWeight: FontWeight.w900,
+                            color: _textColor,
                           ),
                         ),
                       ),

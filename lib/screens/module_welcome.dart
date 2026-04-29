@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 import '../screens/brainstorming_screen.dart';
 
 class ModuleOneScreen extends StatefulWidget {
@@ -31,10 +33,14 @@ class _ModuleOneScreenState extends State<ModuleOneScreen> {
   bool _isLoading = true;
   int _totalQuestions = 0;
 
-  // Constants for Neobrutalist Theme
+  // Theme-aware color getters
+  Color get _borderColor => Theme.of(context).colorScheme.onSurface;
+  Color get _cardBackground => Theme.of(context).cardColor;
+  Color get _textColor => Theme.of(context).colorScheme.onSurface;
+
+  // Neobrutalist accent colors (these stay as-is for branding)
   final Color themeYellow = const Color(0xFFFFC01D);
   final Color themeTeal = const Color(0xFF32C6AD);
-  final Color darkBorder = const Color(0xFF1A1C1E);
 
   @override
   void initState() {
@@ -101,6 +107,9 @@ class _ModuleOneScreenState extends State<ModuleOneScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Watch theme changes
+    context.watch<ThemeProvider>().isDarkMode;
+
     return Scaffold(
       backgroundColor: themeYellow,
       body: SafeArea(
@@ -117,7 +126,7 @@ class _ModuleOneScreenState extends State<ModuleOneScreen> {
                     style: GoogleFonts.montserrat(
                       fontWeight: FontWeight.w900,
                       fontSize: 30,
-                      color: darkBorder,
+                      color: _borderColor,
                     ),
                   ),
                   _buildCloseButton(),
@@ -164,12 +173,12 @@ class _ModuleOneScreenState extends State<ModuleOneScreen> {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: _cardBackground,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: darkBorder, width: 3),
-          boxShadow: [BoxShadow(color: darkBorder, offset: const Offset(4, 4))],
+          border: Border.all(color: _borderColor, width: 3),
+          boxShadow: [BoxShadow(color: _borderColor, offset: const Offset(4, 4))],
         ),
-        child: Icon(Icons.close, size: 24, color: darkBorder, weight: 800),
+        child: Icon(Icons.close, size: 24, color: _borderColor, weight: 800),
       ),
     );
   }
@@ -178,10 +187,10 @@ class _ModuleOneScreenState extends State<ModuleOneScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 28),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _cardBackground,
         borderRadius: BorderRadius.circular(100),
-        border: Border.all(color: darkBorder, width: 3),
-        boxShadow: [BoxShadow(color: darkBorder, offset: const Offset(5, 5))],
+        border: Border.all(color: _borderColor, width: 3),
+        boxShadow: [BoxShadow(color: _borderColor, offset: const Offset(5, 5))],
       ),
       child: Text(
         widget.courseName.toUpperCase(),
@@ -190,7 +199,7 @@ class _ModuleOneScreenState extends State<ModuleOneScreen> {
           fontSize: 12,
           fontWeight: FontWeight.w800,
           letterSpacing: 1.5,
-          color: Colors.grey.shade600,
+          color: _textColor.withValues(alpha: 0.6),
         ),
       ),
     );
@@ -201,10 +210,10 @@ class _ModuleOneScreenState extends State<ModuleOneScreen> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _cardBackground,
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: darkBorder, width: 3),
-        boxShadow: [BoxShadow(color: darkBorder, offset: const Offset(6, 6))],
+        border: Border.all(color: _borderColor, width: 3),
+        boxShadow: [BoxShadow(color: _borderColor, offset: const Offset(6, 6))],
       ),
       child: Column(
         children: [
@@ -224,7 +233,7 @@ class _ModuleOneScreenState extends State<ModuleOneScreen> {
             style: GoogleFonts.montserrat(
               fontSize: 32,
               fontWeight: FontWeight.w900,
-              color: darkBorder,
+              color: _borderColor,
               height: 1.1,
             ),
           ),
@@ -236,7 +245,7 @@ class _ModuleOneScreenState extends State<ModuleOneScreen> {
               style: GoogleFonts.montserrat(
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
-                color: darkBorder.withValues(alpha: 0.7),
+                color: _textColor.withValues(alpha: 0.7),
                 height: 1.5,
               ),
             ),
@@ -259,7 +268,7 @@ class _ModuleOneScreenState extends State<ModuleOneScreen> {
           width: 3,
           margin: const EdgeInsets.symmetric(horizontal: 20),
           decoration: BoxDecoration(
-            color: darkBorder.withValues(alpha: 0.15),
+            color: _borderColor.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(10),
           ),
         ),
@@ -274,14 +283,14 @@ class _ModuleOneScreenState extends State<ModuleOneScreen> {
   Widget _buildStatItem(IconData icon, String label) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: darkBorder.withValues(alpha: 0.5)),
+        Icon(icon, size: 18, color: _borderColor.withValues(alpha: 0.5)),
         const SizedBox(width: 8),
         Text(
           label,
           style: GoogleFonts.montserrat(
             fontSize: 15,
             fontWeight: FontWeight.w700,
-            color: darkBorder.withValues(alpha: 0.7),
+            color: _borderColor.withValues(alpha: 0.7),
           ),
         ),
       ],
@@ -316,8 +325,8 @@ class _ModuleOneScreenState extends State<ModuleOneScreen> {
           const SizedBox(height: 16),
           _buildNeobrutalistButton(
             label: 'Custom Practice',
-            color: Colors.white,
-            textColor: darkBorder,
+            color: _cardBackground,
+            textColor: _borderColor,
             icon: Icons.tune_rounded,
             onTap: () => _showCustomStartSheet(context),
           ),
@@ -341,8 +350,8 @@ class _ModuleOneScreenState extends State<ModuleOneScreen> {
         decoration: BoxDecoration(
           color: color,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: darkBorder, width: 3),
-          boxShadow: [BoxShadow(color: darkBorder, offset: const Offset(0, 6))],
+          border: Border.all(color: _borderColor, width: 3),
+          boxShadow: [BoxShadow(color: _borderColor, offset: const Offset(0, 6))],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -375,9 +384,9 @@ class _ModuleOneScreenState extends State<ModuleOneScreen> {
           return Container(
             padding: const EdgeInsets.fromLTRB(24, 24, 24, 40),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: _cardBackground,
               borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-              border: Border(top: BorderSide(color: darkBorder, width: 3)),
+              border: Border(top: BorderSide(color: _borderColor, width: 3)),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -387,7 +396,7 @@ class _ModuleOneScreenState extends State<ModuleOneScreen> {
                   style: GoogleFonts.montserrat(
                     fontSize: 26,
                     fontWeight: FontWeight.w900,
-                    color: darkBorder,
+                    color: _borderColor,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -408,7 +417,7 @@ class _ModuleOneScreenState extends State<ModuleOneScreen> {
                       style: GoogleFonts.montserrat(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
-                        color: darkBorder,
+                        color: _borderColor,
                       ),
                     ),
                     Container(
@@ -416,7 +425,7 @@ class _ModuleOneScreenState extends State<ModuleOneScreen> {
                       decoration: BoxDecoration(
                         color: themeYellow,
                         borderRadius: BorderRadius.circular(15),
-                        border: Border.all(color: darkBorder, width: 2),
+                        border: Border.all(color: _borderColor, width: 2),
                       ),
                       child: Text(
                         '$selectedMax',
@@ -434,14 +443,14 @@ class _ModuleOneScreenState extends State<ModuleOneScreen> {
                   max: _totalQuestions > 0 ? _totalQuestions.toDouble() : 1,
                   divisions: _totalQuestions > 1 ? _totalQuestions - 1 : 1,
                   activeColor: themeTeal,
-                  inactiveColor: darkBorder.withValues(alpha: 0.1),
+                  inactiveColor: _borderColor.withValues(alpha: 0.1),
                   onChanged: (val) => setSheetState(() => selectedMax = val.round()),
                 ),
                 const SizedBox(height: 32),
                 _buildNeobrutalistButton(
                   label: 'Start ${_pluralize(selectedMax, "Question")}',
                   color: themeYellow,
-                  textColor: darkBorder,
+                  textColor: _borderColor,
                   icon: Icons.rocket_launch_rounded,
                   onTap: () {
                     Navigator.pop(context);
