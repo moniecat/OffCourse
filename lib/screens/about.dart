@@ -67,18 +67,22 @@ class _AboutPageState extends State<AboutPage> {
 
   /// Styled Menu Button matched with FAQPage
   Widget _buildMenuButton() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF2A2D2E) : Colors.white;
+    final borderColor = isDark ? Colors.white : darkBorder;
+
     return GestureDetector(
       onTap: () => _openDrawer(context),
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(color: darkBorder, width: borderWidth),
-          boxShadow: const [
-            BoxShadow(color: darkBorder, offset: Offset(3, 3))
+          color: bgColor,
+          border: Border.all(color: borderColor, width: borderWidth),
+          boxShadow: [
+            BoxShadow(color: borderColor, offset: const Offset(3, 3))
           ],
         ),
-        child: const Icon(Icons.menu, color: darkBorder, size: 30),
+        child: Icon(Icons.menu, color: borderColor, size: 30),
       ),
     );
   }
@@ -90,9 +94,9 @@ class _AboutPageState extends State<AboutPage> {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: Colors.black, width: 2.5),
+          side: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black, width: 2.5),
         ),
-        titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+        backgroundColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF2A2D2E) : Colors.white,
         contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
         actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
         title: Row(
@@ -104,6 +108,7 @@ class _AboutPageState extends State<AboutPage> {
               style: GoogleFonts.montserrat(
                 fontWeight: FontWeight.w900,
                 fontSize: 22,
+                color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
               ),
             ),
           ],
@@ -117,6 +122,7 @@ class _AboutPageState extends State<AboutPage> {
               style: GoogleFonts.montserrat(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
+                color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
               ),
             ),
             const SizedBox(height: 10),
@@ -124,13 +130,13 @@ class _AboutPageState extends State<AboutPage> {
               width: double.infinity,
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: const Color(0xFFF9F9F9),
+                color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1A1C1E) : const Color(0xFFF9F9F9),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.black, width: 2),
+                border: Border.all(color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black, width: 2),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.mail, size: 20),
+                  Icon(Icons.mail, size: 20, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -150,7 +156,7 @@ class _AboutPageState extends State<AboutPage> {
               style: GoogleFonts.montserrat(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: Colors.black54,
+                color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black54,
                 height: 1.5,
               ),
             ),
@@ -162,18 +168,18 @@ class _AboutPageState extends State<AboutPage> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFC107),
+                color: themeYellow,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.black, width: 2),
-                boxShadow: const [
-                  BoxShadow(color: Colors.black, offset: Offset(0, 3)),
+                border: Border.all(color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black, width: 2),
+                boxShadow: [
+                  BoxShadow(color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black, offset: const Offset(0, 3)),
                 ],
               ),
               child: Text(
                 'Close',
                 style: GoogleFonts.montserrat(
                   fontWeight: FontWeight.w900,
-                  color: Colors.black,
+                  color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
                 ),
               ),
             ),
@@ -238,6 +244,11 @@ We may revise these terms at any time. Continued use of the app implies acceptan
     required IconData icon,
     required String content,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF2A2D2E) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final mutedTextColor = isDark ? Colors.white70 : Colors.black87;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -249,13 +260,13 @@ We may revise these terms at any time. Continued use of the app implies acceptan
         expand: false,
         builder: (_, scrollCtrl) {
           return Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
               border: Border(
-                top: BorderSide(color: Colors.black, width: 3),
-                left: BorderSide(color: Colors.black, width: 3),
-                right: BorderSide(color: Colors.black, width: 3),
+                top: BorderSide(color: textColor, width: 3),
+                left: BorderSide(color: textColor, width: 3),
+                right: BorderSide(color: textColor, width: 3),
               ),
             ),
             child: Column(
@@ -265,7 +276,7 @@ We may revise these terms at any time. Continued use of the app implies acceptan
                   width: 48,
                   height: 5,
                   decoration: BoxDecoration(
-                    color: Colors.black,
+                    color: textColor,
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
@@ -281,15 +292,16 @@ We may revise these terms at any time. Continued use of the app implies acceptan
                         style: GoogleFonts.montserrat(
                           fontSize: 22,
                           fontWeight: FontWeight.w900,
+                          color: textColor,
                         ),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24),
-                  child: Divider(color: Colors.black, thickness: 2),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Divider(color: textColor, thickness: 2),
                 ),
                 Expanded(
                   child: ListView(
@@ -301,7 +313,7 @@ We may revise these terms at any time. Continued use of the app implies acceptan
                         style: GoogleFonts.montserrat(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: Colors.black87,
+                          color: mutedTextColor,
                           height: 1.8,
                         ),
                       ),
@@ -318,17 +330,22 @@ We may revise these terms at any time. Continued use of the app implies acceptan
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF1A1C1E) : Colors.white;
+    final textColor = isDark ? Colors.white : darkBorder;
+    final mutedTextColor = isDark ? Colors.white60 : Colors.black45;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: bgColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: bgColor,
         elevation: 0,
         toolbarHeight: 80,
         automaticallyImplyLeading: false,
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 25, top: 10),
-            child: _buildMenuButton(), // Updated Button
+            child: _buildMenuButton(),
           ),
         ],
       ),
@@ -342,7 +359,7 @@ We may revise these terms at any time. Continued use of the app implies acceptan
               fontWeight: FontWeight.w900,
               height: 1.0,
               letterSpacing: -1.5,
-              color: darkBorder,
+              color: textColor,
             ),
           ),
           const SizedBox(height: 32),
@@ -350,15 +367,15 @@ We may revise these terms at any time. Continued use of the app implies acceptan
             child: Container(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.black, width: 3),
-                boxShadow: const [
-                  BoxShadow(color: Colors.black, offset: Offset(4, 4)),
+                border: Border.all(color: textColor, width: 3),
+                boxShadow: [
+                  BoxShadow(color: textColor, offset: const Offset(4, 4)),
                 ],
               ),
-              child: const CircleAvatar(
+              child: CircleAvatar(
                 radius: 46,
-                backgroundImage: AssetImage('assets/pics/logo3.png'),
-                backgroundColor: Colors.white,
+                backgroundImage: const AssetImage('assets/pics/logo3.png'),
+                backgroundColor: isDark ? const Color(0xFF2A2D2E) : Colors.white,
               ),
             ),
           ),
@@ -370,15 +387,15 @@ We may revise these terms at any time. Continued use of the app implies acceptan
               style: GoogleFonts.montserrat(
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
-                color: Colors.black,
+                color: textColor,
                 height: 1.6,
               ),
             ),
           ),
           const SizedBox(height: 24),
-          const _SectionLabel(label: 'WHAT YOU CAN DO'),
+          _SectionLabel(label: 'WHAT YOU CAN DO'),
           const SizedBox(height: 12),
-          const _FeatureTile(
+          _FeatureTile(
             icon: Icons.menu_book_rounded,
             color: Colors.teal,
             title: 'Browse Modules',
@@ -392,14 +409,14 @@ We may revise these terms at any time. Continued use of the app implies acceptan
             description: 'Interactive exercises to sharpen critical thinking.',
           ),
           const SizedBox(height: 12),
-          const _FeatureTile(
+          _FeatureTile(
             icon: Icons.person_outline_rounded,
-            color: Colors.black,
+            color: textColor,
             title: 'Your Profile',
             description: 'Track your progress and manage your student info.',
           ),
           const SizedBox(height: 32),
-          const _SectionLabel(label: 'GET IN TOUCH'),
+          _SectionLabel(label: 'GET IN TOUCH'),
           const SizedBox(height: 12),
           _AboutTile(
             icon: Icons.email_outlined,
@@ -427,7 +444,7 @@ We may revise these terms at any time. Continued use of the app implies acceptan
               style: GoogleFonts.montserrat(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: Colors.black45,
+                color: mutedTextColor,
               ),
             ),
           ),
@@ -446,12 +463,15 @@ class _SectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
+
     return Text(
       label,
       style: GoogleFonts.montserrat(
         fontSize: 13,
         fontWeight: FontWeight.w800,
-        color: Colors.black,
+        color: textColor,
         letterSpacing: 1.5,
       ),
     );
@@ -464,12 +484,16 @@ class _SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF2A2D2E) : const Color(0xFFF9F9F9);
+    final textColor = isDark ? Colors.white : Colors.black;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9F9F9),
+        color: bgColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.black, width: 3),
+        border: Border.all(color: textColor, width: 3),
       ),
       child: child,
     );
@@ -491,13 +515,20 @@ class _FeatureTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF2A2D2E) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final mutedTextColor = isDark ? Colors.white70 : Colors.black54;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: bgColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black, width: 2.5),
-        boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(3, 3))],
+        border: Border.all(color: textColor, width: 2.5),
+        boxShadow: [
+          BoxShadow(color: textColor, offset: const Offset(3, 3)),
+        ],
       ),
       child: Row(
         children: [
@@ -520,6 +551,7 @@ class _FeatureTile extends StatelessWidget {
                   style: GoogleFonts.montserrat(
                     fontWeight: FontWeight.w800,
                     fontSize: 15,
+                    color: textColor,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -528,7 +560,7 @@ class _FeatureTile extends StatelessWidget {
                   style: GoogleFonts.montserrat(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: Colors.black54,
+                    color: mutedTextColor,
                   ),
                 ),
               ],
@@ -557,28 +589,35 @@ class _AboutTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF2A2D2E) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final mutedTextColor = isDark ? Colors.white70 : Colors.black54;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: bgColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black, width: 3),
-        boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
+        border: Border.all(color: textColor, width: 3),
+        boxShadow: [
+          BoxShadow(color: textColor, offset: const Offset(4, 4)),
+        ],
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
         leading: Icon(icon, color: themeYellow, size: 28),
         title: Text(
           label,
-          style: GoogleFonts.montserrat(fontWeight: FontWeight.w800, fontSize: 16),
+          style: GoogleFonts.montserrat(fontWeight: FontWeight.w800, fontSize: 16, color: textColor),
         ),
         subtitle: subtitle != null
             ? Text(
                 subtitle!,
-                style: GoogleFonts.montserrat(fontSize: 13, fontWeight: FontWeight.w500),
+                style: GoogleFonts.montserrat(fontSize: 13, fontWeight: FontWeight.w500, color: mutedTextColor),
               )
             : null,
-        trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.black, size: 18),
+        trailing: Icon(Icons.arrow_forward_ios_rounded, color: textColor, size: 18),
         onTap: onTap,
       ),
     );
