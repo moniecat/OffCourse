@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../services/firestore_service.dart';
 import '../models/course.dart';
+import '../providers/theme_provider.dart';
 import '../widgets/admin_widgets.dart';
 
 class ManageCoursesScreen extends StatefulWidget {
@@ -12,8 +14,13 @@ class ManageCoursesScreen extends StatefulWidget {
 }
 
 class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
-  static const Color darkBorder = Color(0xFF1A1C1E);
   String _searchQuery = '';
+
+  // Theme-aware getters
+  Color get _borderColor => Theme.of(context).colorScheme.onSurface;
+  Color get _backgroundColor => Theme.of(context).scaffoldBackgroundColor;
+  Color get _textColor => Theme.of(context).colorScheme.onSurface;
+  Color get _hintColor => Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4);
 
   Future<void> _editCourse(Course course) async {
     final titleController = TextEditingController(text: course.title);
@@ -157,21 +164,24 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
         width: 45,
         height: 45,
         decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(color: Colors.black, width: 2.5),
-          boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
+          color: _backgroundColor,
+          border: Border.all(color: _borderColor, width: 2.5),
+          boxShadow: [BoxShadow(color: _borderColor, offset: const Offset(4, 4))],
         ),
-        child: const Icon(Icons.arrow_back, color: Colors.black, size: 26),
+        child: Icon(Icons.arrow_back, color: _borderColor, size: 26),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    // Watch theme changes
+    context.watch<ThemeProvider>().isDarkMode;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: _backgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: _backgroundColor,
         elevation: 0,
         toolbarHeight: 90,
         automaticallyImplyLeading: false,
@@ -194,7 +204,7 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
                 fontWeight: FontWeight.w900,
                 height: 1.0,
                 letterSpacing: -1.5,
-                color: darkBorder,
+                color: _textColor,
               ),
             ),
           ),
@@ -203,18 +213,18 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: _backgroundColor,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.black, width: 2.5),
-                boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
+                border: Border.all(color: _borderColor, width: 2.5),
+                boxShadow: [BoxShadow(color: _borderColor, offset: const Offset(4, 4))],
               ),
               child: TextField(
                 onChanged: (value) => setState(() => _searchQuery = value),
-                style: GoogleFonts.montserrat(fontWeight: FontWeight.w700),
+                style: GoogleFonts.montserrat(fontWeight: FontWeight.w700, color: _textColor),
                 decoration: InputDecoration(
                   hintText: 'Search courses...',
-                  hintStyle: GoogleFonts.montserrat(color: Colors.black26),
-                  prefixIcon: const Icon(Icons.search, color: Colors.black),
+                  hintStyle: GoogleFonts.montserrat(color: _hintColor),
+                  prefixIcon: Icon(Icons.search, color: _borderColor),
                   contentPadding: const EdgeInsets.all(20),
                   border: InputBorder.none,
                 ),
@@ -227,7 +237,7 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
               future: FirestoreService().getCourses(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator(color: Colors.black));
+                  return Center(child: CircularProgressIndicator(color: _borderColor));
                 }
 
                 if (snapshot.hasError) {
@@ -252,22 +262,22 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
                     return Container(
                       margin: const EdgeInsets.only(bottom: 20),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: _backgroundColor,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.black, width: 2.5),
-                        boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
+                        border: Border.all(color: _borderColor, width: 2.5),
+                        boxShadow: [BoxShadow(color: _borderColor, offset: const Offset(4, 4))],
                       ),
                       child: ListTile(
                         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                         title: Text(
                           course.title.toUpperCase(),
-                          style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: 16),
+                          style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: 16, color: _textColor),
                         ),
                         subtitle: Text(
                           course.description ?? 'No description',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.montserrat(fontWeight: FontWeight.w600, color: Colors.black54),
+                          style: GoogleFonts.montserrat(fontWeight: FontWeight.w600, color: _hintColor),
                         ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,

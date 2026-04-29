@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../models/course.dart';
+import '../providers/theme_provider.dart';
 import '../services/firestore_service.dart';
 
 class AddQuestionScreen extends StatefulWidget {
@@ -27,8 +29,11 @@ class _AddQuestionScreenState extends State<AddQuestionScreen> {
   List<Map<String, dynamic>> _modules = [];
   Map<String, dynamic>? _selectedModule;
 
-  // Styling Constants
-  static const Color darkBorder = Color(0xFF1A1C1E);
+  // Styling Constants - using theme-aware getters
+  Color get _borderColor => Theme.of(context).colorScheme.onSurface;
+  Color get _backgroundColor => Theme.of(context).scaffoldBackgroundColor;
+  Color get _textColor => Theme.of(context).colorScheme.onSurface;
+  Color get _hintColor => Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4);
 
   @override
   void initState() {
@@ -132,7 +137,7 @@ class _AddQuestionScreenState extends State<AddQuestionScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        backgroundColor: darkBorder,
+        backgroundColor: _borderColor,
         content: Text(message, style: GoogleFonts.montserrat()),
       ),
     );
@@ -146,21 +151,24 @@ class _AddQuestionScreenState extends State<AddQuestionScreen> {
         width: 45,
         height: 45,
         decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(color: Colors.black, width: 2.5),
-          boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
+          color: _backgroundColor,
+          border: Border.all(color: _borderColor, width: 2.5),
+          boxShadow: [BoxShadow(color: _borderColor, offset: const Offset(4, 4))],
         ),
-        child: const Icon(Icons.arrow_back, color: Colors.black, size: 26),
+        child: Icon(Icons.arrow_back, color: _borderColor, size: 26),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    // Watch theme changes
+    context.watch<ThemeProvider>().isDarkMode;
+    
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: _backgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: _backgroundColor,
         elevation: 0,
         toolbarHeight: 90,
         automaticallyImplyLeading: false,
@@ -172,7 +180,7 @@ class _AddQuestionScreenState extends State<AddQuestionScreen> {
         ),
       ),
       body: _loadingCourses
-          ? const Center(child: CircularProgressIndicator(color: darkBorder))
+          ? Center(child: CircularProgressIndicator(color: _borderColor))
           : SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
@@ -185,7 +193,7 @@ class _AddQuestionScreenState extends State<AddQuestionScreen> {
                       fontWeight: FontWeight.w900,
                       height: 1.0,
                       letterSpacing: -1.5,
-                      color: darkBorder,
+                      color: _textColor,
                     ),
                   ),
                   const SizedBox(height: 32),
@@ -208,7 +216,7 @@ class _AddQuestionScreenState extends State<AddQuestionScreen> {
                   _buildLabel('SELECT MODULE'),
                   const SizedBox(height: 10),
                   _loadingModules
-                      ? const LinearProgressIndicator(color: darkBorder, backgroundColor: Colors.white)
+                      ? LinearProgressIndicator(color: _borderColor, backgroundColor: _backgroundColor)
                       : _buildNeoDropdown<Map<String, dynamic>>(
                           value: _selectedModule,
                           items: _modules.map((m) => DropdownMenuItem(value: m, child: Text(m['title'] as String? ?? 'Untitled'))).toList(),
@@ -299,17 +307,17 @@ class _AddQuestionScreenState extends State<AddQuestionScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _backgroundColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black, width: 2.5),
-        boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
+        border: Border.all(color: _borderColor, width: 2.5),
+        boxShadow: [BoxShadow(color: _borderColor, offset: const Offset(4, 4))],
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<T>(
           value: value,
           isExpanded: true,
-          icon: const Icon(Icons.keyboard_arrow_down, color: Colors.black),
-          style: GoogleFonts.montserrat(color: Colors.black, fontWeight: FontWeight.w700, fontSize: 16),
+          icon: Icon(Icons.keyboard_arrow_down, color: _borderColor),
+          style: GoogleFonts.montserrat(color: _textColor, fontWeight: FontWeight.w700, fontSize: 16),
           items: items,
           onChanged: onChanged,
         ),
@@ -325,18 +333,18 @@ class _AddQuestionScreenState extends State<AddQuestionScreen> {
         const SizedBox(height: 10),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: _backgroundColor,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.black, width: 2.5),
-            boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
+            border: Border.all(color: _borderColor, width: 2.5),
+            boxShadow: [BoxShadow(color: _borderColor, offset: const Offset(4, 4))],
           ),
           child: TextField(
             controller: controller,
             maxLines: maxLines,
-            style: GoogleFonts.montserrat(fontWeight: FontWeight.w700),
+            style: GoogleFonts.montserrat(fontWeight: FontWeight.w700, color: _textColor),
             decoration: InputDecoration(
               hintText: hint,
-              hintStyle: GoogleFonts.montserrat(color: Colors.black26),
+              hintStyle: GoogleFonts.montserrat(color: _hintColor),
               contentPadding: const EdgeInsets.all(20),
               border: InputBorder.none,
             ),
