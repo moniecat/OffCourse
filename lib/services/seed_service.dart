@@ -53,6 +53,7 @@ class SeedService {
       final moduleData = {
         'title': module['title'],
         'order': module['order'],
+        'description': module['description'] ?? '', 
       };
 
       final existing = await db
@@ -66,6 +67,12 @@ class SeedService {
       String moduleId;
       if (existing.docs.isNotEmpty) {
         moduleId = existing.docs.first.id;
+        await db                                   
+          .collection('courses')
+          .doc(courseId)
+          .collection('modules')
+          .doc(moduleId)
+          .update({'description': module['description'] ?? ''});
       } else {
         final ref = await db
             .collection('courses')

@@ -1,66 +1,350 @@
 [
-  { "title": "1.1 Basic Theory - Numerical Representations", "order": 1, "courseTitle": "Computer Science Fundamentals" },
-  { "title": "1.1 Basic Theory - Non-Numerical Representations (Probability)", "order": 2, "courseTitle": "Computer Science Fundamentals" },
-  { "title": "1.2 Information and Logic - Automaton", "order": 3, "courseTitle": "Computer Science Fundamentals" },
-  { "title": "1.3 Data Structures - Lists", "order": 4, "courseTitle": "Computer Science Fundamentals" },
-  { "title": "1.4 Algorithms - Flowchart (GCD)", "order": 5, "courseTitle": "Computer Science Fundamentals" },
-  { "title": "1.4 Algorithms - OOP Concepts", "order": 6, "courseTitle": "Computer Science Fundamentals" },
-
-  { "title": "2.1 Hardware - Hard Disks", "order": 1, "courseTitle": "Computer Systems" },
-  { "title": "2.2 Operating Systems - Task Management (Interrupts)", "order": 2, "courseTitle": "Computer Systems" },
-  { "title": "2.2 Operating Systems - Task Management (Scheduling)", "order": 3, "courseTitle": "Computer Systems" },
-  { "title": "2.2 Operating Systems - Memory Management (LRU)", "order": 4, "courseTitle": "Computer Systems" },
-  { "title": "2.2 Operating Systems - Data Management / File Organization", "order": 5, "courseTitle": "Computer Systems" },
-  { "title": "2.3 System Configuration - Distributed Processing", "order": 6, "courseTitle": "Computer Systems" },
-  { "title": "2.4 Performance and Reliability - Availability", "order": 7, "courseTitle": "Computer Systems" },
-  { "title": "2.5 System Applications - Multimedia / Output Devices", "order": 8, "courseTitle": "Computer Systems" },
-  { "title": "2.5 System Applications - Multimedia (Graphics)", "order": 9, "courseTitle": "Computer Systems" },
-  { "title": "1.2 Information and Logic - Logic Circuits", "order": 10, "courseTitle": "Computer Systems" },
-
-  { "title": "3.1 Methods - Software Design / UML", "order": 1, "courseTitle": "System Development" },
-  { "title": "3.2 Tasks - Software Architecture Design", "order": 2, "courseTitle": "System Development" },
-  { "title": "3.2 Tasks - Test Techniques (State Transition)", "order": 3, "courseTitle": "System Development" },
-  { "title": "3.2 Tasks - Types and Procedures of Tests (Acceptance)", "order": 4, "courseTitle": "System Development" },
-  { "title": "3.1 Methods - Software Quality Management", "order": 5, "courseTitle": "System Development" },
-  { "title": "3.1 Methods - Development Methods (Refactoring)", "order": 6, "courseTitle": "System Development" },
-
-  { "title": "4.1 Protocols - Transmission Control", "order": 1, "courseTitle": "Network Technology" },
-  { "title": "4.3 Networks - LANs (ARP)", "order": 2, "courseTitle": "Network Technology" },
-  { "title": "4.3 Networks - Various Communication Units", "order": 3, "courseTitle": "Network Technology" },
-  { "title": "4.3 Networks - The Internet (Email)", "order": 4, "courseTitle": "Network Technology" },
-
-  { "title": "5.1 Data Models - Relational Model (Attributes)", "order": 1, "courseTitle": "Database Technology" },
-  { "title": "5.1 Data Models - Normalization (Functional Dependencies)", "order": 2, "courseTitle": "Database Technology" },
-  { "title": "5.2 Database Languages - SQL", "order": 3, "courseTitle": "Database Technology" },
-  { "title": "5.3 Control - Distributed Databases", "order": 4, "courseTitle": "Database Technology" },
-  { "title": "5.3 Control - Database Control Functions (ACID)", "order": 5, "courseTitle": "Database Technology" },
-
-  { "title": "6.1 Security - Computer Crime / Social Engineering", "order": 1, "courseTitle": "Security & Standardization" },
-  { "title": "6.1 Security - Security Protection (Public Key Cryptography)", "order": 2, "courseTitle": "Security & Standardization" },
-  { "title": "6.1 Security - Computer Crime (DNS Cache Poisoning)", "order": 3, "courseTitle": "Security & Standardization" },
-  { "title": "6.1 Security - Computer Crime (Fraud Triangle)", "order": 4, "courseTitle": "Security & Standardization" },
-  { "title": "6.1 Security - Security Protection (IDS)", "order": 5, "courseTitle": "Security & Standardization" },
-  { "title": "6.1 Security - Computer Crime (Port Scanning)", "order": 6, "courseTitle": "Security & Standardization" },
-  { "title": "6.1 Security - Security Protection (WAF)", "order": 7, "courseTitle": "Security & Standardization" },
-
-  { "title": "7.1 Information Strategies - Computerization (IP Law)", "order": 1, "courseTitle": "Computerization & Management" },
-  { "title": "7.1 Information Strategies - IT Service (SLA / Availability)", "order": 2, "courseTitle": "Computerization & Management" },
-  { "title": "7.1 Information Strategies - IT Service (Incident vs. Problem)", "order": 3, "courseTitle": "Computerization & Management" },
-  { "title": "7.1 Information Strategies - IT Service (Audit)", "order": 4, "courseTitle": "Computerization & Management" },
-  { "title": "7.1 Information Strategies - Computerization Strategies (Feasibility)", "order": 5, "courseTitle": "Computerization & Management" },
-  { "title": "7.1 Information Strategies - IT Service (Outsourcing Risk)", "order": 6, "courseTitle": "Computerization & Management" },
-  { "title": "7.1 Information Strategies - Computerization (Green IT)", "order": 7, "courseTitle": "Computerization & Management" },
-  { "title": "7.1 Information Strategies - Computerization (CIO Role)", "order": 8, "courseTitle": "Computerization & Management" },
-  { "title": "7.1 Information Strategies - Standardization (Software License)", "order": 9, "courseTitle": "Computerization & Management" },
-  { "title": "7.2 Corporate Accounting - Financial Accounting", "order": 10, "courseTitle": "Computerization & Management" },
-  { "title": "7.3 Management Engineering - Schedule Control (Critical Path)", "order": 11, "courseTitle": "Computerization & Management" },
-  { "title": "7.3 Management Engineering - PERT / Three-Point Estimate", "order": 12, "courseTitle": "Computerization & Management" },
-  { "title": "7.3 Management Engineering - Process Innovation", "order": 13, "courseTitle": "Computerization & Management" },
-  { "title": "7.3 Management Engineering - Probability / Statistics (OC Curve)", "order": 14, "courseTitle": "Computerization & Management" },
-  { "title": "7.4 Use of Information Systems - Business Systems (DFD)", "order": 15, "courseTitle": "Computerization & Management" },
-  { "title": "7.4 Use of Information Systems - Business Systems (ERP)", "order": 16, "courseTitle": "Computerization & Management" },
-  { "title": "7.4 Use of Information Systems - Business Systems (Relationship Marketing)", "order": 17, "courseTitle": "Computerization & Management" },
-  { "title": "7.4 Use of Information Systems - Business Systems (Sharing Economy)", "order": 18, "courseTitle": "Computerization & Management" },
-  { "title": "7.4 Use of Information Systems - Engineering Systems (IoT)", "order": 19, "courseTitle": "Computerization & Management" },
-  { "title": "7.4 Use of Information Systems - Engineering Systems (RFID)", "order": 20, "courseTitle": "Computerization & Management" }
+  {
+    "title": "1.1 Basic Theory - Numerical Representations",
+    "order": 1,
+    "courseTitle": "Computer Science Fundamentals",
+    "description": "Covers how computers represent numbers using binary, octal, hexadecimal, and decimal systems. You will learn to convert between number bases and understand how integers and floating-point values are stored in memory."
+  },
+  {
+    "title": "1.1 Basic Theory - Non-Numerical Representations (Probability)",
+    "order": 2,
+    "courseTitle": "Computer Science Fundamentals",
+    "description": "Introduces how non-numerical data and probabilistic concepts are represented in computing. You will explore basic probability theory and understand how uncertainty is reasoned about in computational and information systems."
+  },
+  {
+    "title": "1.2 Information and Logic - Automaton",
+    "order": 3,
+    "courseTitle": "Computer Science Fundamentals",
+    "description": "Explains the theory of automata as abstract machines that process input and transition between states. You will learn how finite automata model computation, recognize patterns, and underpin compilers and formal language theory."
+  },
+  {
+    "title": "1.3 Data Structures - Lists",
+    "order": 4,
+    "courseTitle": "Computer Science Fundamentals",
+    "description": "Examines list-based data structures including arrays, linked lists, stacks, and queues. You will understand how each structure stores and retrieves data, their time complexity trade-offs, and when to apply each in algorithm design."
+  },
+  {
+    "title": "1.4 Algorithms - Flowchart (GCD)",
+    "order": 5,
+    "courseTitle": "Computer Science Fundamentals",
+    "description": "Uses the Greatest Common Divisor algorithm to teach flowchart-based representation of logic. You will practice reading and drawing flowcharts that express iterative processes and build the skill to visually communicate algorithms."
+  },
+  {
+    "title": "1.4 Algorithms - OOP Concepts",
+    "order": 6,
+    "courseTitle": "Computer Science Fundamentals",
+    "description": "Introduces object-oriented programming principles including classes, objects, inheritance, encapsulation, and polymorphism. You will learn how OOP organizes complex programs and why it is the dominant paradigm in modern software development."
+  },
+  {
+    "title": "2.1 Hardware - Hard Disks",
+    "order": 1,
+    "courseTitle": "Computer Systems",
+    "description": "Covers the physical structure and operation of hard disk drives including platters, read/write heads, sectors, and tracks. You will understand magnetic data storage, how access time is calculated, and how HDDs compare to solid-state storage."
+  },
+  {
+    "title": "2.2 Operating Systems - Task Management (Interrupts)",
+    "order": 2,
+    "courseTitle": "Computer Systems",
+    "description": "Explains how operating systems use interrupt signals to manage hardware events and coordinate CPU attention. You will learn the interrupt handling cycle, the types of interrupts, and why they are critical to responsive multitasking systems."
+  },
+  {
+    "title": "2.2 Operating Systems - Task Management (Scheduling)",
+    "order": 3,
+    "courseTitle": "Computer Systems",
+    "description": "Explores CPU scheduling algorithms such as FCFS, round-robin, and priority scheduling. You will learn how the OS decides which process runs next and calculate turnaround and waiting times for different scheduling approaches."
+  },
+  {
+    "title": "2.2 Operating Systems - Memory Management (LRU)",
+    "order": 4,
+    "courseTitle": "Computer Systems",
+    "description": "Covers virtual memory and page replacement with a focus on the Least Recently Used algorithm. You will understand how the OS swaps pages to manage limited RAM, how LRU tracks usage history, and how to trace page fault sequences."
+  },
+  {
+    "title": "2.2 Operating Systems - Data Management / File Organization",
+    "order": 5,
+    "courseTitle": "Computer Systems",
+    "description": "Examines how operating systems organize files on storage media through directory structures, file allocation methods, and access control. You will understand how the OS abstracts physical storage into a navigable file system."
+  },
+  {
+    "title": "2.3 System Configuration - Distributed Processing",
+    "order": 6,
+    "courseTitle": "Computer Systems",
+    "description": "Introduces distributed computing architectures where workloads span multiple machines. You will learn the benefits and challenges of distribution including scalability, fault tolerance, and consistency, and how these concepts underpin cloud infrastructure."
+  },
+  {
+    "title": "2.4 Performance and Reliability - Availability",
+    "order": 7,
+    "courseTitle": "Computer Systems",
+    "description": "Teaches how to measure and reason about system availability using metrics like uptime, MTBF, and MTTR. You will calculate availability percentages, understand redundancy strategies, and appreciate the trade-offs in building highly reliable systems."
+  },
+  {
+    "title": "2.5 System Applications - Multimedia / Output Devices",
+    "order": 8,
+    "courseTitle": "Computer Systems",
+    "description": "Covers how computers process and deliver multimedia content through output devices such as monitors, speakers, and printers. You will understand display technologies, resolution, color depth, and how the OS communicates with hardware drivers."
+  },
+  {
+    "title": "2.5 System Applications - Multimedia (Graphics)",
+    "order": 9,
+    "courseTitle": "Computer Systems",
+    "description": "Explores how computers represent and manipulate digital images including raster vs. vector formats, color models, and compression techniques. You will understand how graphics are rendered, stored efficiently, and displayed on screen."
+  },
+  {
+    "title": "1.2 Information and Logic - Logic Circuits",
+    "order": 10,
+    "courseTitle": "Computer Systems",
+    "description": "Examines the Boolean logic gates that form the building blocks of all digital hardware. You will analyze AND, OR, NOT, XOR, and NAND gates, simplify expressions using truth tables, and understand how circuits implement arithmetic operations."
+  },
+  {
+    "title": "3.1 Methods - Software Design / UML",
+    "order": 1,
+    "courseTitle": "System Development",
+    "description": "Introduces Unified Modeling Language as a standard notation for designing software systems. You will learn to read and create class diagrams, sequence diagrams, and use-case diagrams, giving you a shared vocabulary for communicating software design."
+  },
+  {
+    "title": "3.2 Tasks - Software Architecture Design",
+    "order": 2,
+    "courseTitle": "System Development",
+    "description": "Covers high-level decisions that shape how a software system is structured including layered architecture, client-server models, and component design. You will understand how architectural choices affect scalability, maintainability, and performance."
+  },
+  {
+    "title": "3.2 Tasks - Test Techniques (State Transition)",
+    "order": 3,
+    "courseTitle": "System Development",
+    "description": "Focuses on state transition testing, which verifies system behavior by mapping all possible states and their transitions. You will design test cases from state diagrams and ensure every valid and invalid transition is systematically covered."
+  },
+  {
+    "title": "3.2 Tasks - Types and Procedures of Tests (Acceptance)",
+    "order": 4,
+    "courseTitle": "System Development",
+    "description": "Explains acceptance testing as the final validation phase before delivery to end users. You will learn the distinction between alpha and beta testing, how acceptance criteria are defined, and how stakeholders confirm that system requirements have been met."
+  },
+  {
+    "title": "3.1 Methods - Software Quality Management",
+    "order": 5,
+    "courseTitle": "System Development",
+    "description": "Introduces the processes and metrics used to ensure software meets quality standards throughout development. You will explore quality models, defect tracking, code reviews, and how quality assurance focuses on prevention rather than detection alone."
+  },
+  {
+    "title": "3.1 Methods - Development Methods (Refactoring)",
+    "order": 6,
+    "courseTitle": "System Development",
+    "description": "Covers refactoring as the disciplined practice of improving existing code without changing its external behavior. You will learn common refactoring patterns, when to apply them, and how refactoring integrates into agile practices to manage technical debt."
+  },
+  {
+    "title": "4.1 Protocols - Transmission Control",
+    "order": 1,
+    "courseTitle": "Network Technology",
+    "description": "Examines the TCP protocol and how it ensures reliable ordered delivery of data across networks. You will learn about the three-way handshake, flow control, congestion control, and how TCP compares to the lightweight UDP protocol."
+  },
+  {
+    "title": "4.3 Networks - LANs (ARP)",
+    "order": 2,
+    "courseTitle": "Network Technology",
+    "description": "Explains the Address Resolution Protocol and how devices on a LAN map IP addresses to MAC addresses. You will trace the ARP request-reply cycle, understand the ARP cache, and see how ARP operates within the data link and network layers."
+  },
+  {
+    "title": "4.3 Networks - Various Communication Units",
+    "order": 3,
+    "courseTitle": "Network Technology",
+    "description": "Clarifies the data units at each network layer including bits, frames, packets, and segments. You will understand how data is encapsulated as it moves down the OSI model and de-encapsulated as it arrives at its destination."
+  },
+  {
+    "title": "4.3 Networks - The Internet (Email)",
+    "order": 4,
+    "courseTitle": "Network Technology",
+    "description": "Traces how email is sent, routed, and received across the internet using SMTP, POP3, and IMAP. You will understand the roles of mail servers and clients, how messages are addressed and relayed, and the basics of email security."
+  },
+  {
+    "title": "5.1 Data Models - Relational Model (Attributes)",
+    "order": 1,
+    "courseTitle": "Database Technology",
+    "description": "Introduces the relational model as the theoretical foundation of modern databases. You will learn how data is organized into tables, how attributes define entity properties, and how primary and foreign keys establish relationships between tables."
+  },
+  {
+    "title": "5.1 Data Models - Normalization (Functional Dependencies)",
+    "order": 2,
+    "courseTitle": "Database Technology",
+    "description": "Covers database normalization through the lens of functional dependencies. You will identify redundancy and anomalies in table designs, apply normalization from 1NF through 3NF, and restructure schemas to ensure data integrity and efficient storage."
+  },
+  {
+    "title": "5.2 Database Languages - SQL",
+    "order": 3,
+    "courseTitle": "Database Technology",
+    "description": "Teaches Structured Query Language as the standard tool for interacting with relational databases. You will practice SELECT queries with filtering, joining, grouping, and aggregation, as well as INSERT, UPDATE, and DELETE operations for managing data."
+  },
+  {
+    "title": "5.3 Control - Distributed Databases",
+    "order": 4,
+    "courseTitle": "Database Technology",
+    "description": "Explores how databases are distributed across multiple nodes to improve availability and performance. You will understand replication, partitioning, the CAP theorem, and the challenges of maintaining consistency when data is stored across multiple sites."
+  },
+  {
+    "title": "5.3 Control - Database Control Functions (ACID)",
+    "order": 5,
+    "courseTitle": "Database Technology",
+    "description": "Examines the ACID properties that guarantee reliable transaction processing. You will learn how Atomicity, Consistency, Isolation, and Durability are implemented through locking, write-ahead logging, and rollback mechanisms to prevent data corruption."
+  },
+  {
+    "title": "6.1 Security - Computer Crime / Social Engineering",
+    "order": 1,
+    "courseTitle": "Security and Standardization",
+    "description": "Examines how attackers exploit human psychology through phishing, pretexting, and baiting rather than technical vulnerabilities. You will recognize social engineering tactics and understand the organizational controls used to protect employees from manipulation."
+  },
+  {
+    "title": "6.1 Security - Security Protection (Public Key Cryptography)",
+    "order": 2,
+    "courseTitle": "Security and Standardization",
+    "description": "Explains asymmetric encryption and how public and private key pairs enable secure communication without sharing a secret. You will understand RSA concepts, digital signatures, certificate authorities, and how HTTPS uses public key infrastructure to protect web traffic."
+  },
+  {
+    "title": "6.1 Security - Computer Crime (DNS Cache Poisoning)",
+    "order": 3,
+    "courseTitle": "Security and Standardization",
+    "description": "Covers DNS cache poisoning as an attack that redirects users to malicious sites by corrupting resolver caches. You will trace how the attack is carried out, why it is hard to detect, and learn about DNSSEC and other defenses that prevent DNS spoofing."
+  },
+  {
+    "title": "6.1 Security - Computer Crime (Fraud Triangle)",
+    "order": 4,
+    "courseTitle": "Security and Standardization",
+    "description": "Applies the Fraud Triangle model of opportunity, pressure, and rationalization to understand why individuals commit computer crimes. You will analyze how internal controls and audits reduce the conditions that make fraudulent behavior possible."
+  },
+  {
+    "title": "6.1 Security - Security Protection (IDS)",
+    "order": 5,
+    "courseTitle": "Security and Standardization",
+    "description": "Introduces Intrusion Detection Systems and how they monitor network traffic for signs of malicious behavior. You will learn the difference between signature-based and anomaly-based detection and understand how IDS fits into a layered defense strategy alongside firewalls."
+  },
+  {
+    "title": "6.1 Security - Computer Crime (Port Scanning)",
+    "order": 6,
+    "courseTitle": "Security and Standardization",
+    "description": "Explains port scanning as a reconnaissance technique used to discover open ports and running services. You will understand how scanning tools work, what information they expose, and how organizations defend against unauthorized network reconnaissance."
+  },
+  {
+    "title": "6.1 Security - Security Protection (WAF)",
+    "order": 7,
+    "courseTitle": "Security and Standardization",
+    "description": "Covers Web Application Firewalls and how they protect applications by filtering HTTP traffic. You will learn how WAFs detect and block attacks such as SQL injection and cross-site scripting, and how they differ from traditional network-layer firewalls."
+  },
+  {
+    "title": "7.1 Information Strategies - Computerization (IP Law)",
+    "order": 1,
+    "courseTitle": "Computerization and Management",
+    "description": "Covers intellectual property law as it applies to software, databases, and digital content. You will learn about copyright, patents, trademarks, and trade secrets and understand how organizations protect their digital assets while avoiding infringement."
+  },
+  {
+    "title": "7.1 Information Strategies - IT Service (SLA / Availability)",
+    "order": 2,
+    "courseTitle": "Computerization and Management",
+    "description": "Examines Service Level Agreements and how they define expected availability and performance of IT services. You will calculate availability percentages, understand what SLA terms mean in practice, and learn how penalties apply when service targets are missed."
+  },
+  {
+    "title": "7.1 Information Strategies - IT Service (Incident vs. Problem)",
+    "order": 3,
+    "courseTitle": "Computerization and Management",
+    "description": "Clarifies the ITIL distinction between incidents as individual service disruptions and problems as their underlying root causes. You will understand how each is managed differently and how problem management reduces the frequency of recurring incidents."
+  },
+  {
+    "title": "7.1 Information Strategies - IT Service (Audit)",
+    "order": 4,
+    "courseTitle": "Computerization and Management",
+    "description": "Introduces IT auditing as the process of evaluating whether IT systems and controls meet compliance, security, and performance standards. You will learn the types of IT audits and how audit findings drive improvements in governance and risk management."
+  },
+  {
+    "title": "7.1 Information Strategies - Computerization Strategies (Feasibility)",
+    "order": 5,
+    "courseTitle": "Computerization and Management",
+    "description": "Covers feasibility analysis as the critical first step in evaluating whether a proposed IT project is worth pursuing. You will assess technical, economic, operational, and schedule feasibility and understand how these studies shape project approval decisions."
+  },
+  {
+    "title": "7.1 Information Strategies - IT Service (Outsourcing Risk)",
+    "order": 6,
+    "courseTitle": "Computerization and Management",
+    "description": "Examines the risks that arise when organizations outsource IT services to third-party vendors. You will identify risks related to vendor dependency, data security, and quality control, and learn how governance and SLAs are used to mitigate them."
+  },
+  {
+    "title": "7.1 Information Strategies - Computerization (Green IT)",
+    "order": 7,
+    "courseTitle": "Computerization and Management",
+    "description": "Explores Green IT as the practice of designing and using computing resources sustainably. You will learn about energy-efficient hardware, data center optimization, e-waste management, and how organizations measure and reduce their IT environmental impact."
+  },
+  {
+    "title": "7.1 Information Strategies - Computerization (CIO Role)",
+    "order": 8,
+    "courseTitle": "Computerization and Management",
+    "description": "Defines the responsibilities of the Chief Information Officer in aligning IT strategy with business goals. You will understand how the CIO oversees IT governance, manages technology investments, leads digital transformation, and communicates IT value to leadership."
+  },
+  {
+    "title": "7.1 Information Strategies - Standardization (Software License)",
+    "order": 9,
+    "courseTitle": "Computerization and Management",
+    "description": "Covers software license types and their legal and operational implications for organizations. You will learn the differences between proprietary, open-source, freeware, and subscription licenses, and understand compliance obligations and the risks of unlicensed software."
+  },
+  {
+    "title": "7.2 Corporate Accounting - Financial Accounting",
+    "order": 10,
+    "courseTitle": "Computerization and Management",
+    "description": "Introduces financial accounting fundamentals as they relate to IT management decisions. You will learn to read balance sheets and income statements, understand IT asset depreciation, and see how financial data informs technology budgeting and investment."
+  },
+  {
+    "title": "7.3 Management Engineering - Schedule Control (Critical Path)",
+    "order": 11,
+    "courseTitle": "Computerization and Management",
+    "description": "Teaches Critical Path Method as a scheduling technique that identifies the longest sequence of dependent tasks in a project. You will build network diagrams, calculate float, and determine which tasks cannot be delayed without pushing back the overall deadline."
+  },
+  {
+    "title": "7.3 Management Engineering - PERT / Three-Point Estimate",
+    "order": 12,
+    "courseTitle": "Computerization and Management",
+    "description": "Covers PERT and three-point estimation for modeling task duration under uncertainty. You will combine optimistic, pessimistic, and most-likely estimates into a weighted average and use PERT networks to reason about project timelines and schedule risk."
+  },
+  {
+    "title": "7.3 Management Engineering - Process Innovation",
+    "order": 13,
+    "courseTitle": "Computerization and Management",
+    "description": "Explores how organizations use technology and business process reengineering to redesign workflows for dramatic gains in efficiency and quality. You will examine frameworks including BPR and understand how IT acts as an enabler of organizational transformation."
+  },
+  {
+    "title": "7.3 Management Engineering - Probability / Statistics (OC Curve)",
+    "order": 14,
+    "courseTitle": "Computerization and Management",
+    "description": "Introduces the Operating Characteristic curve as a statistical tool for evaluating sampling inspection plans in quality management. You will interpret OC curves, understand the relationship between sample size and detection power, and apply this to acceptance sampling."
+  },
+  {
+    "title": "7.4 Use of Information Systems - Business Systems (DFD)",
+    "order": 15,
+    "courseTitle": "Computerization and Management",
+    "description": "Explains Data Flow Diagrams as a technique for modeling how information moves through a business system. You will learn to draw context-level and detailed DFDs, identify processes and data stores, and use them to analyze and communicate system requirements."
+  },
+  {
+    "title": "7.4 Use of Information Systems - Business Systems (ERP)",
+    "order": 16,
+    "courseTitle": "Computerization and Management",
+    "description": "Covers Enterprise Resource Planning systems and how they integrate core business functions including finance, HR, supply chain, and manufacturing into a single platform. You will understand ERP adoption challenges and how integrated data supports decision making."
+  },
+  {
+    "title": "7.4 Use of Information Systems - Business Systems (Relationship Marketing)",
+    "order": 17,
+    "courseTitle": "Computerization and Management",
+    "description": "Examines how information systems support relationship marketing strategies that prioritize long-term customer engagement. You will learn how CRM platforms collect and use data to personalize communications, improve retention, and increase customer lifetime value."
+  },
+  {
+    "title": "7.4 Use of Information Systems - Business Systems (Sharing Economy)",
+    "order": 18,
+    "courseTitle": "Computerization and Management",
+    "description": "Explores the sharing economy as a business model enabled by digital platforms facilitating peer-to-peer exchange. You will examine real-world examples, understand how trust and rating systems work, and consider the regulatory implications of platform-based businesses."
+  },
+  {
+    "title": "7.4 Use of Information Systems - Engineering Systems (IoT)",
+    "order": 19,
+    "courseTitle": "Computerization and Management",
+    "description": "Introduces the Internet of Things and how networked devices collect, transmit, and act on data in real time. You will learn IoT architecture, sensor types, communication protocols, and applications in smart environments along with the security challenges IoT introduces."
+  },
+  {
+    "title": "7.4 Use of Information Systems - Engineering Systems (RFID)",
+    "order": 20,
+    "courseTitle": "Computerization and Management",
+    "description": "Covers Radio Frequency Identification technology and how it enables automatic tracking of objects using electromagnetic fields. You will learn how RFID tags and readers work, the difference between active and passive tags, and applications in supply chain and access control."
+  }
 ]
