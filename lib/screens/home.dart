@@ -323,7 +323,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     height: 1.5,
                                     fontWeight: FontWeight.w500,
                                     color: Theme.of(context).brightness == Brightness.dark
-                                        ? Colors.white.withOpacity(0.9)
+                                        ? Colors.white.withValues(alpha: 0.9)
                                         : const Color(0xFF1A1C1E),
                                   ),
                                 ),

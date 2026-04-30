@@ -5,6 +5,7 @@ class LeaderboardEntry {
   final String name;
   final int score;
   final int total;
+  final int elapsedSeconds; // 👈 added — used as tiebreaker (lower = better)
   final String? profileImage;
 
   const LeaderboardEntry({
@@ -12,6 +13,7 @@ class LeaderboardEntry {
     required this.name,
     required this.score,
     required this.total,
+    required this.elapsedSeconds,
     this.profileImage,
   });
 }
@@ -20,6 +22,8 @@ class LeaderboardService {
   static final _db = FirebaseFirestore.instance;
 
   static Future<List<LeaderboardEntry>> getLeaderboard(String moduleId) async {
+    // Fetch by score descending — Firestore handles the primary sort.
+    // Tiebreaking by elapsedSeconds is done client-side after fetching.
     final scoresSnap = await _db
         .collection('bestScores')
         .where('moduleId', isEqualTo: moduleId)
@@ -47,6 +51,7 @@ class LeaderboardService {
         final data = doc.data();
         final userId = data['userId'] as String;
         final score = data['score'] as int? ?? 0;
+        final elapsedSeconds = data['elapsedSeconds'] as int? ?? 0;
 
         String name = 'Unknown';
         String? profileImage;
@@ -61,14 +66,22 @@ class LeaderboardService {
         } catch (_) {}
 
         return LeaderboardEntry(
-          userId: userId,
-          name: name,
-          score: score,
-          total: currentTotal, // 👈 always use live total
-          profileImage: profileImage,
+          userId:         userId,
+          name:           name,
+          score:          score,
+          total:          currentTotal,
+          elapsedSeconds: elapsedSeconds,
+          profileImage:   profileImage,
         );
       }),
     );
+
+    // Sort: highest score first; on tie, fastest time first (lower seconds = better)
+    entries.sort((a, b) {
+      final scoreCmp = b.score.compareTo(a.score);
+      if (scoreCmp != 0) return scoreCmp;
+      return a.elapsedSeconds.compareTo(b.elapsedSeconds);
+    });
 
     return entries;
   }

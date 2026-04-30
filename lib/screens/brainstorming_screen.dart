@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -39,6 +40,10 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
   int _currentIndex = 0;
   int _score = 0;
 
+  // ── Count-up timer ────────────────────────────────────────────
+  int _elapsedSeconds = 0;
+  Timer? _timer;
+
   // Theme-aware color getters
   Color get _borderColor => Theme.of(context).colorScheme.onSurface;
   Color get _backgroundColor => Theme.of(context).scaffoldBackgroundColor;
@@ -57,6 +62,25 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
     _loadQuestions();
   }
 
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      setState(() => _elapsedSeconds++);
+    });
+  }
+
+  String get _formattedTime {
+    final m = (_elapsedSeconds ~/ 60).toString().padLeft(2, '0');
+    final s = (_elapsedSeconds % 60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
   Future<void> _loadQuestions() async {
     try {
       final questions = await QuestionService.loadForModule(
@@ -71,6 +95,7 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
             : questions;
         _isLoading = false;
       });
+      _startTimer();
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -102,14 +127,17 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
         _currentSelection = null;
       });
     } else {
+      _timer?.cancel();
+
       // Logic for ending the session
       if (!widget.isCustom) {
         try {
           await ResultService.saveResult(
-            courseId: widget.courseId,
-            moduleId: widget.moduleId,
-            score:    _score,
-            total:    _questions.length,
+            courseId:       widget.courseId,
+            moduleId:       widget.moduleId,
+            score:          _score,
+            total:          _questions.length,
+            elapsedSeconds: _elapsedSeconds, // 👈 passed through
           );
         } catch (e) {
           debugPrint('❌ Error saving result: $e');
@@ -123,11 +151,12 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
         context,
         MaterialPageRoute(
           builder: (_) => ResultScreen(
-            score:       _score,
-            total:       _questions.length,
-            courseId:    widget.courseId,
-            courseIndex: widget.courseIndex,
-            isCustom:    widget.isCustom,
+            score:          _score,
+            total:          _questions.length,
+            courseId:       widget.courseId,
+            courseIndex:    widget.courseIndex,
+            isCustom:       widget.isCustom,
+            elapsedSeconds: _elapsedSeconds, // 👈 passed through
           ),
         ),
       );
@@ -200,7 +229,9 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
                             _buildHeader(),
                             const SizedBox(height: 20),
                             _buildProgressBar(),
-                            const SizedBox(height: 30),
+                            const SizedBox(height: 16),
+                            _buildTimerBadge(),
+                            const SizedBox(height: 14),
                             _buildQuestionCard(currentQuestion, isAnswered),
                           ],
                         ),
@@ -216,6 +247,41 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
       ),
     );
   }
+
+  // ── Timer badge (only new widget) ────────────────────────────
+  Widget _buildTimerBadge() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+          decoration: BoxDecoration(
+            color: _cardBackground,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: _borderColor, width: 2.5),
+            boxShadow: [BoxShadow(color: _borderColor, offset: const Offset(3, 3))],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.timer_outlined, size: 18, color: _hintColor),
+              const SizedBox(width: 6),
+              Text(
+                _formattedTime,
+                style: GoogleFonts.montserrat(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  color: _textColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── All original widgets below, untouched ────────────────────
 
   Widget _buildTopBar() {
     return Column(

@@ -7,6 +7,7 @@ class BestScoreModel {
   final String moduleId;
   final int score;
   final int total;
+  final int elapsedSeconds; // 👈 added
   final DateTime updatedAt;
 
   const BestScoreModel({
@@ -16,27 +17,30 @@ class BestScoreModel {
     required this.moduleId,
     required this.score,
     required this.total,
+    required this.elapsedSeconds,
     required this.updatedAt,
   });
 
   factory BestScoreModel.fromMap(String id, Map<String, dynamic> data) {
     return BestScoreModel(
-      id:        id,
-      userId:    data['userId']    as String? ?? '',
-      courseId:  data['courseId']  as String? ?? '',
-      moduleId:  data['moduleId']  as String? ?? '',
-      score:     data['score']     as int?    ?? 0,
-      total:     data['total']     as int?    ?? 0,
-      updatedAt: (data['updatedAt'] as Timestamp).toDate(),
+      id:             id,
+      userId:         data['userId']         as String?    ?? '',
+      courseId:       data['courseId']        as String?    ?? '',
+      moduleId:       data['moduleId']        as String?    ?? '',
+      score:          data['score']           as int?       ?? 0,
+      total:          data['total']           as int?       ?? 0,
+      elapsedSeconds: data['elapsedSeconds']  as int?       ?? 0,
+      updatedAt:      (data['updatedAt']      as Timestamp).toDate(),
     );
   }
 
   Map<String, dynamic> toMap() => {
-    'userId':    userId,
-    'courseId':  courseId,
-    'moduleId':  moduleId,
-    'score':     score,
-    'total':     total,
-    'updatedAt': Timestamp.fromDate(updatedAt),
+    'userId':         userId,
+    'courseId':       courseId,
+    'moduleId':       moduleId,
+    'score':          score,
+    'total':          total,
+    'elapsedSeconds': elapsedSeconds,
+    'updatedAt':      Timestamp.fromDate(updatedAt),
   };
 }

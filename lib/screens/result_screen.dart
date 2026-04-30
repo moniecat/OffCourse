@@ -4,13 +4,13 @@ import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
 import 'home.dart';
 
-
 class ResultScreen extends StatefulWidget {
   final int score;
   final int total;
   final String courseId;
   final int courseIndex;
   final bool isCustom;
+  final int elapsedSeconds;
 
   const ResultScreen({
     super.key,
@@ -19,6 +19,7 @@ class ResultScreen extends StatefulWidget {
     required this.courseId,
     required this.courseIndex,
     this.isCustom = false,
+    this.elapsedSeconds = 0,
   });
 
   @override
@@ -31,7 +32,8 @@ class _ResultScreenState extends State<ResultScreen> {
   Color get _backgroundColor => Theme.of(context).scaffoldBackgroundColor;
   Color get _cardBackground => Theme.of(context).cardColor;
   Color get _textColor => Theme.of(context).colorScheme.onSurface;
-  Color get _hintColor => Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6);
+  Color get _hintColor =>
+      Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6);
 
   // Accent colors (branding - keep as-is)
   final Color themeTeal = const Color(0xFF249780);
@@ -39,19 +41,24 @@ class _ResultScreenState extends State<ResultScreen> {
   final Color passGreen = const Color(0xFFC8E6C9);
   final Color failRed = const Color(0xFFFFCDD2);
 
+  String get _formattedTime {
+    final m = (widget.elapsedSeconds ~/ 60).toString().padLeft(2, '0');
+    final s = (widget.elapsedSeconds % 60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Watch theme changes
     context.watch<ThemeProvider>().isDarkMode;
 
-    final percent = widget.total > 0 ? (widget.score / widget.total * 100).round() : 0;
+    final percent =
+        widget.total > 0 ? (widget.score / widget.total * 100).round() : 0;
     final bool isPassed = percent >= 75;
 
     return PopScope(
-      canPop: false, // Prevent default system pop
+      canPop: false,
       onPopInvokedWithResult: (bool didPop, Object? result) {
         if (didPop) return;
-        // Manually pop with true when the back gesture/button is triggered
         Navigator.pop(context, true);
       },
       child: Scaffold(
@@ -104,7 +111,8 @@ class _ResultScreenState extends State<ResultScreen> {
                               topRight: Radius.circular(20),
                             ),
                             border: Border(
-                              bottom: BorderSide(color: _borderColor, width: 3),
+                              bottom:
+                                  BorderSide(color: _borderColor, width: 3),
                             ),
                           ),
                           child: Text(
@@ -117,6 +125,7 @@ class _ResultScreenState extends State<ResultScreen> {
                             ),
                           ),
                         ),
+
                         if (widget.isCustom)
                           Container(
                             width: double.infinity,
@@ -125,7 +134,8 @@ class _ResultScreenState extends State<ResultScreen> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.info_outline, size: 16, color: Color(0xFF856404)),
+                                const Icon(Icons.info_outline,
+                                    size: 16, color: Color(0xFF856404)),
                                 const SizedBox(width: 6),
                                 Text(
                                   'Practice Mode — Score not recorded',
@@ -160,12 +170,10 @@ class _ResultScreenState extends State<ResultScreen> {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 20, vertical: 8),
                                 decoration: BoxDecoration(
-                                  color: isPassed
-                                      ? passGreen
-                                      : failRed,
+                                  color: isPassed ? passGreen : failRed,
                                   borderRadius: BorderRadius.circular(30),
-                                  border:
-                                      Border.all(color: _borderColor, width: 2),
+                                  border: Border.all(
+                                      color: _borderColor, width: 2),
                                 ),
                                 child: Text(
                                   "$percent%",
@@ -179,10 +187,42 @@ class _ResultScreenState extends State<ResultScreen> {
                                 ),
                               ),
 
-                              const SizedBox(height: 25),
+                              const SizedBox(height: 20),
+
+                              // Time taken badge
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 7),
+                                decoration: BoxDecoration(
+                                  color: _backgroundColor,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                      color: _borderColor, width: 2),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.timer_outlined,
+                                        size: 16, color: _hintColor),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      _formattedTime,
+                                      style: GoogleFonts.montserrat(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w800,
+                                        color: _textColor,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              const SizedBox(height: 20),
 
                               Text(
-                                isPassed ? "Outstanding!" : "Don't give up!",
+                                isPassed
+                                    ? "Outstanding!"
+                                    : "Don't give up!",
                                 style: GoogleFonts.montserrat(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w800,
@@ -217,7 +257,8 @@ class _ResultScreenState extends State<ResultScreen> {
                     onTap: () {
                       Navigator.of(context).pushAndRemoveUntil(
                         MaterialPageRoute(
-                          builder: (_) => HomeScreen(initialCourseIndex: widget.courseIndex),
+                          builder: (_) => HomeScreen(
+                              initialCourseIndex: widget.courseIndex),
                         ),
                         (route) => false,
                       );
