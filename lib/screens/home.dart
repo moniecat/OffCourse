@@ -17,12 +17,14 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // Styling Constants for consistency
+  // Styling Constants
   static const double borderWidth = 3.0;
+  
+  // State Variables
   late int _selectedIndex;
-
   String _displayName = 'User';
   String _userRole = 'student';
+  bool _isDescriptionExpanded = false; // Tracks the drop-down state
 
   bool get _isAdmin => _userRole == 'admin';
 
@@ -146,20 +148,24 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Check if current course has a valid description
+    final bool hasDescription = _courses.isNotEmpty && 
+                                _courses[_selectedIndex].description != null && 
+                                _courses[_selectedIndex].description!.isNotEmpty;
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       extendBody: true,
       bottomNavigationBar: const CustomBottomNav(),
       body: Column(
         children: [
-
           Expanded(
             child: SafeArea(
               bottom: false,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  /// 2. HEADER
+                  /// 1. HEADER
                   Padding(
                     padding: const EdgeInsets.fromLTRB(25, 25, 25, 10),
                     child: Row(
@@ -194,8 +200,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             ],
                           ),
                         ),
-                        
-                        // Updated Menu Icon Button
                         _buildMenuButton(),
                       ],
                     ),
@@ -203,7 +207,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   const SizedBox(height: 20),
 
-                  /// 3. HORIZONTAL COURSE SELECTOR
+                  /// 2. HORIZONTAL COURSE SELECTOR
                   SizedBox(
                     height: 110,
                     child: _loadingCourses
@@ -219,7 +223,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                 label: _courses[index].title,
                                 isActive: index == _selectedIndex,
                                 onTap: () {
-                                  setState(() => _selectedIndex = index);
+                                  setState(() {
+                                    _selectedIndex = index;
+                                    _isDescriptionExpanded = false; // Reset dropdown when course changes
+                                  });
                                   _loadModules();
                                 },
                               );
@@ -229,53 +236,105 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   const SizedBox(height: 15),
 
-                  /// 3.5. COURSE DESCRIPTION
-                  if (_courses.isNotEmpty && _courses[_selectedIndex].description != null && _courses[_selectedIndex].description!.isNotEmpty)
+                  /// 3. COURSE DESCRIPTION (DROP DOWN)
+                  if (hasDescription)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Container(
                         width: double.infinity,
                         decoration: BoxDecoration(
                           color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.grey[900]
-                            : const Color(0xFFFFBC1F),
+                              ? Colors.grey[900]
+                              : const Color(0xFFFFBC1F),
                           border: Border.all(
                             color: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.white
-                              : const Color(0xFF1A1C1E),
+                                ? Colors.white
+                                : const Color(0xFF1A1C1E),
                             width: borderWidth,
                           ),
                           boxShadow: [
                             BoxShadow(
                               color: Theme.of(context).brightness == Brightness.dark
-                                ? Colors.white
-                                : const Color(0xFF1A1C1E),
+                                  ? Colors.white
+                                  : const Color(0xFF1A1C1E),
                               offset: const Offset(4, 4),
                             ),
                           ],
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Text(
-                            _courses[_selectedIndex].description ?? '',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 14,
-                              height: 1.6,
-                              color: Theme.of(context).brightness == Brightness.dark
-                                ? Colors.white
-                                : const Color(0xFF1A1C1E),
-                              fontWeight: FontWeight.w500,
-                              letterSpacing: 0.2,
+                        child: Column(
+                          children: [
+                            // Header/Toggle Area
+                            InkWell(
+                              onTap: () => setState(() => _isDescriptionExpanded = !_isDescriptionExpanded),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.info_outline,
+                                          size: 20,
+                                          color: Theme.of(context).brightness == Brightness.dark
+                                              ? Colors.white
+                                              : const Color(0xFF1A1C1E),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Text(
+                                          "COURSE DESCRIPTION",
+                                          style: GoogleFonts.montserrat(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w900,
+                                            letterSpacing: 1.1,
+                                            color: Theme.of(context).brightness == Brightness.dark
+                                                ? Colors.white
+                                                : const Color(0xFF1A1C1E),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    AnimatedRotation(
+                                      turns: _isDescriptionExpanded ? 0.5 : 0,
+                                      duration: const Duration(milliseconds: 300),
+                                      child: Icon(
+                                        Icons.keyboard_arrow_down,
+                                        color: Theme.of(context).brightness == Brightness.dark
+                                            ? Colors.white
+                                            : const Color(0xFF1A1C1E),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
-                          ),
+                            // Expandable Content Area
+                            AnimatedSize(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                              child: Container(
+                                height: _isDescriptionExpanded ? null : 0,
+                                width: double.infinity,
+                                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                                child: Text(
+                                  _courses[_selectedIndex].description ?? '',
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 14,
+                                    height: 1.5,
+                                    fontWeight: FontWeight.w500,
+                                    color: Theme.of(context).brightness == Brightness.dark
+                                        ? Colors.white.withOpacity(0.9)
+                                        : const Color(0xFF1A1C1E),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
 
-                  if (_courses.isNotEmpty && (_courses[_selectedIndex].description == null || _courses[_selectedIndex].description!.isEmpty))
-                    const SizedBox(height: 0),
-
-                  const SizedBox(height: 15),
+                  const SizedBox(height: 20),
 
                   /// 4. VERTICAL MODULE LIST
                   Expanded(
@@ -289,6 +348,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 itemCount: _modules.length,
                                 separatorBuilder: (_, __) => const SizedBox(height: 25), 
                                 itemBuilder: (_, index) {
+                                  // Alternating Neobrutalist Colors
                                   final colors = [const Color(0xFF00CBA9), const Color(0xFFFFBC1F)];
                                   
                                   return ModuleCard(
