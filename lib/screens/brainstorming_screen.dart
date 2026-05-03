@@ -380,25 +380,6 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
       ),
       child: Column(
         children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            decoration: BoxDecoration(
-              color: themeTeal,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
-              ),
-              border: Border(bottom: BorderSide(color: _borderColor, width: 3)),
-            ),
-            child: Text(
-              question.questionType.toUpperCase(),
-              textAlign: TextAlign.center,
-              style: GoogleFonts.montserrat(
-                color: Colors.white, fontSize: 14, fontWeight: FontWeight.w900,
-              ),
-            ),
-          ),
           Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
