@@ -137,7 +137,7 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
             moduleId:       widget.moduleId,
             score:          _score,
             total:          _questions.length,
-            elapsedSeconds: _elapsedSeconds, // 👈 passed through
+            elapsedSeconds: _elapsedSeconds, 
           );
         } catch (e) {
           debugPrint('❌ Error saving result: $e');
@@ -154,9 +154,10 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
             score:          _score,
             total:          _questions.length,
             courseId:       widget.courseId,
+            moduleId:       widget.moduleId,
             courseIndex:    widget.courseIndex,
             isCustom:       widget.isCustom,
-            elapsedSeconds: _elapsedSeconds, // 👈 passed through
+            elapsedSeconds: _elapsedSeconds, 
           ),
         ),
       );
