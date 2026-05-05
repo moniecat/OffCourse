@@ -285,13 +285,32 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                           ),
                           child: ListTile(
                             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            leading: CircleAvatar(
-                              backgroundColor: isAdmin
-                                  ? const Color(0xFFFFBC1F)
-                                  : const Color(0xFF00CBA9),
-                              child: Text(
-                                name.isNotEmpty ? name[0].toUpperCase() : '?',
-                                style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, color: Colors.white),
+                            leading: Container(
+                              width: 46,
+                              height: 46,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(color: textColor, width: 2),
+                                color: isAdmin ? const Color(0xFFFFBC1F) : const Color(0xFF00CBA9),
+                              ),
+                              child: ClipOval(
+                                child: (user['profileImage'] != null && (user['profileImage'] as String).isNotEmpty)
+                                    ? Image.network(
+                                        user['profileImage'] as String,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => Center(
+                                          child: Text(
+                                            name.isNotEmpty ? name[0].toUpperCase() : '?',
+                                            style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, color: Colors.white),
+                                          ),
+                                        ),
+                                      )
+                                    : Center(
+                                        child: Text(
+                                          name.isNotEmpty ? name[0].toUpperCase() : '?',
+                                          style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, color: Colors.white),
+                                        ),
+                                      ),
                               ),
                             ),
                             title: Text(name, style: GoogleFonts.montserrat(fontWeight: FontWeight.w800, color: textColor)),
@@ -299,28 +318,39 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                // 👈 add edit button
-                                GestureDetector(
-                                  onTap: () => _editUser(user),
-                                  child: const Icon(Icons.edit_rounded, color: Color(0xFF249780), size: 22),
-                                ),
-                                const SizedBox(width: 8),
+                                // Role badge
                                 GestureDetector(
                                   onTap: () => _changeRole(uid, role),
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                     decoration: BoxDecoration(
-                                      color: isAdmin ? const Color(0xFFFFBC1F).withValues(alpha: 0.15) : const Color(0xFF00CBA9).withValues(alpha: 0.15),
+                                      color: isAdmin
+                                          ? const Color(0xFFFFBC1F).withValues(alpha: 0.15)
+                                          : const Color(0xFF00CBA9).withValues(alpha: 0.15),
                                       borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(color: isAdmin ? const Color(0xFFFFBC1F) : const Color(0xFF00CBA9), width: 2),
+                                      border: Border.all(
+                                        color: isAdmin ? const Color(0xFFFFBC1F) : const Color(0xFF00CBA9),
+                                        width: 2,
+                                      ),
                                     ),
                                     child: Text(
                                       isAdmin ? 'Admin' : 'Student',
-                                      style: GoogleFonts.montserrat(fontWeight: FontWeight.w800, fontSize: 12, color: isAdmin ? const Color(0xFFFFBC1F) : const Color(0xFF00CBA9)),
+                                      style: GoogleFonts.montserrat(
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 12,
+                                        color: isAdmin ? const Color(0xFFFFBC1F) : const Color(0xFF00CBA9),
+                                      ),
                                     ),
                                   ),
                                 ),
                                 const SizedBox(width: 8),
+                                // Edit icon
+                                GestureDetector(
+                                  onTap: () => _editUser(user),
+                                  child: const Icon(Icons.edit_rounded, color: Color(0xFF249780), size: 22),
+                                ),
+                                const SizedBox(width: 8),
+                                // Delete icon
                                 GestureDetector(
                                   onTap: () => _deleteUser(uid, name),
                                   child: const Icon(Icons.delete_outline_rounded, color: Colors.red, size: 22),

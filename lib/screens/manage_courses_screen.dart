@@ -283,7 +283,7 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
-                              icon: const Icon(Icons.edit_outlined, color: Colors.blue, size: 24),
+                              icon: const Icon(Icons.edit_outlined, color: Color(0xFF249780), size: 24),
                               onPressed: () => _editCourse(course),
                             ),
                             IconButton(

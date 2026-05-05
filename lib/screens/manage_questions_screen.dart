@@ -431,7 +431,7 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.edit_outlined, color: Colors.blue, size: 24),
+                      icon: const Icon(Icons.edit_outlined, color: Color(0xFF249780), size: 24),
                       onPressed: () => _editQuestion(_selectedCourseId!, _selectedModuleId!, q),
                     ),
                     IconButton(
