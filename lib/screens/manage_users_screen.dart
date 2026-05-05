@@ -415,7 +415,11 @@ class _AddUserScreenState extends State<AddUserScreen> {
       );
       if (mounted) Navigator.pop(context);
     } catch (e) {
-      if (mounted) setState(() { _error = e.toString(); _isLoading = false; });
+      String message = e.toString();
+      if (message.contains('email-already-in-use')) {
+        message = 'This email is already registered. If you deleted this user, the authentication account still exists and cannot be reused from the app.';
+      }
+      if (mounted) setState(() { _error = message; _isLoading = false; });
     }
   }
 
