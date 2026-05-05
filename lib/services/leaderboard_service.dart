@@ -46,14 +46,14 @@ class LeaderboardService {
         .get();
     final currentTotal = totalSnap.count ?? 0;
 
-    final entries = await Future.wait(
+    final entries = (await Future.wait(
       scoresSnap.docs.map((doc) async {
         final data = doc.data();
         final userId = data['userId'] as String;
         final score = data['score'] as int? ?? 0;
         final elapsedSeconds = data['elapsedSeconds'] as int? ?? 0;
 
-        String name = 'Unknown';
+        String? name;
         String? profileImage;
 
         try {
@@ -65,16 +65,21 @@ class LeaderboardService {
           }
         } catch (_) {}
 
+        // Return null if user no longer exists
+        if (name == null) return null;
+
         return LeaderboardEntry(
-          userId:         userId,
-          name:           name,
-          score:          score,
-          total:          currentTotal,
+          userId: userId,
+          name: name,
+          score: score,
+          total: currentTotal,
           elapsedSeconds: elapsedSeconds,
-          profileImage:   profileImage,
+          profileImage: profileImage,
         );
       }),
-    );
+    ))
+    .whereType<LeaderboardEntry>() // 👈 filter out nulls
+    .toList();
 
     // Sort: highest score first; on tie, fastest time first (lower seconds = better)
     entries.sort((a, b) {
