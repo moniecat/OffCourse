@@ -428,10 +428,15 @@ class _AddUserScreenState extends State<AddUserScreen> {
 
             Text('ROLE', style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.w800, color: textColor.withValues(alpha: 0.5), letterSpacing: 1.5)),
             const SizedBox(height: 10),
+            
             Row(
               children: ['student', 'admin'].map((role) {
                 final isSelected = _selectedRole == role;
                 final color = role == 'admin' ? const Color(0xFFFFBC1F) : const Color(0xFF00CBA9);
+                final isDark = Theme.of(context).brightness == Brightness.dark;
+                final bgColor = isDark ? const Color(0xFF2A2D2E) : Colors.white;
+                final textColor = isDark ? Colors.white : darkBorder;
+
                 return Expanded(
                   child: GestureDetector(
                     onTap: () => setState(() => _selectedRole = role),
@@ -439,16 +444,31 @@ class _AddUserScreenState extends State<AddUserScreen> {
                       margin: EdgeInsets.only(right: role == 'student' ? 8 : 0),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       decoration: BoxDecoration(
-                        color: isSelected ? color.withValues(alpha: 0.15) : (isDark ? const Color(0xFF2A2D2E) : Colors.white),
+                        color: isSelected ? color : bgColor,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: isSelected ? color : textColor.withValues(alpha: 0.3), width: isSelected ? 2.5 : 1.5),
-                        boxShadow: isSelected ? [BoxShadow(color: color, offset: const Offset(0, 3), blurRadius: 0)] : null,
+                        border: Border.all(
+                          color: isSelected ? color : textColor.withValues(alpha: 0.3),
+                          width: isSelected ? 2.5 : 1.5,
+                        ),
+                        boxShadow: isSelected
+                            ? [BoxShadow(color: color.withValues(alpha: 0.4), offset: const Offset(0, 3), blurRadius: 0)]
+                            : null,
                       ),
                       child: Column(
                         children: [
-                          Icon(role == 'admin' ? Icons.admin_panel_settings_rounded : Icons.school_rounded, color: isSelected ? color : textColor.withValues(alpha: 0.5), size: 28),
+                          Icon(
+                            role == 'admin' ? Icons.admin_panel_settings_rounded : Icons.school_rounded,
+                            color: isSelected ? Colors.white : textColor.withValues(alpha: 0.5),
+                            size: 28,
+                          ),
                           const SizedBox(height: 6),
-                          Text(role == 'admin' ? 'Admin' : 'Student', style: GoogleFonts.montserrat(fontWeight: FontWeight.w800, color: isSelected ? color : textColor.withValues(alpha: 0.5))),
+                          Text(
+                            role == 'admin' ? 'Admin' : 'Student',
+                            style: GoogleFonts.montserrat(
+                              fontWeight: FontWeight.w800,
+                              color: isSelected ? Colors.white : textColor.withValues(alpha: 0.5),
+                            ),
+                          ),
                         ],
                       ),
                     ),
