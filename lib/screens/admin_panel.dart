@@ -4,12 +4,14 @@ import '../widgets/menu_drawer.dart';
 import '../widgets/admin_widgets.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
+import '../services/user_management_service.dart';
 import 'add_course_screen.dart';
 import 'add_module_screen.dart';
 import 'add_question_screen.dart';
 import 'manage_courses_screen.dart';
 import 'manage_modules_screen.dart';
 import 'manage_questions_screen.dart';
+import 'manage_users_screen.dart';
 
 class AdminPanelScreen extends StatefulWidget {
   const AdminPanelScreen({super.key});
@@ -21,7 +23,9 @@ class AdminPanelScreen extends StatefulWidget {
 class _AdminPanelScreenState extends State<AdminPanelScreen> {
   static const Color darkBorder = Color(0xFF1A1C1E);
   static const double borderWidth = 3.0;
+
   late Stream<Map<String, int>> _statsStream;
+  late Stream<Map<String, int>> _userStatsStream;
 
   String _userRole = 'student';
   bool get _isAdmin => _userRole == 'admin';
@@ -30,6 +34,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   void initState() {
     super.initState();
     _statsStream = FirestoreService().watchStats();
+    _userStatsStream = UserManagementService.watchUserCounts();
     _loadUserRole();
   }
 
@@ -79,9 +84,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         decoration: BoxDecoration(
           color: bgColor,
           border: Border.all(color: borderColor, width: borderWidth),
-          boxShadow: [
-            BoxShadow(color: borderColor, offset: const Offset(3, 3))
-          ],
+          boxShadow: [BoxShadow(color: borderColor, offset: const Offset(3, 3))],
         ),
         child: Icon(Icons.menu, color: borderColor, size: 30),
       ),
@@ -128,9 +131,9 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Stats Section
+              // ── CONTENT OVERVIEW ──
               Text(
-                'OVERVIEW',
+                'CONTENT OVERVIEW',
                 style: GoogleFonts.montserrat(
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
@@ -177,8 +180,53 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                   );
                 },
               ),
+
+              const SizedBox(height: 24),
+
+              // ── USER OVERVIEW ──
+              Text(
+                'USER OVERVIEW',
+                style: GoogleFonts.montserrat(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: textColor,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              StreamBuilder<Map<String, int>>(
+                stream: _userStatsStream,
+                initialData: const {'admins': 0, 'students': 0},
+                builder: (context, snapshot) {
+                  final stats = snapshot.data ?? const {'admins': 0, 'students': 0};
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: AdminStatCard(
+                          title: 'Admins',
+                          value: stats['admins'].toString(),
+                          icon: Icons.admin_panel_settings_rounded,
+                          color: const Color(0xFFFFBC1F),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: AdminStatCard(
+                          title: 'Students',
+                          value: stats['students'].toString(),
+                          icon: Icons.school_rounded,
+                          color: const Color(0xFF00CBA9),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+
               const SizedBox(height: 40),
 
+              // ── CONTENT MANAGEMENT ──
               Text(
                 'CONTENT MANAGEMENT',
                 style: GoogleFonts.montserrat(
@@ -189,15 +237,9 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-
               Text(
                 'Create courses, modules and questions for the learning experience.',
-                style: GoogleFonts.montserrat(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  color: mutedTextColor,
-                  height: 1.5,
-                ),
+                style: GoogleFonts.montserrat(fontSize: 15, fontWeight: FontWeight.w500, color: mutedTextColor, height: 1.5),
               ),
               const SizedBox(height: 32),
 
@@ -205,33 +247,26 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                 label: 'Add Course',
                 icon: Icons.library_add_rounded,
                 color: const Color(0xFF00CBA9),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const AddCourseScreen()),
-                ),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddCourseScreen())),
               ),
               const SizedBox(height: 20),
               _AdminButton(
                 label: 'Add Module',
                 icon: Icons.post_add_rounded,
                 color: const Color(0xFFFFBC1F),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const AddModuleScreen()),
-                ),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddModuleScreen())),
               ),
               const SizedBox(height: 20),
               _AdminButton(
                 label: 'Add Question',
                 icon: Icons.quiz_rounded,
                 color: const Color(0xFF00CBA9),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const AddQuestionScreen()),
-                ),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddQuestionScreen())),
               ),
+
               const SizedBox(height: 48),
 
+              // ── MANAGE CONTENT ──
               Text(
                 'MANAGE CONTENT',
                 style: GoogleFonts.montserrat(
@@ -242,15 +277,9 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-
               Text(
                 'Edit or delete existing courses, modules and questions.',
-                style: GoogleFonts.montserrat(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  color: mutedTextColor,
-                  height: 1.5,
-                ),
+                style: GoogleFonts.montserrat(fontSize: 15, fontWeight: FontWeight.w500, color: mutedTextColor, height: 1.5),
               ),
               const SizedBox(height: 32),
 
@@ -258,31 +287,49 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                 label: 'Manage Courses',
                 icon: Icons.folder_open_rounded,
                 color: const Color(0xFF00CBA9),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ManageCoursesScreen()),
-                ),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageCoursesScreen())),
               ),
               const SizedBox(height: 20),
               _AdminButton(
                 label: 'Manage Modules',
                 icon: Icons.edit_rounded,
                 color: const Color(0xFFFFBC1F),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ManageModulesScreen()),
-                ),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageModulesScreen())),
               ),
               const SizedBox(height: 20),
               _AdminButton(
                 label: 'Manage Questions',
                 icon: Icons.help_outline_rounded,
                 color: const Color(0xFF00CBA9),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ManageQuestionsScreen()),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageQuestionsScreen())),
+              ),
+
+              const SizedBox(height: 48),
+
+              // ── USER MANAGEMENT ──
+              Text(
+                'USER MANAGEMENT',
+                style: GoogleFonts.montserrat(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: textColor,
+                  letterSpacing: 1.5,
                 ),
               ),
+              const SizedBox(height: 12),
+              Text(
+                'Add new users and manage existing accounts and roles.',
+                style: GoogleFonts.montserrat(fontSize: 15, fontWeight: FontWeight.w500, color: mutedTextColor, height: 1.5),
+              ),
+              const SizedBox(height: 32),
+
+              _AdminButton(
+                label: 'Manage Users',
+                icon: Icons.people_rounded,
+                color: const Color(0xFFFFBC1F),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageUsersScreen())),
+              ),
+
               const SizedBox(height: 32),
             ],
           );
@@ -319,9 +366,7 @@ class _AdminButton extends StatelessWidget {
           color: bgColor,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: textColor, width: 3),
-          boxShadow: [
-            BoxShadow(color: textColor, offset: const Offset(4, 4)),
-          ],
+          boxShadow: [BoxShadow(color: textColor, offset: const Offset(4, 4))],
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -340,11 +385,7 @@ class _AdminButton extends StatelessWidget {
               Expanded(
                 child: Text(
                   label,
-                  style: GoogleFonts.montserrat(
-                    color: textColor,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                  ),
+                  style: GoogleFonts.montserrat(color: textColor, fontSize: 18, fontWeight: FontWeight.w900),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
