@@ -421,7 +421,7 @@ class _ResultScreenState extends State<ResultScreen> {
                                           ),
                                           child: Center(
                                             child: Text(
-                                              '#${_userRank}',
+                                              '#$_userRank',
                                               style: GoogleFonts.montserrat(
                                                 fontSize: 20,
                                                 fontWeight: FontWeight.w900,
