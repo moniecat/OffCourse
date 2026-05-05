@@ -313,7 +313,44 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
           child: Align(
             alignment: Alignment.topRight,
             child: GestureDetector(
-              onTap: () => Navigator.pop(context),
+              onTap: () async {
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (_) => AlertDialog(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    title: Text(
+                      'Quit Quiz?',
+                      style: GoogleFonts.montserrat(fontWeight: FontWeight.w900),
+                    ),
+                    content: Text(
+                      widget.isCustom
+                          ? 'Your progress will be lost. Are you sure you want to quit?'
+                          : 'Your progress will be lost and the score will not be recorded.',
+                      style: GoogleFonts.montserrat(fontWeight: FontWeight.w600, fontSize: 14),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: Text(
+                          'Keep Going',
+                          style: GoogleFonts.montserrat(fontWeight: FontWeight.w800, color: const Color(0xFF249780)),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        child: Text(
+                          'Quit',
+                          style: GoogleFonts.montserrat(fontWeight: FontWeight.w800, color: Colors.red),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (confirm == true && context.mounted) {
+                  Navigator.pop(context);
+                }
+              },
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
