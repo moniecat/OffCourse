@@ -5,6 +5,7 @@ import '../widgets/admin_widgets.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
 import '../services/user_management_service.dart';
+import '../constants/admin_constants.dart';
 import 'add_course_screen.dart';
 import 'add_module_screen.dart';
 import 'add_question_screen.dart';
@@ -33,8 +34,12 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   @override
   void initState() {
     super.initState();
-    _statsStream = FirestoreService().watchStats();
-    _userStatsStream = UserManagementService.watchUserCounts();
+    _statsStream = FirestoreService().watchStats().handleError((e) {
+      return const {'courses': 0, 'modules': 0, 'questions': 0};
+    });
+    _userStatsStream = UserManagementService.watchUserCounts().handleError((e) {
+      return const {'admins': 0, 'students': 0};
+    });
     _loadUserRole();
   }
 
@@ -154,8 +159,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                         child: AdminStatCard(
                           title: 'Courses',
                           value: stats['courses'].toString(),
-                          icon: Icons.library_books_rounded,
-                          color: const Color(0xFF00CBA9),
+                          icon: AdminIcons.courseIcon,
+                          color: AdminColors.courseColor,
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -163,8 +168,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                         child: AdminStatCard(
                           title: 'Modules',
                           value: stats['modules'].toString(),
-                          icon: Icons.layers_rounded,
-                          color: const Color(0xFFFFBC1F),
+                          icon: AdminIcons.moduleIcon,
+                          color: AdminColors.moduleColor,
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -172,8 +177,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                         child: AdminStatCard(
                           title: 'Questions',
                           value: stats['questions'].toString(),
-                          icon: Icons.quiz_rounded,
-                          color: const Color(0xFF00CBA9),
+                          icon: AdminIcons.questionIcon,
+                          color: AdminColors.questionColor,
                         ),
                       ),
                     ],
@@ -206,8 +211,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                         child: AdminStatCard(
                           title: 'Admins',
                           value: stats['admins'].toString(),
-                          icon: Icons.admin_panel_settings_rounded,
-                          color: const Color(0xFFFFBC1F),
+                          icon: AdminIcons.adminIcon,
+                          color: AdminColors.adminColor,
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -215,8 +220,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                         child: AdminStatCard(
                           title: 'Students',
                           value: stats['students'].toString(),
-                          icon: Icons.school_rounded,
-                          color: const Color(0xFF00CBA9),
+                          icon: AdminIcons.studentIcon,
+                          color: AdminColors.studentColor,
                         ),
                       ),
                     ],
@@ -245,22 +250,22 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
 
               _AdminButton(
                 label: 'Add Course',
-                icon: Icons.library_add_rounded,
-                color: const Color(0xFF00CBA9),
+                icon: AdminIcons.addCourseIcon,
+                color: AdminColors.courseColor,
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddCourseScreen())),
               ),
               const SizedBox(height: 20),
               _AdminButton(
                 label: 'Add Module',
-                icon: Icons.post_add_rounded,
-                color: const Color(0xFFFFBC1F),
+                icon: AdminIcons.addModuleIcon,
+                color: AdminColors.moduleColor,
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddModuleScreen())),
               ),
               const SizedBox(height: 20),
               _AdminButton(
                 label: 'Add Question',
-                icon: Icons.quiz_rounded,
-                color: const Color(0xFF00CBA9),
+                icon: AdminIcons.addQuestionIcon,
+                color: AdminColors.questionColor,
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddQuestionScreen())),
               ),
 
@@ -285,22 +290,22 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
 
               _AdminButton(
                 label: 'Manage Courses',
-                icon: Icons.folder_open_rounded,
-                color: const Color(0xFF00CBA9),
+                icon: AdminIcons.manageCourseIcon,
+                color: AdminColors.courseColor,
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageCoursesScreen())),
               ),
               const SizedBox(height: 20),
               _AdminButton(
                 label: 'Manage Modules',
-                icon: Icons.edit_rounded,
-                color: const Color(0xFFFFBC1F),
+                icon: AdminIcons.manageModuleIcon,
+                color: AdminColors.moduleColor,
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageModulesScreen())),
               ),
               const SizedBox(height: 20),
               _AdminButton(
                 label: 'Manage Questions',
-                icon: Icons.help_outline_rounded,
-                color: const Color(0xFF00CBA9),
+                icon: AdminIcons.manageQuestionIcon,
+                color: AdminColors.questionColor,
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageQuestionsScreen())),
               ),
 
@@ -325,8 +330,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
 
               _AdminButton(
                 label: 'Manage Users',
-                icon: Icons.people_rounded,
-                color: const Color(0xFFFFBC1F),
+                icon: AdminIcons.manageUsersIcon,
+                color: AdminColors.adminColor,
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageUsersScreen())),
               ),
 
