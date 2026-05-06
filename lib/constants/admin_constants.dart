@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 /// Admin UI Constants
 class AdminColors {
   // OffCourse Brand Colors
-  static const Color courseColor = Color(0xFF00CBA9); // Brand Teal
-  static const Color moduleColor = Color(0xFF00CBA9); 
-  static const Color questionColor = Color(0xFF00CBA9); 
+  static const Color courseColor = Color(0xFFFFBC1F);
+  static const Color moduleColor = Color(0xFFFFBC1F); 
+  static const Color questionColor = Color(0xFFFFBC1F); 
 
   // User Management Colors
-  static const Color adminColor = Color(0xFF00CBA9); // Brand Gold/Orange
-  static const Color studentColor = Color(0xFF00CBA9); // Brand Teal
+  static const Color adminColor = Color(0xFFFFBC1F); // Brand Gold/Orange
+  static const Color studentColor = Color(0xFFFFBC1F); 
 }
 
 /// Admin UI Icons
