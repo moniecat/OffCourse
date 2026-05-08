@@ -99,23 +99,9 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      // Student Role Button (Teal)
-                      _floaterRoleBtn(
-                        'student', 
-                        Icons.school_outlined, 
-                        selectedRole, 
-                        const Color(0xFF00CBA9),
-                        (r) => setModalState(() => selectedRole = r)
-                      ),
+                      _floaterRoleBtn('student', Icons.school_outlined, selectedRole, const Color(0xFF00CBA9), (r) => setModalState(() => selectedRole = r)),
                       const SizedBox(width: 12),
-                      // Admin Role Button (Yellow)
-                      _floaterRoleBtn(
-                        'admin', 
-                        Icons.admin_panel_settings_outlined, 
-                        selectedRole, 
-                        const Color(0xFFFFBC1F), // Admin color updated to Yellow
-                        (r) => setModalState(() => selectedRole = r)
-                      ),
+                      _floaterRoleBtn('admin', Icons.admin_panel_settings_outlined, selectedRole, const Color(0xFFFFBC1F), (r) => setModalState(() => selectedRole = r)),
                     ],
                   ),
                   const SizedBox(height: 32),
@@ -256,10 +242,35 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     }
   }
 
+  // UPDATED: Ask before changing role
   Future<void> _changeRole(String uid, String currentRole) async {
     final newRole = currentRole == 'admin' ? 'student' : 'admin';
-    await UserManagementService.updateUserRole(uid, newRole);
-    _loadUsers();
+    final roleColor = newRole == 'admin' ? const Color(0xFFFFBC1F) : const Color(0xFF00CBA9);
+    
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: darkBorder, width: 3)),
+        title: Text('Switch Role', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, color: darkBorder)),
+        content: Text('Change this user to ${newRole.toUpperCase()}?', style: GoogleFonts.montserrat(fontWeight: FontWeight.w600)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false), 
+            child: Text('CANCEL', style: GoogleFonts.montserrat(color: Colors.grey, fontWeight: FontWeight.w700))
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true), 
+            child: Text('CONFIRM', style: GoogleFonts.montserrat(color: roleColor, fontWeight: FontWeight.w900))
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await UserManagementService.updateUserRole(uid, newRole);
+      _loadUsers();
+    }
   }
 
   @override
@@ -322,7 +333,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
               ),
             ),
 
-            // ADD USER BUTTON (Floater Trigger)
+            // ADD USER BUTTON
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 5, 20, 15),
               child: GestureDetector(
