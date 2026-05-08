@@ -50,44 +50,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     });
   }
 
-  // --- 1. CHANGE ROLE (WITH CONFIRMATION) ---
-  Future<void> _changeRole(String uid, String name, String currentRole) async {
-    final newRole = currentRole == 'admin' ? 'student' : 'admin';
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : darkBorder;
-    final cardColor = isDark ? const Color(0xFF2A2D2E) : Colors.white;
-
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: cardColor,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: textColor, width: 3)),
-        title: Text('Change Role?',
-            style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, color: textColor)),
-        content: Text('Change $name from ${currentRole.toUpperCase()} to ${newRole.toUpperCase()}?',
-            style: GoogleFonts.montserrat(fontWeight: FontWeight.w600, color: textColor)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text('CANCEL', style: GoogleFonts.montserrat(color: Colors.grey, fontWeight: FontWeight.w900)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text('CONFIRM', style: GoogleFonts.montserrat(color: const Color(0xFF00CBA9), fontWeight: FontWeight.w900)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      await UserManagementService.updateUserRole(uid, newRole);
-      _loadUsers();
-    }
-  }
-
-  // --- 2. EDIT USER DIALOG (Matches your image) ---
+  // --- EDIT USER DIALOG ---
   Future<void> _editUser(Map<String, dynamic> user) async {
     final nameCtrl = TextEditingController(text: user['name'] ?? '');
     final emailCtrl = TextEditingController(text: user['email'] ?? '');
@@ -104,8 +67,9 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
           return Dialog(
             backgroundColor: cardColor,
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
-                side: BorderSide(color: textColor, width: 3)),
+              borderRadius: BorderRadius.circular(24),
+              side: BorderSide(color: textColor, width: 3),
+            ),
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
               child: Column(
@@ -131,6 +95,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                         icon: Icons.school_outlined,
                         isSelected: tempRole == 'student',
                         activeColor: const Color(0xFF00CBA9),
+                        textColor: textColor,
                         onTap: () => setDialogState(() => tempRole = 'student'),
                       ),
                       const SizedBox(width: 12),
@@ -139,6 +104,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                         icon: Icons.admin_panel_settings_outlined,
                         isSelected: tempRole == 'admin',
                         activeColor: const Color(0xFFFFBC1F),
+                        textColor: textColor,
                         onTap: () => setDialogState(() => tempRole = 'admin'),
                       ),
                     ],
@@ -184,7 +150,6 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     );
   }
 
-  // --- 3. DELETE USER ---
   Future<void> _deleteUser(String uid, String name) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -204,6 +169,12 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     }
   }
 
+  Future<void> _changeRole(String uid, String currentRole) async {
+    final newRole = currentRole == 'admin' ? 'student' : 'admin';
+    await UserManagementService.updateUserRole(uid, newRole);
+    _loadUsers();
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -215,8 +186,8 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
       backgroundColor: bgColor,
       body: SafeArea(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // HEADER
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
               child: Column(
@@ -239,7 +210,6 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                 ],
               ),
             ),
-            // SEARCH
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               child: Container(
@@ -262,7 +232,6 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                 ),
               ),
             ),
-            // LIST
             Expanded(
               child: _loading
                   ? const Center(child: CircularProgressIndicator())
@@ -272,10 +241,11 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                       separatorBuilder: (_, __) => const SizedBox(height: 16),
                       itemBuilder: (_, index) {
                         final user = _filteredUsers[index];
-                        final name = user['name'] ?? 'Unknown';
-                        final email = user['email'] ?? '';
-                        final role = user['role'] ?? 'student';
-                        final isAdmin = role == 'admin';
+                        final String name = user['name'] ?? 'Unknown';
+                        final String email = user['email'] ?? '';
+                        final String role = user['role'] ?? 'student';
+                        final String? profileImg = user['profileImage'];
+                        final bool isAdmin = role == 'admin';
 
                         return Container(
                           decoration: BoxDecoration(
@@ -288,7 +258,20 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                             padding: const EdgeInsets.all(12.0),
                             child: Row(
                               children: [
-                                _profileCircle(name, isAdmin, user['profileImage'], textColor),
+                                Container(
+                                  width: 60,
+                                  height: 60,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: isAdmin ? const Color(0xFFFFBC1F) : const Color(0xFF00CBA9),
+                                    border: Border.all(color: textColor, width: 2.5),
+                                  ),
+                                  child: ClipOval(
+                                    child: (profileImg != null && profileImg.isNotEmpty)
+                                        ? Image.network(profileImg, fit: BoxFit.cover, errorBuilder: (c, e, s) => _initials(name))
+                                        : _initials(name),
+                                  ),
+                                ),
                                 const SizedBox(width: 15),
                                 Expanded(
                                   child: Column(
@@ -298,7 +281,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                                       Text(email, style: GoogleFonts.montserrat(fontSize: 11, color: Colors.grey)),
                                       const SizedBox(height: 4),
                                       GestureDetector(
-                                        onTap: () => _changeRole(user['uid'], name, role),
+                                        onTap: () => _changeRole(user['uid'], role),
                                         child: Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                           decoration: BoxDecoration(
@@ -312,8 +295,8 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                                     ],
                                   ),
                                 ),
-                                IconButton(onPressed: () => _editUser(user), icon: const Icon(Icons.edit_outlined, color: Color(0xFF00CBA9))),
-                                IconButton(onPressed: () => _deleteUser(user['uid'], name), icon: const Icon(Icons.delete_outline_rounded, color: Colors.red)),
+                                IconButton(onPressed: () => _editUser(user), icon: const Icon(Icons.edit_outlined, color: Color(0xFF00CBA9), size: 24)),
+                                IconButton(onPressed: () => _deleteUser(user['uid'], name), icon: const Icon(Icons.delete_outline_rounded, color: Colors.red, size: 24)),
                               ],
                             ),
                           ),
@@ -337,21 +320,9 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     );
   }
 
-  // --- WIDGET HELPERS ---
-
-  Widget _profileCircle(String name, bool isAdmin, String? img, Color textColor) {
-    return Container(
-      width: 60, height: 60,
-      decoration: BoxDecoration(shape: BoxShape.circle, color: isAdmin ? const Color(0xFFFFBC1F) : const Color(0xFF00CBA9), border: Border.all(color: textColor, width: 2.5)),
-      child: ClipOval(
-        child: (img != null && img.isNotEmpty) 
-          ? Image.network(img, fit: BoxFit.cover, errorBuilder: (c, e, s) => _initials(name)) 
-          : _initials(name),
-      ),
-    );
+  Widget _initials(String name) {
+    return Center(child: Text(name.isNotEmpty ? name[0].toUpperCase() : '?', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: 24, color: Colors.white)));
   }
-
-  Widget _initials(String name) => Center(child: Text(name.isNotEmpty ? name[0].toUpperCase() : '?', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: 24, color: Colors.white)));
 
   Widget _buildEditField(String label, IconData icon, TextEditingController ctrl, Color textColor) {
     return TextField(
@@ -359,6 +330,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
       style: GoogleFonts.montserrat(fontWeight: FontWeight.w700, color: textColor),
       decoration: InputDecoration(
         labelText: label,
+        labelStyle: GoogleFonts.montserrat(color: Colors.grey, fontWeight: FontWeight.w600),
         prefixIcon: Icon(icon, color: Colors.grey),
         enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.grey, width: 2)),
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: textColor, width: 2)),
@@ -366,7 +338,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     );
   }
 
-  Widget _roleOption({required String label, required IconData icon, required bool isSelected, required Color activeColor, required VoidCallback onTap}) {
+  Widget _roleOption({required String label, required IconData icon, required bool isSelected, required Color activeColor, required Color textColor, required VoidCallback onTap}) {
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
@@ -396,7 +368,8 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: color, borderRadius: BorderRadius.circular(16),
+          color: color,
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: darkBorder, width: 2.5),
           boxShadow: hasShadow ? [const BoxShadow(color: darkBorder, offset: Offset(0, 4))] : null,
         ),
@@ -406,10 +379,11 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
   }
 }
 
-// --- ADD USER SCREEN ---
+// --- ADD USER SCREEN WIDGET ---
 
 class AddUserScreen extends StatefulWidget {
   const AddUserScreen({super.key});
+
   @override
   State<AddUserScreen> createState() => _AddUserScreenState();
 }
@@ -418,81 +392,206 @@ class _AddUserScreenState extends State<AddUserScreen> {
   final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
-  String _selectedRole = 'student';
+  
+  // 1. Add error tracking variables
+  bool _nameError = false;
+  bool _emailError = false;
+  bool _passError = false;
+
+  String _selectedRole = 'admin'; 
   bool _isLoading = false;
+
+  final Color darkBorder = const Color(0xFF1A1C1E);
+  final Color tealPrimary = const Color(0xFF00CBA9);
+  final Color yellowPrimary = const Color(0xFFFFBC1F);
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : const Color(0xFF1A1C1E);
+    final textColor = isDark ? Colors.white : darkBorder;
     final bgColor = isDark ? const Color(0xFF1A1C1E) : Colors.white;
 
     return Scaffold(
       backgroundColor: bgColor,
-      appBar: AppBar(backgroundColor: bgColor, elevation: 0, iconTheme: IconThemeData(color: textColor)),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 100, height: 100,
-                decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.grey[300], border: Border.all(color: textColor, width: 3), boxShadow: [BoxShadow(color: textColor, offset: const Offset(4, 4))]),
-                child: Icon(Icons.camera_alt_outlined, size: 40, color: textColor),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Back Button
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(color: darkBorder, width: 3),
+                    boxShadow: [BoxShadow(color: darkBorder, offset: const Offset(4, 4))],
+                  ),
+                  child: Icon(Icons.arrow_back, color: darkBorder, size: 28),
+                ),
               ),
-            ),
-            const SizedBox(height: 30),
-            Text('Create\nAccount', style: GoogleFonts.montserrat(fontSize: 40, fontWeight: FontWeight.w900, color: textColor, height: 1.0)),
-            const SizedBox(height: 30),
-            _buildField('Full Name', _nameCtrl, textColor, isDark),
-            const SizedBox(height: 16),
-            _buildField('Email Address', _emailCtrl, textColor, isDark),
-            const SizedBox(height: 16),
-            _buildField('Password', _passwordCtrl, textColor, isDark, obscure: true),
-            const SizedBox(height: 24),
-            Row(children: [_roleBtn('student', Icons.school), const SizedBox(width: 12), _roleBtn('admin', Icons.admin_panel_settings)]),
-            const SizedBox(height: 40),
-            GestureDetector(
-              onTap: _isLoading ? null : () async {
-                setState(() => _isLoading = true);
-                await UserManagementService.createUser(name: _nameCtrl.text.trim(), email: _emailCtrl.text.trim(), password: _passwordCtrl.text.trim(), role: _selectedRole);
-                if (context.mounted) Navigator.pop(context);
-              },
-              child: Container(
-                width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 20),
-                decoration: BoxDecoration(color: const Color(0xFF00CBA9), borderRadius: BorderRadius.circular(16), border: Border.all(color: textColor, width: 3), boxShadow: [BoxShadow(color: textColor, offset: const Offset(0, 4))]),
-                child: Center(child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : Text('CREATE USER', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, color: Colors.white, fontSize: 18))),
+              const SizedBox(height: 12),
+              Text('Create\nAccount', 
+                style: GoogleFonts.montserrat(fontSize: 54, fontWeight: FontWeight.w900, color: textColor, height: 0.85, letterSpacing: -3)),
+              
+              const SizedBox(height: 40),
+
+              // 2. Pass the error state to the fields
+              _buildField('Full Name', _nameCtrl, false, _nameError),
+              const SizedBox(height: 16),
+              _buildField('Email Address', _emailCtrl, false, _emailError),
+              const SizedBox(height: 16),
+              _buildField('Password', _passwordCtrl, true, _passError),
+
+              const SizedBox(height: 32),
+              Text('SELECT ROLE', 
+                style: GoogleFonts.montserrat(fontSize: 14, fontWeight: FontWeight.w900, color: Colors.grey[600], letterSpacing: 0.5)),
+              const SizedBox(height: 16),
+              
+              Row(
+                children: [
+                  _roleBtn('student', Icons.school_outlined),
+                  const SizedBox(width: 16),
+                  _roleBtn('admin', Icons.admin_panel_settings_outlined),
+                ],
               ),
-            ),
-          ],
+
+              const SizedBox(height: 40),
+
+              GestureDetector(
+                onTap: _isLoading ? null : _handleCreate,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 22),
+                  decoration: BoxDecoration(
+                    color: tealPrimary,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: darkBorder, width: 3),
+                    boxShadow: [BoxShadow(color: darkBorder, offset: const Offset(0, 6))],
+                  ),
+                  child: Center(
+                    child: _isLoading 
+                      ? const CircularProgressIndicator(color: Colors.white) 
+                      : Text('CREATE USER', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, color: Colors.white, fontSize: 20, letterSpacing: 1)),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  // 3. Updated Helper to show Red Border if hasError is true
+  Widget _buildField(String label, TextEditingController ctrl, bool obscure, bool hasError) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            // Border turns RED if hasError is true
+            border: Border.all(color: hasError ? Colors.red : darkBorder, width: 3),
+            boxShadow: [
+              BoxShadow(
+                color: hasError ? Colors.red.withOpacity(0.2) : Colors.grey.shade200, 
+                offset: const Offset(4, 4)
+              )
+            ],
+          ),
+          child: TextField(
+            controller: ctrl,
+            obscureText: obscure,
+            onChanged: (val) {
+              // Reset error when user starts typing
+              if (hasError && val.isNotEmpty) {
+                setState(() {
+                   if (ctrl == _nameCtrl) _nameError = false;
+                   if (ctrl == _emailCtrl) _emailError = false;
+                   if (ctrl == _passwordCtrl) _passError = false;
+                });
+              }
+            },
+            style: GoogleFonts.montserrat(fontWeight: FontWeight.w700, color: darkBorder),
+            decoration: InputDecoration(
+              hintText: label,
+              hintStyle: GoogleFonts.montserrat(color: hasError ? Colors.red.withOpacity(0.5) : Colors.grey.shade400, fontWeight: FontWeight.w700),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+            ),
+          ),
+        ),
+        if (hasError) 
+          Padding(
+            padding: const EdgeInsets.only(left: 8, top: 4),
+            child: Text("Required field", style: GoogleFonts.montserrat(color: Colors.red, fontWeight: FontWeight.w700, fontSize: 12)),
+          ),
+      ],
+    );
+  }
+
+  // 4. Update the handleCreate logic
+  void _handleCreate() async {
+    // Check for "No Sulod" (Empty content)
+    setState(() {
+      _nameError = _nameCtrl.text.trim().isEmpty;
+      _emailError = _emailCtrl.text.trim().isEmpty;
+      _passError = _passwordCtrl.text.trim().isEmpty;
+    });
+
+    // If any are empty, stop here
+    if (_nameError || _emailError || _passError) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please fill in all fields', style: GoogleFonts.montserrat(fontWeight: FontWeight.w700)),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    
+    setState(() => _isLoading = true);
+    try {
+      await UserManagementService.createUser(
+        name: _nameCtrl.text.trim(),
+        email: _emailCtrl.text.trim(),
+        password: _passwordCtrl.text.trim(),
+        role: _selectedRole,
+      );
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
   }
 
   Widget _roleBtn(String role, IconData icon) {
     bool isSel = _selectedRole == role;
+    Color btnColor = role == 'admin' ? yellowPrimary : tealPrimary;
+
     return Expanded(
       child: GestureDetector(
         onTap: () => setState(() => _selectedRole = role),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(color: isSel ? (role == 'admin' ? const Color(0xFFFFBC1F) : const Color(0xFF00CBA9)) : Colors.transparent, border: Border.all(color: const Color(0xFF1A1C1E), width: 2.5), borderRadius: BorderRadius.circular(12), boxShadow: isSel ? [const BoxShadow(color: Color(0xFF1A1C1E), offset: Offset(2, 2))] : null),
-          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(icon, color: isSel ? Colors.white : Colors.grey, size: 20), const SizedBox(width: 8), Text(role.toUpperCase(), style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, color: isSel ? Colors.white : Colors.grey, fontSize: 12))]),
+          height: 70,
+          decoration: BoxDecoration(
+            color: isSel ? btnColor : Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: isSel ? btnColor : Colors.grey.shade400, width: 3),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: isSel ? Colors.white : Colors.grey, size: 24),
+              const SizedBox(width: 10),
+              Text(role.toUpperCase(), 
+                style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, color: isSel ? Colors.white : Colors.grey, fontSize: 14)),
+            ],
+          ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildField(String label, TextEditingController ctrl, Color textColor, bool isDark, {bool obscure = false}) {
-    return TextField(
-      controller: ctrl, obscureText: obscure,
-      style: GoogleFonts.montserrat(fontWeight: FontWeight.w700, color: textColor),
-      decoration: InputDecoration(
-        labelText: label, filled: true, fillColor: isDark ? const Color(0xFF2A2D2E) : Colors.white,
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: textColor, width: 2)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF00CBA9), width: 3)),
       ),
     );
   }
