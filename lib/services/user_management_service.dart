@@ -70,8 +70,11 @@ class UserManagementService {
     int students = 0;
     for (final doc in snap.docs) {
       final role = doc.data()['role'] as String? ?? 'student';
-      if (role == 'admin') admins++;
-      else students++;
+      if (role == 'admin') {
+        admins++;
+      } else {
+        students++;
+      }
     }
     return {'admins': admins, 'students': students};
   }
@@ -83,8 +86,11 @@ class UserManagementService {
       int students = 0;
       for (final doc in snap.docs) {
         final role = doc.data()['role'] as String? ?? 'student';
-        if (role == 'admin') admins++;
-        else students++;
+        if (role == 'admin') {
+          admins++;
+        } else {
+          students++;
+        }
       }
       return {'admins': admins, 'students': students};
     });

@@ -5,7 +5,6 @@ import '../widgets/admin_widgets.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
 import '../services/user_management_service.dart';
-import '../constants/admin_constants.dart';
 import 'add_course_screen.dart';
 import 'add_module_screen.dart';
 import 'add_question_screen.dart';
@@ -34,12 +33,9 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   @override
   void initState() {
     super.initState();
-    _statsStream = FirestoreService().watchStats().handleError((e) {
-      return const {'courses': 0, 'modules': 0, 'questions': 0};
-    });
-    _userStatsStream = UserManagementService.watchUserCounts().handleError((e) {
-      return const {'admins': 0, 'students': 0};
-    });
+    // FIX: Added .asBroadcastStream() to allow the stream to be listened to multiple times
+    _statsStream = FirestoreService().watchStats().asBroadcastStream();
+    _userStatsStream = UserManagementService.watchUserCounts().asBroadcastStream();
     _loadUserRole();
   }
 
@@ -62,7 +58,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       PageRouteBuilder(
         opaque: false,
         barrierDismissible: true,
-        barrierColor: Colors.black.withValues(alpha: 0.5),
+        // FIX: Replaced .withValues (new API) with .withOpacity for safety
+        barrierColor: Colors.black.withValues(alpha: .5),
         pageBuilder: (_, __, ___) => MenuDrawer(isAdmin: _isAdmin, currentScreen: 'Admin'),
         transitionsBuilder: (_, animation, __, child) {
           return SlideTransition(
@@ -159,8 +156,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                         child: AdminStatCard(
                           title: 'Courses',
                           value: stats['courses'].toString(),
-                          icon: AdminIcons.courseIcon,
-                          color: AdminColors.courseColor,
+                          icon: Icons.library_books_rounded,
+                          color: const Color(0xFF00CBA9),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -168,8 +165,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                         child: AdminStatCard(
                           title: 'Modules',
                           value: stats['modules'].toString(),
-                          icon: AdminIcons.moduleIcon,
-                          color: AdminColors.moduleColor,
+                          icon: Icons.layers_rounded,
+                          color: const Color(0xFFFFBC1F),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -177,8 +174,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                         child: AdminStatCard(
                           title: 'Questions',
                           value: stats['questions'].toString(),
-                          icon: AdminIcons.questionIcon,
-                          color: AdminColors.questionColor,
+                          icon: Icons.quiz_rounded,
+                          color: const Color(0xFF00CBA9),
                         ),
                       ),
                     ],
@@ -211,8 +208,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                         child: AdminStatCard(
                           title: 'Admins',
                           value: stats['admins'].toString(),
-                          icon: AdminIcons.adminIcon,
-                          color: AdminColors.adminColor,
+                          icon: Icons.admin_panel_settings_rounded,
+                          color: const Color(0xFFFFBC1F),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -220,8 +217,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                         child: AdminStatCard(
                           title: 'Students',
                           value: stats['students'].toString(),
-                          icon: AdminIcons.studentIcon,
-                          color: AdminColors.studentColor,
+                          icon: Icons.school_rounded,
+                          color: const Color(0xFF00CBA9),
                         ),
                       ),
                     ],
@@ -250,22 +247,22 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
 
               _AdminButton(
                 label: 'Add Course',
-                icon: AdminIcons.addCourseIcon,
-                color: AdminColors.courseColor,
+                icon: Icons.library_add_rounded,
+                color: const Color(0xFF00CBA9),
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddCourseScreen())),
               ),
               const SizedBox(height: 20),
               _AdminButton(
                 label: 'Add Module',
-                icon: AdminIcons.addModuleIcon,
-                color: AdminColors.moduleColor,
+                icon: Icons.post_add_rounded,
+                color: const Color(0xFFFFBC1F),
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddModuleScreen())),
               ),
               const SizedBox(height: 20),
               _AdminButton(
                 label: 'Add Question',
-                icon: AdminIcons.addQuestionIcon,
-                color: AdminColors.questionColor,
+                icon: Icons.quiz_rounded,
+                color: const Color(0xFF00CBA9),
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddQuestionScreen())),
               ),
 
@@ -290,22 +287,22 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
 
               _AdminButton(
                 label: 'Manage Courses',
-                icon: AdminIcons.manageCourseIcon,
-                color: AdminColors.courseColor,
+                icon: Icons.folder_open_rounded,
+                color: const Color(0xFF00CBA9),
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageCoursesScreen())),
               ),
               const SizedBox(height: 20),
               _AdminButton(
                 label: 'Manage Modules',
-                icon: AdminIcons.manageModuleIcon,
-                color: AdminColors.moduleColor,
+                icon: Icons.edit_rounded,
+                color: const Color(0xFFFFBC1F),
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageModulesScreen())),
               ),
               const SizedBox(height: 20),
               _AdminButton(
                 label: 'Manage Questions',
-                icon: AdminIcons.manageQuestionIcon,
-                color: AdminColors.questionColor,
+                icon: Icons.help_outline_rounded,
+                color: const Color(0xFF00CBA9),
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageQuestionsScreen())),
               ),
 
@@ -330,8 +327,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
 
               _AdminButton(
                 label: 'Manage Users',
-                icon: AdminIcons.manageUsersIcon,
-                color: AdminColors.adminColor,
+                icon: Icons.people_rounded,
+                color: const Color(0xFFFFBC1F),
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageUsersScreen())),
               ),
 
@@ -380,7 +377,8 @@ class _AdminButton extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.15),
+                  // FIX: Replaced .withValues with .withOpacity for safety
+                  color: color.withValues(alpha: .15),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: color, width: 2),
                 ),

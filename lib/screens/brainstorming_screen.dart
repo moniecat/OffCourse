@@ -347,7 +347,8 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
                   ),
                 );
 
-                if (confirm == true && context.mounted) {
+                if (!mounted) return;
+                if (confirm == true) {
                   Navigator.pop(context);
                 }
               },
