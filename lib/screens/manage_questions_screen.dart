@@ -117,7 +117,6 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
 
                       setDialogState(() => isLoading = true);
 
-                      // Capture Navigator and Messenger before async gap
                       final navigator = Navigator.of(dialogContext);
                       final messenger = ScaffoldMessenger.of(context);
 
@@ -137,14 +136,14 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
 
                         if (!mounted) return;
 
-                        navigator.pop(); // Close dialog
+                        navigator.pop(); 
                         messenger.showSnackBar(
                           SnackBar(
                             content: Text('Question updated', style: GoogleFonts.montserrat()),
                             backgroundColor: Colors.green,
                           ),
                         );
-                        setState(() {}); // Refresh list
+                        setState(() {}); 
                       } catch (e) {
                         if (!mounted) return;
                         messenger.showSnackBar(
@@ -258,6 +257,7 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
       backgroundColor: bgColor,
       appBar: AppBar(
         backgroundColor: bgColor,
+        surfaceTintColor: Colors.transparent, // FIX 1: Removes top visual split
         elevation: 0,
         toolbarHeight: 90,
         automaticallyImplyLeading: false,
@@ -410,39 +410,44 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
           return Center(child: Text('No questions found.', style: GoogleFonts.montserrat(fontWeight: FontWeight.w600, color: textColor)));
         }
 
-        return ListView.builder(
-          padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
-          itemCount: questions.length,
-          itemBuilder: (context, index) {
-            final q = questions[index];
-            return Container(
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF2A2D2E) : Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: textColor, width: 2.5),
-                boxShadow: [BoxShadow(color: textColor, offset: const Offset(4, 4))],
-              ),
-              child: ListTile(
-                contentPadding: const EdgeInsets.all(16),
-                title: Text(q['question'] ?? 'UNTITLED', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, color: textColor)),
-                subtitle: Text('Correct: ${q['correctAnswer']}', style: GoogleFonts.montserrat(fontWeight: FontWeight.w600, color: isDark ? Colors.lightGreen[400] : Colors.green[700])),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.edit_outlined, color: Color(0xFF249780), size: 24),
-                      onPressed: () => _editQuestion(_selectedCourseId!, _selectedModuleId!, q),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline, color: Colors.red, size: 24),
-                      onPressed: () => _deleteQuestion(_selectedCourseId!, _selectedModuleId!, q['id']),
-                    ),
-                  ],
+        // FIX 2: ScrollConfiguration and BouncingScrollPhysics removes yellow glow
+        return ScrollConfiguration(
+          behavior: const ScrollBehavior().copyWith(overscroll: false),
+          child: ListView.builder(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
+            itemCount: questions.length,
+            itemBuilder: (context, index) {
+              final q = questions[index];
+              return Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF2A2D2E) : Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: textColor, width: 2.5),
+                  boxShadow: [BoxShadow(color: textColor, offset: const Offset(4, 4))],
                 ),
-              ),
-            );
-          },
+                child: ListTile(
+                  contentPadding: const EdgeInsets.all(16),
+                  title: Text(q['question'] ?? 'UNTITLED', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, color: textColor)),
+                  subtitle: Text('Correct: ${q['correctAnswer']}', style: GoogleFonts.montserrat(fontWeight: FontWeight.w600, color: isDark ? Colors.lightGreen[400] : Colors.green[700])),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit_outlined, color: Color(0xFF249780), size: 24),
+                        onPressed: () => _editQuestion(_selectedCourseId!, _selectedModuleId!, q),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline, color: Colors.red, size: 24),
+                        onPressed: () => _deleteQuestion(_selectedCourseId!, _selectedModuleId!, q['id']),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
         );
       },
     );
