@@ -90,24 +90,20 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
 
                       setDialogState(() => isLoading = true);
 
-                      // Capture the Navigator and Messenger before the async gap
                       final navigator = Navigator.of(dialogContext);
                       final messenger = ScaffoldMessenger.of(context);
 
                       try {
                         await FirestoreService().updateCourse(course.id, title, description, order);
-                        
-                        // Check if the widget is still in the tree
                         if (!mounted) return;
-
-                        navigator.pop(); // Close dialog
+                        navigator.pop(); 
                         messenger.showSnackBar(
                           SnackBar(
                             content: Text('Course updated', style: GoogleFonts.montserrat()),
                             backgroundColor: Colors.green,
                           ),
                         );
-                        setState(() {}); // Refresh list
+                        setState(() {}); 
                       } catch (e) {
                         if (!mounted) return;
                         messenger.showSnackBar(
@@ -136,16 +132,14 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
         onConfirm: () async {
           try {
             await FirestoreService().deleteCourse(courseId);
-            
             if (!mounted) return;
-
             messenger.showSnackBar(
               SnackBar(
                 content: Text('Course deleted', style: GoogleFonts.montserrat()),
                 backgroundColor: Colors.green,
               ),
             );
-            setState(() {}); // Refresh list
+            setState(() {}); 
           } catch (e) {
             if (!mounted) return;
             messenger.showSnackBar(
@@ -175,13 +169,13 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Watch theme changes
     context.watch<ThemeProvider>().isDarkMode;
 
     return Scaffold(
       backgroundColor: _backgroundColor,
       appBar: AppBar(
         backgroundColor: _backgroundColor,
+        surfaceTintColor: Colors.transparent, // FIX 1: Removes top split/tint
         elevation: 0,
         toolbarHeight: 90,
         automaticallyImplyLeading: false,
@@ -254,47 +248,52 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
                   );
                 }
 
-                return ListView.builder(
-                  padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
-                  itemCount: filteredCourses.length,
-                  itemBuilder: (context, index) {
-                    final course = filteredCourses[index];
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 20),
-                      decoration: BoxDecoration(
-                        color: _backgroundColor,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: _borderColor, width: 2.5),
-                        boxShadow: [BoxShadow(color: _borderColor, offset: const Offset(4, 4))],
-                      ),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                        title: Text(
-                          course.title.toUpperCase(),
-                          style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: 16, color: _textColor),
+                // FIX 2: ScrollConfiguration and BouncingScrollPhysics removes yellow glow
+                return ScrollConfiguration(
+                  behavior: const ScrollBehavior().copyWith(overscroll: false),
+                  child: ListView.builder(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
+                    itemCount: filteredCourses.length,
+                    itemBuilder: (context, index) {
+                      final course = filteredCourses[index];
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 20),
+                        decoration: BoxDecoration(
+                          color: _backgroundColor,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: _borderColor, width: 2.5),
+                          boxShadow: [BoxShadow(color: _borderColor, offset: const Offset(4, 4))],
                         ),
-                        subtitle: Text(
-                          course.description ?? 'No description',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.montserrat(fontWeight: FontWeight.w600, color: _hintColor),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          title: Text(
+                            course.title.toUpperCase(),
+                            style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: 16, color: _textColor),
+                          ),
+                          subtitle: Text(
+                            course.description ?? 'No description',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.montserrat(fontWeight: FontWeight.w600, color: _hintColor),
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit_outlined, color: Color(0xFF249780), size: 24),
+                                onPressed: () => _editCourse(course),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline, color: Colors.red, size: 28),
+                                onPressed: () => _deleteCourse(course.id, course.title),
+                              ),
+                            ],
+                          ),
                         ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit_outlined, color: Color(0xFF249780), size: 24),
-                              onPressed: () => _editCourse(course),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete_outline, color: Colors.red, size: 28),
-                              onPressed: () => _deleteCourse(course.id, course.title),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 );
               },
             ),

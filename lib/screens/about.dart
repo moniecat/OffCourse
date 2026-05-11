@@ -198,7 +198,7 @@ class _AboutPageState extends State<AboutPage> {
       content: '''Last updated: April 2026
 
 1. Information We Collect
-OffCourse collects only the information you provide when creating an account — your name, email address, and LRN (Learner Reference Number). We also store your learning progress and preferences.
+OffCourse collects only the information you provide when creating an account — your name and email address. We also store your learning progress and preferences.
 
 2. How We Use Your Information
 Your information is used solely to operate and improve the OffCourse app. We do not sell, trade, or share your personal data with third parties.
@@ -304,20 +304,24 @@ We may revise these terms at any time. Continued use of the app implies acceptan
                   child: Divider(color: textColor, thickness: 2),
                 ),
                 Expanded(
-                  child: ListView(
-                    controller: scrollCtrl,
-                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
-                    children: [
-                      Text(
-                        content,
-                        style: GoogleFonts.montserrat(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: mutedTextColor,
-                          height: 1.8,
+                  child: ScrollConfiguration(
+                    behavior: const ScrollBehavior().copyWith(overscroll: false),
+                    child: ListView(
+                      controller: scrollCtrl,
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+                      children: [
+                        Text(
+                          content,
+                          style: GoogleFonts.montserrat(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: mutedTextColor,
+                            height: 1.8,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -339,6 +343,7 @@ We may revise these terms at any time. Continued use of the app implies acceptan
       backgroundColor: bgColor,
       appBar: AppBar(
         backgroundColor: bgColor,
+        surfaceTintColor: Colors.transparent, // FIX: Syncs Top Bar Color
         elevation: 0,
         toolbarHeight: 80,
         automaticallyImplyLeading: false,
@@ -349,107 +354,111 @@ We may revise these terms at any time. Continued use of the app implies acceptan
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        children: [
-          Text(
-            'About',
-            style: GoogleFonts.montserrat(
-              fontSize: 48,
-              fontWeight: FontWeight.w900,
-              height: 1.0,
-              letterSpacing: -1.5,
-              color: textColor,
-            ),
-          ),
-          const SizedBox(height: 32),
-          Center(
-            child: Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: textColor, width: 3),
-                boxShadow: [
-                  BoxShadow(color: textColor, offset: const Offset(4, 4)),
-                ],
-              ),
-              child: CircleAvatar(
-                radius: 46,
-                backgroundImage: const AssetImage('assets/pics/logo3.png'),
-                backgroundColor: isDark ? const Color(0xFF2A2D2E) : Colors.white,
-              ),
-            ),
-          ),
-          const SizedBox(height: 32),
-          _SectionCard(
-            child: Text(
-              'OffCourse is a learning companion designed to help students stay on track with their modules, manage their schedule, and track their academic progress.',
-              textAlign: TextAlign.center,
+      body: ScrollConfiguration(
+        behavior: const ScrollBehavior().copyWith(overscroll: false), // FIX: Removes Yellow Glow
+        child: ListView(
+          physics: const BouncingScrollPhysics(), // FIX: Adds Smooth Bounce
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          children: [
+            Text(
+              'About',
               style: GoogleFonts.montserrat(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
+                fontSize: 48,
+                fontWeight: FontWeight.w900,
+                height: 1.0,
+                letterSpacing: -1.5,
                 color: textColor,
-                height: 1.6,
               ),
             ),
-          ),
-          const SizedBox(height: 24),
-          _SectionLabel(label: 'WHAT YOU CAN DO'),
-          const SizedBox(height: 12),
-          _FeatureTile(
-            icon: Icons.menu_book_rounded,
-            color: Colors.teal,
-            title: 'Browse Modules',
-            description: 'Access learning materials organized by quarter.',
-          ),
-          const SizedBox(height: 12),
-          _FeatureTile(
-            icon: Icons.lightbulb_outline_rounded,
-            color: themeYellow,
-            title: 'Brainstorming Tools',
-            description: 'Interactive exercises to sharpen critical thinking.',
-          ),
-          const SizedBox(height: 12),
-          _FeatureTile(
-            icon: Icons.person_outline_rounded,
-            color: textColor,
-            title: 'Your Profile',
-            description: 'Track your progress and manage your student info.',
-          ),
-          const SizedBox(height: 32),
-          _SectionLabel(label: 'GET IN TOUCH'),
-          const SizedBox(height: 12),
-          _AboutTile(
-            icon: Icons.email_outlined,
-            label: 'Contact Us',
-            subtitle: 'offcourse.support@gmail.com',
-            themeYellow: themeYellow,
-            onTap: () => _showContactDialog(context),
-          ),
-          _AboutTile(
-            icon: Icons.privacy_tip_outlined,
-            label: 'Privacy Policy',
-            themeYellow: themeYellow,
-            onTap: () => _showPrivacyPolicy(context),
-          ),
-          _AboutTile(
-            icon: Icons.article_outlined,
-            label: 'Terms of Service',
-            themeYellow: themeYellow,
-            onTap: () => _showTermsOfService(context),
-          ),
-          const SizedBox(height: 32),
-          Center(
-            child: Text(
-              'Made with ❤️ for Students',
-              style: GoogleFonts.montserrat(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: mutedTextColor,
+            const SizedBox(height: 32),
+            Center(
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: textColor, width: 3),
+                  boxShadow: [
+                    BoxShadow(color: textColor, offset: const Offset(4, 4)),
+                  ],
+                ),
+                child: CircleAvatar(
+                  radius: 46,
+                  backgroundImage: const AssetImage('assets/pics/logo3.png'),
+                  backgroundColor: isDark ? const Color(0xFF2A2D2E) : Colors.white,
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 24),
-        ],
+            const SizedBox(height: 32),
+            _SectionCard(
+              child: Text(
+                'OffCourse is a learning companion designed to help students stay on track with their modules, manage their schedule, and track their academic progress.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.montserrat(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: textColor,
+                  height: 1.6,
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            _SectionLabel(label: 'WHAT YOU CAN DO'),
+            const SizedBox(height: 12),
+            _FeatureTile(
+              icon: Icons.menu_book_rounded,
+              color: Colors.teal,
+              title: 'Browse Modules',
+              description: 'Access learning materials organized by quarter.',
+            ),
+            const SizedBox(height: 12),
+            _FeatureTile(
+              icon: Icons.lightbulb_outline_rounded,
+              color: themeYellow,
+              title: 'Brainstorming Tools',
+              description: 'Interactive exercises to sharpen critical thinking.',
+            ),
+            const SizedBox(height: 12),
+            _FeatureTile(
+              icon: Icons.person_outline_rounded,
+              color: textColor,
+              title: 'Your Profile',
+              description: 'Track your progress and manage your student info.',
+            ),
+            const SizedBox(height: 32),
+            _SectionLabel(label: 'GET IN TOUCH'),
+            const SizedBox(height: 12),
+            _AboutTile(
+              icon: Icons.email_outlined,
+              label: 'Contact Us',
+              subtitle: 'offcourse.support@gmail.com',
+              themeYellow: themeYellow,
+              onTap: () => _showContactDialog(context),
+            ),
+            _AboutTile(
+              icon: Icons.privacy_tip_outlined,
+              label: 'Privacy Policy',
+              themeYellow: themeYellow,
+              onTap: () => _showPrivacyPolicy(context),
+            ),
+            _AboutTile(
+              icon: Icons.article_outlined,
+              label: 'Terms of Service',
+              themeYellow: themeYellow,
+              onTap: () => _showTermsOfService(context),
+            ),
+            const SizedBox(height: 32),
+            Center(
+              child: Text(
+                'Made with ❤️ for Students',
+                style: GoogleFonts.montserrat(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: mutedTextColor,
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
       ),
     );
   }

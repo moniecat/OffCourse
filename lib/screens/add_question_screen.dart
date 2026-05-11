@@ -143,7 +143,6 @@ class _AddQuestionScreenState extends State<AddQuestionScreen> {
     );
   }
 
-  /// Styled Back Button from your provided image
   Widget _buildBackButton() {
     return GestureDetector(
       onTap: () => Navigator.pop(context),
@@ -162,13 +161,13 @@ class _AddQuestionScreenState extends State<AddQuestionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Watch theme changes
     context.watch<ThemeProvider>().isDarkMode;
     
     return Scaffold(
       backgroundColor: _backgroundColor,
       appBar: AppBar(
         backgroundColor: _backgroundColor,
+        surfaceTintColor: Colors.transparent, // FIX 1: Removes the visual "block" split
         elevation: 0,
         toolbarHeight: 90,
         automaticallyImplyLeading: false,
@@ -181,116 +180,120 @@ class _AddQuestionScreenState extends State<AddQuestionScreen> {
       ),
       body: _loadingCourses
           ? Center(child: CircularProgressIndicator(color: _borderColor))
-          : SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    'Add\nQuestion',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 48,
-                      fontWeight: FontWeight.w900,
-                      height: 1.0,
-                      letterSpacing: -1.5,
-                      color: _textColor,
+          : ScrollConfiguration(
+              behavior: const ScrollBehavior().copyWith(overscroll: false), // FIX 2: Removes yellow glow
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(), // FIX 3: Smooth bounce instead of glow
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Add\nQuestion',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 48,
+                        fontWeight: FontWeight.w900,
+                        height: 1.0,
+                        letterSpacing: -1.5,
+                        color: _textColor,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 32),
+                    const SizedBox(height: 32),
 
-                  // Course Selection
-                  _buildLabel('SELECT COURSE'),
-                  const SizedBox(height: 10),
-                  _buildNeoDropdown<Course>(
-                    value: _selectedCourse,
-                    items: _courses.map((c) => DropdownMenuItem(value: c, child: Text(c.title))).toList(),
-                    onChanged: (val) {
-                      if (val == null) return;
-                      setState(() => _selectedCourse = val);
-                      _loadModules(val.id);
-                    },
-                  ),
-                  const SizedBox(height: 24),
+                    // Course Selection
+                    _buildLabel('SELECT COURSE'),
+                    const SizedBox(height: 10),
+                    _buildNeoDropdown<Course>(
+                      value: _selectedCourse,
+                      items: _courses.map((c) => DropdownMenuItem(value: c, child: Text(c.title))).toList(),
+                      onChanged: (val) {
+                        if (val == null) return;
+                        setState(() => _selectedCourse = val);
+                        _loadModules(val.id);
+                      },
+                    ),
+                    const SizedBox(height: 24),
 
-                  // Module Selection
-                  _buildLabel('SELECT MODULE'),
-                  const SizedBox(height: 10),
-                  _loadingModules
-                      ? LinearProgressIndicator(color: _borderColor, backgroundColor: _backgroundColor)
-                      : _buildNeoDropdown<Map<String, dynamic>>(
-                          value: _selectedModule,
-                          items: _modules.map((m) => DropdownMenuItem(value: m, child: Text(m['title'] as String? ?? 'Untitled'))).toList(),
-                          onChanged: (val) => setState(() => _selectedModule = val),
+                    // Module Selection
+                    _buildLabel('SELECT MODULE'),
+                    const SizedBox(height: 10),
+                    _loadingModules
+                        ? LinearProgressIndicator(color: _borderColor, backgroundColor: _backgroundColor)
+                        : _buildNeoDropdown<Map<String, dynamic>>(
+                            value: _selectedModule,
+                            items: _modules.map((m) => DropdownMenuItem(value: m, child: Text(m['title'] as String? ?? 'Untitled'))).toList(),
+                            onChanged: (val) => setState(() => _selectedModule = val),
+                          ),
+                    const SizedBox(height: 24),
+
+                    // Question Text
+                    _buildNeoTextField(controller: _questionController, label: 'QUESTION', hint: 'Type your question here...', maxLines: 3),
+                    const SizedBox(height: 24),
+
+                    // Options
+                    Row(
+                      children: [
+                        Expanded(child: _buildNeoTextField(controller: _optionAController, label: 'OPTION A', hint: 'Choice 1')),
+                        const SizedBox(width: 16),
+                        Expanded(child: _buildNeoTextField(controller: _optionBController, label: 'OPTION B', hint: 'Choice 2')),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(child: _buildNeoTextField(controller: _optionCController, label: 'OPTION C', hint: 'Choice 3')),
+                        const SizedBox(width: 16),
+                        Expanded(child: _buildNeoTextField(controller: _optionDController, label: 'OPTION D', hint: 'Choice 4')),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Correct Answer
+                    _buildLabel('CORRECT ANSWER'),
+                    const SizedBox(height: 10),
+                    _buildNeoDropdown<String>(
+                      value: _correctAnswer,
+                      items: const [
+                        DropdownMenuItem(value: 'A', child: Text('A')),
+                        DropdownMenuItem(value: 'B', child: Text('B')),
+                        DropdownMenuItem(value: 'C', child: Text('C')),
+                        DropdownMenuItem(value: 'D', child: Text('D')),
+                      ],
+                      onChanged: (val) {
+                        if (val != null) setState(() => _correctAnswer = val);
+                      },
+                    ),
+                    const SizedBox(height: 40),
+
+                    // Save Button
+                    GestureDetector(
+                      onTap: _isLoading ? null : _saveQuestion,
+                      child: Container(
+                        height: 70,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Theme.of(context).colorScheme.onSurface, width: 3),
+                          boxShadow: [BoxShadow(color: Theme.of(context).colorScheme.onSurface, offset: const Offset(4, 4))],
                         ),
-                  const SizedBox(height: 24),
-
-                  // Question Text
-                  _buildNeoTextField(controller: _questionController, label: 'QUESTION', hint: 'Type your question here...', maxLines: 3),
-                  const SizedBox(height: 24),
-
-                  // Options
-                  Row(
-                    children: [
-                      Expanded(child: _buildNeoTextField(controller: _optionAController, label: 'OPTION A', hint: 'Choice 1')),
-                      const SizedBox(width: 16),
-                      Expanded(child: _buildNeoTextField(controller: _optionBController, label: 'OPTION B', hint: 'Choice 2')),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(child: _buildNeoTextField(controller: _optionCController, label: 'OPTION C', hint: 'Choice 3')),
-                      const SizedBox(width: 16),
-                      Expanded(child: _buildNeoTextField(controller: _optionDController, label: 'OPTION D', hint: 'Choice 4')),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Correct Answer
-                  _buildLabel('CORRECT ANSWER'),
-                  const SizedBox(height: 10),
-                  _buildNeoDropdown<String>(
-                    value: _correctAnswer,
-                    items: const [
-                      DropdownMenuItem(value: 'A', child: Text('A')),
-                      DropdownMenuItem(value: 'B', child: Text('B')),
-                      DropdownMenuItem(value: 'C', child: Text('C')),
-                      DropdownMenuItem(value: 'D', child: Text('D')),
-                    ],
-                    onChanged: (val) {
-                      if (val != null) setState(() => _correctAnswer = val);
-                    },
-                  ),
-                  const SizedBox(height: 40),
-
-                  // Save Button
-                  GestureDetector(
-                    onTap: _isLoading ? null : _saveQuestion,
-                    child: Container(
-                      height: 70,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Theme.of(context).colorScheme.onSurface, width: 3),
-                        boxShadow: [BoxShadow(color: Theme.of(context).colorScheme.onSurface, offset: const Offset(4, 4))],
-                      ),
-                      child: Center(
-                        child: _isLoading
-                            ? CircularProgressIndicator(color: Theme.of(context).colorScheme.onPrimary)
-                            : Text(
-                                'SAVE QUESTION',
-                                style: GoogleFonts.montserrat(
-                                  color: Theme.of(context).colorScheme.onPrimary,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 1.2,
+                        child: Center(
+                          child: _isLoading
+                              ? CircularProgressIndicator(color: Theme.of(context).colorScheme.onPrimary)
+                              : Text(
+                                  'SAVE QUESTION',
+                                  style: GoogleFonts.montserrat(
+                                    color: Theme.of(context).colorScheme.onPrimary,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 1.2,
+                                  ),
                                 ),
-                              ),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 40),
-                ],
+                    const SizedBox(height: 40),
+                  ],
+                ),
               ),
             ),
     );

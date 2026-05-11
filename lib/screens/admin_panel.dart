@@ -33,7 +33,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   @override
   void initState() {
     super.initState();
-    // Use .asBroadcastStream() to prevent the "Bad state" error we saw earlier
     _statsStream = FirestoreService().watchStats().asBroadcastStream();
     _userStatsStream = UserManagementService.watchUserCounts().asBroadcastStream();
     _loadUserRole();
@@ -58,7 +57,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       PageRouteBuilder(
         opaque: false,
         barrierDismissible: true,
-        // FIXED: Replaced .withValues with .withOpacity for safety
         barrierColor: Colors.black.withValues(alpha: 0.5),
         pageBuilder: (_, __, ___) => MenuDrawer(isAdmin: _isAdmin, currentScreen: 'Admin'),
         transitionsBuilder: (_, animation, __, child) {
@@ -96,6 +94,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    // Ensure this color is exactly what you want for the whole screen
     final bgColor = isDark ? const Color(0xFF1A1C1E) : Colors.white;
     final textColor = isDark ? Colors.white : darkBorder;
     final mutedTextColor = isDark ? Colors.white70 : Colors.black54;
@@ -104,6 +103,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       backgroundColor: bgColor,
       appBar: AppBar(
         backgroundColor: bgColor,
+        surfaceTintColor: Colors.transparent, // REMOVES THE YELLOW/TINTED TOP BLOCK
         elevation: 0,
         toolbarHeight: 80,
         automaticallyImplyLeading: false,
@@ -114,127 +114,129 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
           ),
         ],
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final isSmallScreen = constraints.maxWidth < 400;
-          return ListView(
-            // FIX: Keep items alive in memory for 1000 pixels off-screen
-            cacheExtent: 1000, 
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            children: [
-              Text(
-                'Admin\nPanel',
-                style: GoogleFonts.montserrat(
-                  fontSize: isSmallScreen ? 36 : 48,
-                  fontWeight: FontWeight.w900,
-                  height: 1.0,
-                  letterSpacing: -1.5,
-                  color: textColor,
+      // ScrollConfiguration removes the "Glow" entirely
+      body: ScrollConfiguration(
+        behavior: const ScrollBehavior().copyWith(overscroll: false),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isSmallScreen = constraints.maxWidth < 400;
+            return ListView(
+              physics: const BouncingScrollPhysics(), // IOS-style bounce, no yellow glow
+              cacheExtent: 1000, 
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+              children: [
+                Text(
+                  'Admin\nPanel',
+                  style: GoogleFonts.montserrat(
+                    fontSize: isSmallScreen ? 36 : 48,
+                    fontWeight: FontWeight.w900,
+                    height: 1.0,
+                    letterSpacing: -1.5,
+                    color: textColor,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-              Text(
-                'CONTENT OVERVIEW',
-                style: GoogleFonts.montserrat(fontSize: 13, fontWeight: FontWeight.w800, color: textColor, letterSpacing: 1.5),
-              ),
-              const SizedBox(height: 12),
+                Text(
+                  'CONTENT OVERVIEW',
+                  style: GoogleFonts.montserrat(fontSize: 13, fontWeight: FontWeight.w800, color: textColor, letterSpacing: 1.5),
+                ),
+                const SizedBox(height: 12),
 
-              StreamBuilder<Map<String, int>>(
-                stream: _statsStream,
-                builder: (context, snapshot) {
-                  // If we have data, use it. If not, don't revert to 0 if it was already showing something.
-                  final stats = snapshot.data ?? const {'courses': 0, 'modules': 0, 'questions': 0};
-                  return Row(
-                    children: [
-                      Expanded(child: AdminStatCard(title: 'Courses', value: stats['courses'].toString(), icon: Icons.library_books_rounded, color: const Color(0xFF00CBA9))),
-                      const SizedBox(width: 8),
-                      Expanded(child: AdminStatCard(title: 'Modules', value: stats['modules'].toString(), icon: Icons.layers_rounded, color: const Color(0xFFFFBC1F))),
-                      const SizedBox(width: 8),
-                      Expanded(child: AdminStatCard(title: 'Questions', value: stats['questions'].toString(), icon: Icons.quiz_rounded, color: const Color(0xFF00CBA9))),
-                    ],
-                  );
-                },
-              ),
+                StreamBuilder<Map<String, int>>(
+                  stream: _statsStream,
+                  builder: (context, snapshot) {
+                    final stats = snapshot.data ?? const {'courses': 0, 'modules': 0, 'questions': 0};
+                    return Row(
+                      children: [
+                        Expanded(child: AdminStatCard(title: 'Courses', value: stats['courses'].toString(), icon: Icons.library_books_rounded, color: const Color(0xFF00CBA9))),
+                        const SizedBox(width: 8),
+                        Expanded(child: AdminStatCard(title: 'Modules', value: stats['modules'].toString(), icon: Icons.layers_rounded, color: const Color(0xFFFFBC1F))),
+                        const SizedBox(width: 8),
+                        Expanded(child: AdminStatCard(title: 'Questions', value: stats['questions'].toString(), icon: Icons.quiz_rounded, color: const Color(0xFF00CBA9))),
+                      ],
+                    );
+                  },
+                ),
 
-              const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-              Text(
-                'USER OVERVIEW',
-                style: GoogleFonts.montserrat(fontSize: 13, fontWeight: FontWeight.w800, color: textColor, letterSpacing: 1.5),
-              ),
-              const SizedBox(height: 12),
+                Text(
+                  'USER OVERVIEW',
+                  style: GoogleFonts.montserrat(fontSize: 13, fontWeight: FontWeight.w800, color: textColor, letterSpacing: 1.5),
+                ),
+                const SizedBox(height: 12),
 
-              StreamBuilder<Map<String, int>>(
-                stream: _userStatsStream,
-                builder: (context, snapshot) {
-                  final stats = snapshot.data ?? const {'admins': 0, 'students': 0};
-                  return Row(
-                    children: [
-                      Expanded(child: AdminStatCard(title: 'Admins', value: stats['admins'].toString(), icon: Icons.admin_panel_settings_rounded, color: const Color(0xFFFFBC1F))),
-                      const SizedBox(width: 8),
-                      Expanded(child: AdminStatCard(title: 'Students', value: stats['students'].toString(), icon: Icons.school_rounded, color: const Color(0xFF00CBA9))),
-                    ],
-                  );
-                },
-              ),
+                StreamBuilder<Map<String, int>>(
+                  stream: _userStatsStream,
+                  builder: (context, snapshot) {
+                    final stats = snapshot.data ?? const {'admins': 0, 'students': 0};
+                    return Row(
+                      children: [
+                        Expanded(child: AdminStatCard(title: 'Admins', value: stats['admins'].toString(), icon: Icons.admin_panel_settings_rounded, color: const Color(0xFFFFBC1F))),
+                        const SizedBox(width: 8),
+                        Expanded(child: AdminStatCard(title: 'Students', value: stats['students'].toString(), icon: Icons.school_rounded, color: const Color(0xFF00CBA9))),
+                      ],
+                    );
+                  },
+                ),
 
-              const SizedBox(height: 40),
+                const SizedBox(height: 40),
 
-              Text(
-                'CONTENT MANAGEMENT',
-                style: GoogleFonts.montserrat(fontSize: 13, fontWeight: FontWeight.w800, color: textColor, letterSpacing: 1.5),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Create courses, modules and questions for the learning experience.',
-                style: GoogleFonts.montserrat(fontSize: 15, fontWeight: FontWeight.w500, color: mutedTextColor, height: 1.5),
-              ),
-              const SizedBox(height: 32),
+                Text(
+                  'CONTENT MANAGEMENT',
+                  style: GoogleFonts.montserrat(fontSize: 13, fontWeight: FontWeight.w800, color: textColor, letterSpacing: 1.5),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Create courses, modules and questions for the learning experience.',
+                  style: GoogleFonts.montserrat(fontSize: 15, fontWeight: FontWeight.w500, color: mutedTextColor, height: 1.5),
+                ),
+                const SizedBox(height: 32),
 
-              _AdminButton(label: 'Add Course', icon: Icons.library_add_rounded, color: const Color(0xFF00CBA9), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddCourseScreen()))),
-              const SizedBox(height: 20),
-              _AdminButton(label: 'Add Module', icon: Icons.post_add_rounded, color: const Color(0xFFFFBC1F), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddModuleScreen()))),
-              const SizedBox(height: 20),
-              _AdminButton(label: 'Add Question', icon: Icons.quiz_rounded, color: const Color(0xFF00CBA9), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddQuestionScreen()))),
+                _AdminButton(label: 'Add Course', icon: Icons.library_add_rounded, color: const Color(0xFF00CBA9), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddCourseScreen()))),
+                const SizedBox(height: 20),
+                _AdminButton(label: 'Add Module', icon: Icons.post_add_rounded, color: const Color(0xFFFFBC1F), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddModuleScreen()))),
+                const SizedBox(height: 20),
+                _AdminButton(label: 'Add Question', icon: Icons.quiz_rounded, color: const Color(0xFF00CBA9), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddQuestionScreen()))),
 
-              const SizedBox(height: 48),
+                const SizedBox(height: 48),
 
-              Text(
-                'MANAGE CONTENT',
-                style: GoogleFonts.montserrat(fontSize: 13, fontWeight: FontWeight.w800, color: textColor, letterSpacing: 1.5),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Edit or delete existing courses, modules and questions.',
-                style: GoogleFonts.montserrat(fontSize: 15, fontWeight: FontWeight.w500, color: mutedTextColor, height: 1.5),
-              ),
-              const SizedBox(height: 32),
+                Text(
+                  'MANAGE CONTENT',
+                  style: GoogleFonts.montserrat(fontSize: 13, fontWeight: FontWeight.w800, color: textColor, letterSpacing: 1.5),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Edit or delete existing courses, modules and questions.',
+                  style: GoogleFonts.montserrat(fontSize: 15, fontWeight: FontWeight.w500, color: mutedTextColor, height: 1.5),
+                ),
+                const SizedBox(height: 32),
 
-              _AdminButton(label: 'Manage Courses', icon: Icons.folder_open_rounded, color: const Color(0xFF00CBA9), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageCoursesScreen())),),
-              const SizedBox(height: 20),
-              _AdminButton(label: 'Manage Modules', icon: Icons.edit_rounded, color: const Color(0xFFFFBC1F), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageModulesScreen()))),
-              const SizedBox(height: 20),
-              _AdminButton(label: 'Manage Questions', icon: Icons.help_outline_rounded, color: const Color(0xFF00CBA9), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageQuestionsScreen()))),
+                _AdminButton(label: 'Manage Courses', icon: Icons.folder_open_rounded, color: const Color(0xFF00CBA9), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageCoursesScreen())),),
+                const SizedBox(height: 20),
+                _AdminButton(label: 'Manage Modules', icon: Icons.edit_rounded, color: const Color(0xFFFFBC1F), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageModulesScreen()))),
+                const SizedBox(height: 20),
+                _AdminButton(label: 'Manage Questions', icon: Icons.help_outline_rounded, color: const Color(0xFF00CBA9), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageQuestionsScreen()))),
 
-              const SizedBox(height: 48),
+                const SizedBox(height: 48),
 
-              Text(
-                'USER MANAGEMENT',
-                style: GoogleFonts.montserrat(fontSize: 13, fontWeight: FontWeight.w800, color: textColor, letterSpacing: 1.5),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Add new users and manage existing accounts and roles.',
-                style: GoogleFonts.montserrat(fontSize: 15, fontWeight: FontWeight.w500, color: mutedTextColor, height: 1.5),
-              ),
-              const SizedBox(height: 32),
+                Text(
+                  'USER MANAGEMENT',
+                  style: GoogleFonts.montserrat(fontSize: 13, fontWeight: FontWeight.w800, color: textColor, letterSpacing: 1.5),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Add new users and manage existing accounts and roles.',
+                  style: GoogleFonts.montserrat(fontSize: 15, fontWeight: FontWeight.w500, color: mutedTextColor, height: 1.5),
+                ),
+                const SizedBox(height: 32),
 
-              _AdminButton(label: 'Manage Users', icon: Icons.people_rounded, color: const Color(0xFFFFBC1F), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageUsersScreen()))),
-              const SizedBox(height: 32),
-            ],
-          );
-        },
+                _AdminButton(label: 'Manage Users', icon: Icons.people_rounded, color: const Color(0xFFFFBC1F), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageUsersScreen()))),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -250,13 +252,16 @@ class _AdminButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textColor = Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1A1C1E);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : const Color(0xFF1A1C1E);
+    final cardBg = isDark ? const Color(0xFF2A2D2E) : Colors.white;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         height: 80,
         decoration: BoxDecoration(
-          color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF2A2D2E) : Colors.white,
+          color: cardBg,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: textColor, width: 3),
           boxShadow: [BoxShadow(color: textColor, offset: const Offset(4, 4))],
@@ -268,7 +273,7 @@ class _AdminButton extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: .15),
+                  color: color.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: color, width: 2),
                 ),

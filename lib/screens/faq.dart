@@ -12,8 +12,12 @@ class FAQPage extends StatefulWidget {
 }
 
 class _FAQPageState extends State<FAQPage> {
-  // Styling Constants from Home/Settings
+  // Styling Constants
   static const double borderWidth = 3.0;
+  
+  // Theme-aware getters (Matching your ManageModulesScreen)
+  Color get _backgroundColor => Theme.of(context).scaffoldBackgroundColor;
+  Color get _textColor => Theme.of(context).colorScheme.onSurface;
 
   // Role logic for the Drawer
   String _userRole = 'student';
@@ -32,7 +36,6 @@ class _FAQPageState extends State<FAQPage> {
     _loadUserRole();
   }
 
-  /// Fetch user role to pass the correct isAdmin flag to MenuDrawer
   Future<void> _loadUserRole() async {
     final user = AuthService().currentUser;
     if (user == null) return;
@@ -47,7 +50,6 @@ class _FAQPageState extends State<FAQPage> {
     } catch (_) {}
   }
 
-  /// Updated Drawer Animation to match Home
   void _openDrawer(BuildContext context) {
     Navigator.of(context).push(
       PageRouteBuilder(
@@ -68,7 +70,6 @@ class _FAQPageState extends State<FAQPage> {
     );
   }
 
-  /// Reusable Styled Menu Button from Home
   Widget _buildMenuButton() {
     return GestureDetector(
       onTap: () => _openDrawer(context),
@@ -76,12 +77,12 @@ class _FAQPageState extends State<FAQPage> {
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
-          border: Border.all(color: Theme.of(context).colorScheme.onSurface, width: borderWidth),
+          border: Border.all(color: _textColor, width: borderWidth),
           boxShadow: [
-            BoxShadow(color: Theme.of(context).colorScheme.onSurface, offset: const Offset(3, 3))
+            BoxShadow(color: _textColor, offset: const Offset(3, 3))
           ],
         ),
-        child: Icon(Icons.menu, color: Theme.of(context).colorScheme.onSurface, size: 30),
+        child: Icon(Icons.menu, color: _textColor, size: 30),
       ),
     );
   }
@@ -89,44 +90,51 @@ class _FAQPageState extends State<FAQPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: _backgroundColor,
       appBar: AppBar(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        backgroundColor: _backgroundColor,
+        surfaceTintColor: Colors.transparent, // FIX: Removes the top tint/line
         elevation: 0,
         toolbarHeight: 80,
         automaticallyImplyLeading: false,
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 25, top: 10),
-            child: _buildMenuButton(), // Updated Button
+            child: _buildMenuButton(),
           ),
         ],
       ),
       body: Column(
         children: [
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              children: [
-                Text(
-                  'FAQ',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 48,
-                    fontWeight: FontWeight.w900,
-                    height: 1.0,
-                    letterSpacing: -1.5,
-                    color: Theme.of(context).colorScheme.onSurface,
+            // FIX: Removes the yellow glow wrapper
+            child: ScrollConfiguration(
+              behavior: const ScrollBehavior().copyWith(overscroll: false),
+              child: ListView(
+                // FIX: ClampingScrollPhysics stops the list dead at the edge (no stretch)
+                physics: const ClampingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                children: [
+                  Text(
+                    'FAQ',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 48,
+                      fontWeight: FontWeight.w900,
+                      height: 1.0,
+                      letterSpacing: -1.5,
+                      color: _textColor,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 30),
-                ..._faqs.asMap().entries.map((entry) {
-                  int idx = entry.key;
-                  Color themeColor = idx % 2 == 0
-                      ? const Color(0xFF2BB19B)
-                      : const Color(0xFFFFC12F);
-                  return _FAQTile(faq: entry.value, accentColor: themeColor);
-                }),
-              ],
+                  const SizedBox(height: 30),
+                  ..._faqs.asMap().entries.map((entry) {
+                    int idx = entry.key;
+                    Color themeColor = idx % 2 == 0
+                        ? const Color(0xFF2BB19B)
+                        : const Color(0xFFFFC12F);
+                    return _FAQTile(faq: entry.value, accentColor: themeColor);
+                  }),
+                ],
+              ),
             ),
           ),
         ],

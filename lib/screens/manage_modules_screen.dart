@@ -91,7 +91,6 @@ class _ManageModulesScreenState extends State<ManageModulesScreen> {
 
                       setDialogState(() => isLoading = true);
 
-                      // Capture Navigator and Messenger before async gap
                       final navigator = Navigator.of(dialogContext);
                       final messenger = ScaffoldMessenger.of(context);
 
@@ -187,13 +186,13 @@ class _ManageModulesScreenState extends State<ManageModulesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Watch theme changes
     context.watch<ThemeProvider>().isDarkMode;
 
     return Scaffold(
       backgroundColor: _backgroundColor,
       appBar: AppBar(
         backgroundColor: _backgroundColor,
+        surfaceTintColor: Colors.transparent, // FIX 1: Removes top split/tint
         elevation: 0,
         toolbarHeight: 90,
         automaticallyImplyLeading: false,
@@ -214,7 +213,6 @@ class _ManageModulesScreenState extends State<ManageModulesScreen> {
           final courses = snapshot.data ?? [];
           if (courses.isEmpty) return Center(child: Text("No Courses found"));
 
-          // Initialize selected course
           _selectedCourseId ??= courses.first.id;
 
           return Column(
@@ -308,46 +306,51 @@ class _ManageModulesScreenState extends State<ManageModulesScreen> {
                       return Center(child: Text('No modules found.', style: GoogleFonts.montserrat(fontWeight: FontWeight.w600)));
                     }
 
-                    return ListView.builder(
-                      padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
-                      itemCount: filteredModules.length,
-                      itemBuilder: (context, index) {
-                        final module = filteredModules[index];
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 20),
-                          decoration: BoxDecoration(
-                            color: _backgroundColor,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: _borderColor, width: 2.5),
-                            boxShadow: [BoxShadow(color: _borderColor, offset: const Offset(4, 4))],
-                          ),
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                            title: Text(
-                              module['title']?.toString().toUpperCase() ?? 'UNTITLED',
-                              style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: 16, color: _textColor),
+                    // FIX 2: ScrollConfiguration and BouncingScrollPhysics removes yellow glow
+                    return ScrollConfiguration(
+                      behavior: const ScrollBehavior().copyWith(overscroll: false),
+                      child: ListView.builder(
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
+                        itemCount: filteredModules.length,
+                        itemBuilder: (context, index) {
+                          final module = filteredModules[index];
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 20),
+                            decoration: BoxDecoration(
+                              color: _backgroundColor,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: _borderColor, width: 2.5),
+                              boxShadow: [BoxShadow(color: _borderColor, offset: const Offset(4, 4))],
                             ),
-                            subtitle: Text(
-                              module['description'] ?? 'No description',
-                              maxLines: 1,
-                              style: GoogleFonts.montserrat(fontWeight: FontWeight.w600, color: _hintColor),
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                              title: Text(
+                                module['title']?.toString().toUpperCase() ?? 'UNTITLED',
+                                style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: 16, color: _textColor),
+                              ),
+                              subtitle: Text(
+                                module['description'] ?? 'No description',
+                                maxLines: 1,
+                                style: GoogleFonts.montserrat(fontWeight: FontWeight.w600, color: _hintColor),
+                              ),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.edit_outlined, color: Color(0xFF249780), size: 24),
+                                    onPressed: () => _editModule(_selectedCourseId!, module),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_outline, color: Colors.red, size: 28),
+                                    onPressed: () => _deleteModule(_selectedCourseId!, module['id'], module['title']),
+                                  ),
+                                ],
+                              ),
                             ),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: const Icon(Icons.edit_outlined, color: Color(0xFF249780), size: 24),
-                                  onPressed: () => _editModule(_selectedCourseId!, module),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.delete_outline, color: Colors.red, size: 28),
-                                  onPressed: () => _deleteModule(_selectedCourseId!, module['id'], module['title']),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     );
                   },
                 ),
