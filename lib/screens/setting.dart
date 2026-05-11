@@ -262,31 +262,35 @@ class _SettingPageState extends State<SettingPage> {
               ),
             ),
             Expanded(
-              child: ListView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(25, 10, 25, 100),
-                children: [
-                  const SizedBox(height: 20),
-                  _SettingSection(title: 'Preferences', children: [
-                    Consumer<ThemeProvider>(builder: (context, themeProvider, child) {
-                      return _ToggleTile(label: 'Dark Mode', value: themeProvider.isDarkMode, activeColor: themeYellow, onChanged: (v) => themeProvider.setTheme(v));
-                    }),
-                    const Divider(height: 1, thickness: 1),
-                    _ActionTile(label: 'Language', icon: Icons.language, trailingText: 'English', onTap: () => _showSnack('Only English is currently supported.')),
-                  ]),
-                  const SizedBox(height: 25),
-                  _SettingSection(title: 'Support', children: [
-                    _ActionTile(label: 'Report a Bug', icon: Icons.bug_report_outlined, onTap: () => _sendEmail(subject: '[BUG REPORT]', body: 'Describe bug:')),
-                    const Divider(height: 1, thickness: 1),
-                    _ActionTile(label: 'Feature Request', icon: Icons.lightbulb_outline, onTap: () => _sendEmail(subject: '[FEATURE REQUEST]', body: 'Describe feature:')),
-                  ]),
-                  const SizedBox(height: 25),
-                  _SettingSection(title: 'Account & Storage', children: [
-                    _ActionTile(label: 'Change Password', icon: Icons.lock_outline, onTap: _showChangePasswordDialog),
-                    const Divider(height: 1, thickness: 1),
-                    _ActionTile(label: 'Delete Account', icon: Icons.delete_outline, color: Colors.red, onTap: _showDeleteAccountDialog),
-                  ]),
-                ],
+              // FIX: Wrapped with ScrollConfiguration and changed physics to remove yellow/stretch
+              child: ScrollConfiguration(
+                behavior: const ScrollBehavior().copyWith(overscroll: false),
+                child: ListView(
+                  physics: const ClampingScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(25, 10, 25, 100),
+                  children: [
+                    const SizedBox(height: 20),
+                    _SettingSection(title: 'Preferences', children: [
+                      Consumer<ThemeProvider>(builder: (context, themeProvider, child) {
+                        return _ToggleTile(label: 'Dark Mode', value: themeProvider.isDarkMode, activeColor: themeYellow, onChanged: (v) => themeProvider.setTheme(v));
+                      }),
+                      const Divider(height: 1, thickness: 1),
+                      _ActionTile(label: 'Language', icon: Icons.language, trailingText: 'English', onTap: () => _showSnack('Only English is currently supported.')),
+                    ]),
+                    const SizedBox(height: 25),
+                    _SettingSection(title: 'Support', children: [
+                      _ActionTile(label: 'Report a Bug', icon: Icons.bug_report_outlined, onTap: () => _sendEmail(subject: '[BUG REPORT]', body: 'Describe bug:')),
+                      const Divider(height: 1, thickness: 1),
+                      _ActionTile(label: 'Feature Request', icon: Icons.lightbulb_outline, onTap: () => _sendEmail(subject: '[FEATURE REQUEST]', body: 'Describe feature:')),
+                    ]),
+                    const SizedBox(height: 25),
+                    _SettingSection(title: 'Account & Storage', children: [
+                      _ActionTile(label: 'Change Password', icon: Icons.lock_outline, onTap: _showChangePasswordDialog),
+                      const Divider(height: 1, thickness: 1),
+                      _ActionTile(label: 'Delete Account', icon: Icons.delete_outline, color: Colors.red, onTap: _showDeleteAccountDialog),
+                    ]),
+                  ],
+                ),
               ),
             ),
           ],
