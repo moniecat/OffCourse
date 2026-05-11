@@ -137,7 +137,6 @@ class _MenuDrawerState extends State<MenuDrawer> {
                       );
                     }),
 
-                    const SizedBox(height: 20),
                     
                     // Logout Button (No shadow because it is not the "active" screen)
                     GestureDetector(
