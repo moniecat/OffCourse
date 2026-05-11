@@ -11,10 +11,10 @@ import '../services/result_service.dart';
 
 class BrainstormingScreen extends StatefulWidget {
   final String moduleName;
-  final String courseId; 
+  final String courseId;
   final String moduleId;
   final int courseIndex;
-  final bool isCustom;       
+  final bool isCustom;
   final int? maxQuestions;
 
   const BrainstormingScreen({
@@ -23,8 +23,8 @@ class BrainstormingScreen extends StatefulWidget {
     required this.courseId,
     required this.moduleId,
     required this.courseIndex,
-    this.isCustom = false,    
-    this.maxQuestions, 
+    this.isCustom = false,
+    this.maxQuestions,
   });
 
   @override
@@ -40,7 +40,7 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
   int _currentIndex = 0;
   int _score = 0;
 
-  // ── Count-up timer ────────────────────────────────────────────
+  // ── Timer Logic ───────────────────────────────────────────────
   int _elapsedSeconds = 0;
   Timer? _timer;
 
@@ -51,7 +51,7 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
   Color get _textColor => Theme.of(context).colorScheme.onSurface;
   Color get _hintColor => Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6);
 
-  // Accent colors (branding - keep as-is)
+  // Accent colors
   final Color themeTeal = const Color(0xFF249780);
   final Color themeYellow = const Color(0xFFFBB017);
   final Color errorRed = const Color(0xFFE74C3C);
@@ -95,7 +95,11 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
             : questions;
         _isLoading = false;
       });
-      _startTimer();
+
+      // Only start timer if this is NOT a custom/practice session
+      if (!widget.isCustom) {
+        _startTimer();
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -129,35 +133,33 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
     } else {
       _timer?.cancel();
 
-      // Logic for ending the session
       if (!widget.isCustom) {
         try {
           await ResultService.saveResult(
-            courseId:       widget.courseId,
-            moduleId:       widget.moduleId,
-            score:          _score,
-            total:          _questions.length,
-            elapsedSeconds: _elapsedSeconds, 
+            courseId: widget.courseId,
+            moduleId: widget.moduleId,
+            score: _score,
+            total: _questions.length,
+            elapsedSeconds: _elapsedSeconds,
           );
         } catch (e) {
           debugPrint('❌ Error saving result: $e');
         }
       }
 
-      // Check mounted before navigating after an await
       if (!mounted) return;
 
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (_) => ResultScreen(
-            score:          _score,
-            total:          _questions.length,
-            courseId:       widget.courseId,
-            moduleId:       widget.moduleId,
-            courseIndex:    widget.courseIndex,
-            isCustom:       widget.isCustom,
-            elapsedSeconds: _elapsedSeconds, 
+            score: _score,
+            total: _questions.length,
+            courseId: widget.courseId,
+            moduleId: widget.moduleId,
+            courseIndex: widget.courseIndex,
+            isCustom: widget.isCustom,
+            elapsedSeconds: _elapsedSeconds,
           ),
         ),
       );
@@ -166,21 +168,20 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
 
   AnswerState _stateFor(String label) {
     final confirmedAnswer = _userAnswers[_currentIndex];
-    
+
     if (confirmedAnswer != null) {
       final correctLabel = _questions[_currentIndex].correctAnswer.toUpperCase();
       if (label == correctLabel) return AnswerState.correct;
       if (label == confirmedAnswer) return AnswerState.wrong;
       return AnswerState.idle;
     }
-    
-    if (label == _currentSelection) return AnswerState.selected; 
+
+    if (label == _currentSelection) return AnswerState.selected;
     return AnswerState.idle;
   }
 
   @override
   Widget build(BuildContext context) {
-    // Watch theme changes
     context.watch<ThemeProvider>().isDarkMode;
 
     if (_isLoading) {
@@ -230,8 +231,13 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
                             _buildHeader(),
                             const SizedBox(height: 20),
                             _buildProgressBar(),
-                            const SizedBox(height: 16),
-                            _buildTimerBadge(),
+                            
+                            // Timer Badge: Only show if not custom practice
+                            if (!widget.isCustom) ...[
+                              const SizedBox(height: 16),
+                              _buildTimerBadge(),
+                            ],
+                            
                             const SizedBox(height: 14),
                             _buildQuestionCard(currentQuestion, isAnswered),
                           ],
@@ -249,7 +255,6 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
     );
   }
 
-  // ── Timer badge (only new widget) ────────────────────────────
   Widget _buildTimerBadge() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -281,8 +286,6 @@ class _BrainstormingScreenState extends State<BrainstormingScreen> {
       ],
     );
   }
-
-  // ── All original widgets below, untouched ────────────────────
 
   Widget _buildTopBar() {
     return Column(
