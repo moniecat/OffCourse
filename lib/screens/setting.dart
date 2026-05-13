@@ -43,6 +43,41 @@ class _SettingPageState extends State<SettingPage> {
     } catch (_) {}
   }
 
+  // --- Header Helpers ---
+
+  void _openDrawer(BuildContext context) {
+    Navigator.of(context).push(PageRouteBuilder(
+      opaque: false,
+      barrierDismissible: true,
+      barrierColor: Colors.black.withValues(alpha: 0.5),
+      pageBuilder: (_, __, ___) => MenuDrawer(isAdmin: _isAdmin, currentScreen: 'Setting'),
+      transitionsBuilder: (_, animation, __, child) {
+        return SlideTransition(
+          position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero)
+              .animate(CurvedAnimation(parent: animation, curve: Curves.easeOutQuart)),
+          child: child,
+        );
+      },
+    ));
+  }
+
+  Widget _buildMenuButton() {
+    return GestureDetector(
+      onTap: () => _openDrawer(context),
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          border: Border.all(color: Theme.of(context).colorScheme.onSurface, width: borderWidth),
+          boxShadow: [BoxShadow(color: Theme.of(context).colorScheme.onSurface, offset: const Offset(3, 3))],
+        ),
+        child: Icon(Icons.menu, color: Theme.of(context).colorScheme.onSurface, size: 30),
+      ),
+    );
+  }
+
+  // --- Actions ---
+
   Future<void> _sendEmail({required String subject, required String body}) async {
     final user = FirebaseAuth.instance.currentUser;
     final String fullBody = "$body\n\n---\nUser ID: ${user?.uid ?? 'Not Logged In'}\nEmail: ${user?.email ?? 'N/A'}";
@@ -59,6 +94,12 @@ class _SettingPageState extends State<SettingPage> {
       }
     } catch (e) { _showSnack('Error: $e'); }
   }
+
+  void _showSnack(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  // --- Dialogs ---
 
   void _showChangePasswordDialog() {
     final currentCtrl = TextEditingController();
@@ -115,27 +156,20 @@ class _SettingPageState extends State<SettingPage> {
 
   void _showDeleteAccountDialog() {
     final passwordCtrl = TextEditingController();
-
     showDialog(
       context: context,
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(35),
-            border: Border.all(color: Colors.black, width: 3),
-          ),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(35), border: Border.all(color: Colors.black, width: 3)),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("Delete\nAccount",
-                  style: GoogleFonts.montserrat(fontSize: 34, fontWeight: FontWeight.w900, height: 1.1, color: Colors.red)),
+              Text("Delete\nAccount", style: GoogleFonts.montserrat(fontSize: 34, fontWeight: FontWeight.w900, height: 1.1, color: Colors.red)),
               const SizedBox(height: 15),
-              Text("This action is permanent.",
-                  style: GoogleFonts.montserrat(fontWeight: FontWeight.w700, fontSize: 14, color: Colors.black54)),
+              Text("This action is permanent.", style: GoogleFonts.montserrat(fontWeight: FontWeight.w700, fontSize: 14, color: Colors.black54)),
               const SizedBox(height: 25),
               _buildDialogField("Enter Password", Icons.lock_outline, passwordCtrl),
               const SizedBox(height: 35),
@@ -171,14 +205,8 @@ class _SettingPageState extends State<SettingPage> {
         hintText: hint,
         hintStyle: GoogleFonts.montserrat(fontWeight: FontWeight.w700, color: const Color(0xFF9E9E9E)),
         contentPadding: const EdgeInsets.symmetric(vertical: 18),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: Color(0xFFBDBDBD), width: 2),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: Colors.black, width: 2),
-        ),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: const BorderSide(color: Color(0xFFBDBDBD), width: 2)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: const BorderSide(color: Colors.black, width: 2)),
       ),
     );
   }
@@ -192,113 +220,88 @@ class _SettingPageState extends State<SettingPage> {
           color: bgColor,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(color: Colors.black, width: 3),
-          boxShadow: bgColor != Colors.white ? [
-            const BoxShadow(color: Colors.black, offset: Offset(0, 4))
-          ] : null,
+          boxShadow: bgColor != Colors.white ? [const BoxShadow(color: Colors.black, offset: Offset(0, 4))] : null,
         ),
-        child: Center(
-          child: Text(
-            text,
-            style: GoogleFonts.montserrat(color: textColor, fontWeight: FontWeight.w900, fontSize: 20),
-          ),
-        ),
+        child: Center(child: Text(text, style: GoogleFonts.montserrat(color: textColor, fontWeight: FontWeight.w900, fontSize: 20))),
       ),
     );
   }
 
-  void _openDrawer(BuildContext context) {
-    Navigator.of(context).push(PageRouteBuilder(
-      opaque: false,
-      barrierDismissible: true,
-      barrierColor: Colors.black.withValues(alpha: 0.5),
-      pageBuilder: (_, __, ___) => MenuDrawer(isAdmin: _isAdmin, currentScreen: 'Setting'),
-      transitionsBuilder: (_, animation, __, child) {
-        return SlideTransition(
-          position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero)
-              .animate(CurvedAnimation(parent: animation, curve: Curves.easeOutQuart)),
-          child: child,
-        );
-      },
-    ));
-  }
-
-  Widget _buildMenuButton() {
-    return GestureDetector(
-      onTap: () => _openDrawer(context),
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          border: Border.all(color: Theme.of(context).colorScheme.onSurface, width: borderWidth),
-          boxShadow: [BoxShadow(color: Theme.of(context).colorScheme.onSurface, offset: const Offset(3, 3))],
-        ),
-        child: Icon(Icons.menu, color: Theme.of(context).colorScheme.onSurface, size: 30),
-      ),
-    );
-  }
-
-  void _showSnack(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-  }
+  // --- Build Method ---
 
   @override
   Widget build(BuildContext context) {
+    // FIX: Removed underscores from local variable names to comply with Dart linting
+    final backgroundColor = Theme.of(context).scaffoldBackgroundColor;
     final textColor = Theme.of(context).colorScheme.onSurface;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(25, 25, 25, 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      backgroundColor: backgroundColor,
+      appBar: AppBar(
+        backgroundColor: backgroundColor,
+        surfaceTintColor: Colors.transparent, 
+        elevation: 0,
+        toolbarHeight: 80,
+        automaticallyImplyLeading: false,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 25, top: 10),
+            child: _buildMenuButton(),
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: ScrollConfiguration(
+              behavior: const ScrollBehavior().copyWith(overscroll: false),
+              child: ListView(
+                physics: const ClampingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 24),
                 children: [
-                  Text('Settings',
-                    style: GoogleFonts.montserrat(fontSize: 48, fontWeight: FontWeight.w900, letterSpacing: -2.5, color: textColor)),
-                  _buildMenuButton(),
+                  Text(
+                    'Settings',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 48,
+                      fontWeight: FontWeight.w900,
+                      height: 1.0,
+                      letterSpacing: -1.5,
+                      color: textColor,
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  
+                  _SettingSection(title: 'Preferences', children: [
+                    Consumer<ThemeProvider>(builder: (context, themeProvider, child) {
+                      return _ToggleTile(label: 'Dark Mode', value: themeProvider.isDarkMode, activeColor: themeYellow, onChanged: (v) => themeProvider.setTheme(v));
+                    }),
+                    const Divider(height: 1, thickness: 1),
+                    _ActionTile(label: 'Language', icon: Icons.language, trailingText: 'English', onTap: () => _showSnack('Only English is supported.')),
+                  ]),
+                  const SizedBox(height: 25),
+                  _SettingSection(title: 'Support', children: [
+                    _ActionTile(label: 'Report a Bug', icon: Icons.bug_report_outlined, onTap: () => _sendEmail(subject: '[BUG REPORT]', body: 'Describe bug:')),
+                    const Divider(height: 1, thickness: 1),
+                    _ActionTile(label: 'Feature Request', icon: Icons.lightbulb_outline, onTap: () => _sendEmail(subject: '[FEATURE REQUEST]', body: 'Describe feature:')),
+                  ]),
+                  const SizedBox(height: 25),
+                  _SettingSection(title: 'Account & Storage', children: [
+                    _ActionTile(label: 'Change Password', icon: Icons.lock_outline, onTap: _showChangePasswordDialog),
+                    const Divider(height: 1, thickness: 1),
+                    _ActionTile(label: 'Delete Account', icon: Icons.delete_outline, color: Colors.red, onTap: _showDeleteAccountDialog),
+                  ]),
+                  const SizedBox(height: 100), 
                 ],
               ),
             ),
-            Expanded(
-              // FIX: Wrapped with ScrollConfiguration and changed physics to remove yellow/stretch
-              child: ScrollConfiguration(
-                behavior: const ScrollBehavior().copyWith(overscroll: false),
-                child: ListView(
-                  physics: const ClampingScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(25, 10, 25, 100),
-                  children: [
-                    const SizedBox(height: 20),
-                    _SettingSection(title: 'Preferences', children: [
-                      Consumer<ThemeProvider>(builder: (context, themeProvider, child) {
-                        return _ToggleTile(label: 'Dark Mode', value: themeProvider.isDarkMode, activeColor: themeYellow, onChanged: (v) => themeProvider.setTheme(v));
-                      }),
-                      const Divider(height: 1, thickness: 1),
-                      _ActionTile(label: 'Language', icon: Icons.language, trailingText: 'English', onTap: () => _showSnack('Only English is currently supported.')),
-                    ]),
-                    const SizedBox(height: 25),
-                    _SettingSection(title: 'Support', children: [
-                      _ActionTile(label: 'Report a Bug', icon: Icons.bug_report_outlined, onTap: () => _sendEmail(subject: '[BUG REPORT]', body: 'Describe bug:')),
-                      const Divider(height: 1, thickness: 1),
-                      _ActionTile(label: 'Feature Request', icon: Icons.lightbulb_outline, onTap: () => _sendEmail(subject: '[FEATURE REQUEST]', body: 'Describe feature:')),
-                    ]),
-                    const SizedBox(height: 25),
-                    _SettingSection(title: 'Account & Storage', children: [
-                      _ActionTile(label: 'Change Password', icon: Icons.lock_outline, onTap: _showChangePasswordDialog),
-                      const Divider(height: 1, thickness: 1),
-                      _ActionTile(label: 'Delete Account', icon: Icons.delete_outline, color: Colors.red, onTap: _showDeleteAccountDialog),
-                    ]),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
+
+// --- Internal Widgets ---
 
 class _SettingSection extends StatelessWidget {
   final String title;
