@@ -23,6 +23,91 @@ class _ManageModulesScreenState extends State<ManageModulesScreen> {
   Color get _textColor => Theme.of(context).colorScheme.onSurface;
   Color get _hintColor => Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4);
 
+  // --- SUCCESS FEEDBACK HELPER ---
+  void _showSuccessSnackBar(ScaffoldMessengerState messenger, String message) {
+    messenger.showSnackBar(
+      SnackBar(
+        backgroundColor: const Color(0xFF2DCFA1), // Teal
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(20),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+          side: const BorderSide(color: Colors.black, width: 2.5),
+        ),
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle, color: Colors.white),
+            const SizedBox(width: 12),
+            Text(
+              message,
+              style: GoogleFonts.montserrat(fontWeight: FontWeight.w800, color: Colors.white),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // --- UI HELPER: Custom Text Field (Neubrutalism Style) ---
+  Widget _buildDialogField({
+    required String label,
+    required TextEditingController controller,
+    required IconData icon,
+    int maxLines = 1,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: TextField(
+        controller: controller,
+        maxLines: maxLines,
+        keyboardType: keyboardType,
+        style: GoogleFonts.montserrat(fontWeight: FontWeight.w800, color: Colors.black),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: GoogleFonts.montserrat(fontWeight: FontWeight.bold, color: Colors.grey[600]),
+          prefixIcon: Icon(icon, color: Colors.grey, size: 22),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.grey, width: 2),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.black, width: 2.5),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- UI HELPER: Custom Dialog Button ---
+  Widget _buildDialogButton({
+    required String text,
+    required Color color,
+    required Color textColor,
+    required VoidCallback? onPressed,
+  }) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        height: 60,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.black, width: 3),
+          boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(0, 4))],
+        ),
+        child: Center(
+          child: Text(
+            text,
+            style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: 18, color: textColor),
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _editModule(String courseId, Map<String, dynamic> module) async {
     final titleController = TextEditingController(text: module['title'] ?? '');
     final descriptionController = TextEditingController(text: module['description'] ?? '');
@@ -32,93 +117,82 @@ class _ManageModulesScreenState extends State<ManageModulesScreen> {
     showDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Text('Edit Module', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900)),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: titleController,
-                  decoration: InputDecoration(
-                    labelText: 'Title',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        builder: (context, setDialogState) => Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(32),
+              border: Border.all(color: Colors.black, width: 3),
+              boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(0, 6))],
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Edit Module',
+                    style: GoogleFonts.montserrat(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.black),
                   ),
-                  style: GoogleFonts.montserrat(),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: descriptionController,
-                  decoration: InputDecoration(
-                    labelText: 'Description',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  const SizedBox(height: 24),
+                  _buildDialogField(label: 'Title', controller: titleController, icon: Icons.title),
+                  _buildDialogField(label: 'Description', controller: descriptionController, icon: Icons.description_outlined, maxLines: 3),
+                  _buildDialogField(label: 'Order', controller: orderController, icon: Icons.format_list_numbered, keyboardType: TextInputType.number),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildDialogButton(
+                          text: 'Cancel',
+                          color: Colors.white,
+                          textColor: Colors.grey[600]!,
+                          onPressed: () => Navigator.pop(dialogContext),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildDialogButton(
+                          text: isLoading ? '...' : 'Update',
+                          color: const Color(0xFF2DCFA1),
+                          textColor: Colors.white,
+                          onPressed: isLoading
+                              ? null
+                              : () async {
+                                  final title = titleController.text.trim();
+                                  final description = descriptionController.text.trim();
+                                  final order = int.tryParse(orderController.text.trim()) ?? 0;
+
+                                  if (title.isEmpty) return;
+
+                                  setDialogState(() => isLoading = true);
+                                  
+                                  final messenger = ScaffoldMessenger.of(context);
+                                  final navigator = Navigator.of(dialogContext);
+
+                                  try {
+                                    await FirestoreService().updateModule(courseId, module['id'], title, description, order);
+                                    if (!mounted) return;
+                                    
+                                    navigator.pop();
+                                    _showSuccessSnackBar(messenger, 'Module updated!');
+                                    setState(() {});
+                                  } catch (e) {
+                                    // Handle error
+                                  } finally {
+                                    if (mounted) setDialogState(() => isLoading = false);
+                                  }
+                                },
+                        ),
+                      ),
+                    ],
                   ),
-                  maxLines: 3,
-                  style: GoogleFonts.montserrat(),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: orderController,
-                  decoration: InputDecoration(
-                    labelText: 'Order',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                  keyboardType: TextInputType.number,
-                  style: GoogleFonts.montserrat(),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text('Cancel', style: GoogleFonts.montserrat()),
-            ),
-            ElevatedButton(
-              onPressed: isLoading
-                  ? null
-                  : () async {
-                      final title = titleController.text.trim();
-                      final description = descriptionController.text.trim();
-                      final order = int.tryParse(orderController.text.trim()) ?? 0;
-
-                      if (title.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Title is required', style: GoogleFonts.montserrat())),
-                        );
-                        return;
-                      }
-
-                      setDialogState(() => isLoading = true);
-
-                      final navigator = Navigator.of(dialogContext);
-                      final messenger = ScaffoldMessenger.of(context);
-
-                      try {
-                        await FirestoreService().updateModule(courseId, module['id'], title, description, order);
-                        
-                        if (!mounted) return;
-
-                        navigator.pop();
-                        messenger.showSnackBar(
-                          SnackBar(
-                            content: Text('Module updated', style: GoogleFonts.montserrat()),
-                            backgroundColor: Colors.green,
-                          ),
-                        );
-                        setState(() {});
-                      } catch (e) {
-                        if (!mounted) return;
-                        messenger.showSnackBar(
-                          const SnackBar(content: Text('Failed to update'), backgroundColor: Colors.red),
-                        );
-                      } finally {
-                        setDialogState(() => isLoading = false);
-                      }
-                    },
-              child: Text('Update', style: GoogleFonts.montserrat()),
-            ),
-          ],
         ),
       ),
     );
@@ -135,15 +209,8 @@ class _ManageModulesScreenState extends State<ManageModulesScreen> {
         onConfirm: () async {
           try {
             await FirestoreService().deleteModule(courseId, moduleId);
-            
             if (!mounted) return;
-            
-            messenger.showSnackBar(
-              SnackBar(
-                content: Text('Module deleted', style: GoogleFonts.montserrat()), 
-                backgroundColor: Colors.green
-              )
-            );
+            _showSuccessSnackBar(messenger, 'Module deleted successfully');
             setState(() {});
           } catch (e) {
             if (!mounted) return;
@@ -192,7 +259,7 @@ class _ManageModulesScreenState extends State<ManageModulesScreen> {
       backgroundColor: _backgroundColor,
       appBar: AppBar(
         backgroundColor: _backgroundColor,
-        surfaceTintColor: Colors.transparent, // FIX 1: Removes top split/tint
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         toolbarHeight: 90,
         automaticallyImplyLeading: false,
@@ -211,7 +278,7 @@ class _ManageModulesScreenState extends State<ManageModulesScreen> {
           }
 
           final courses = snapshot.data ?? [];
-          if (courses.isEmpty) return Center(child: Text("No Courses found"));
+          if (courses.isEmpty) return const Center(child: Text("No Courses found"));
 
           _selectedCourseId ??= courses.first.id;
 
@@ -306,7 +373,6 @@ class _ManageModulesScreenState extends State<ManageModulesScreen> {
                       return Center(child: Text('No modules found.', style: GoogleFonts.montserrat(fontWeight: FontWeight.w600)));
                     }
 
-                    // FIX 2: ScrollConfiguration and BouncingScrollPhysics removes yellow glow
                     return ScrollConfiguration(
                       behavior: const ScrollBehavior().copyWith(overscroll: false),
                       child: ListView.builder(

@@ -18,6 +18,91 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
   String? _selectedModuleId;
   String _searchQuery = '';
 
+  // --- UI HELPER: Custom Text Field (Neubrutalism Style) ---
+  Widget _buildDialogField({
+    required String label,
+    required TextEditingController controller,
+    required IconData icon,
+    int maxLines = 1,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: TextField(
+        controller: controller,
+        maxLines: maxLines,
+        keyboardType: keyboardType,
+        style: GoogleFonts.montserrat(fontWeight: FontWeight.w800, color: Colors.black),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: GoogleFonts.montserrat(fontWeight: FontWeight.bold, color: Colors.grey[600]),
+          prefixIcon: Icon(icon, color: Colors.grey, size: 22),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.grey, width: 2),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.black, width: 2.5),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- UI HELPER: Custom Dialog Button ---
+  Widget _buildDialogButton({
+    required String text,
+    required Color color,
+    required Color textColor,
+    required VoidCallback? onPressed,
+  }) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        height: 60,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.black, width: 3),
+          boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(0, 4))],
+        ),
+        child: Center(
+          child: Text(
+            text,
+            style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, fontSize: 18, color: textColor),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- SUCCESS FEEDBACK HELPER ---
+  void _showSuccessSnackBar(ScaffoldMessengerState messenger, String message) {
+    messenger.showSnackBar(
+      SnackBar(
+        backgroundColor: const Color(0xFF2DCFA1), // Same Teal
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(20),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+          side: BorderSide(color: Colors.black, width: 2.5),
+        ),
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle, color: Colors.white),
+            const SizedBox(width: 12),
+            Text(
+              message,
+              style: GoogleFonts.montserrat(fontWeight: FontWeight.w800, color: Colors.white),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _editQuestion(String courseId, String moduleId, Map<String, dynamic> question) async {
     final questionController = TextEditingController(text: question['question'] ?? '');
     final optionAController = TextEditingController(text: question['optionA'] ?? '');
@@ -30,132 +115,119 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
     showDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Text('Edit Question', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900)),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: questionController,
-                  decoration: InputDecoration(
-                    labelText: 'Question',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        builder: (context, setDialogState) => Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(32),
+              border: Border.all(color: Colors.black, width: 3),
+              boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(0, 6))],
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Edit Question',
+                    style: GoogleFonts.montserrat(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.black),
                   ),
-                  maxLines: 3,
-                  style: GoogleFonts.montserrat(),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: optionAController,
-                  decoration: InputDecoration(
-                    labelText: 'Option A',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  const SizedBox(height: 24),
+                  _buildDialogField(label: 'Question', controller: questionController, icon: Icons.help_outline, maxLines: 3),
+                  _buildDialogField(label: 'Option A', controller: optionAController, icon: Icons.looks_one_outlined),
+                  _buildDialogField(label: 'Option B', controller: optionBController, icon: Icons.looks_two_outlined),
+                  _buildDialogField(label: 'Option C', controller: optionCController, icon: Icons.looks_3_outlined),
+                  _buildDialogField(label: 'Option D', controller: optionDController, icon: Icons.looks_4_outlined),
+                  
+                  _buildLabel('CORRECT ANSWER'),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey, width: 2),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: selectedCorrect,
+                        isExpanded: true,
+                        style: GoogleFonts.montserrat(fontWeight: FontWeight.w800, color: Colors.black),
+                        items: ['A', 'B', 'C', 'D']
+                            .map((e) => DropdownMenuItem(value: e, child: Text('Option $e')))
+                            .toList(),
+                        onChanged: (val) => setDialogState(() => selectedCorrect = val),
+                      ),
+                    ),
                   ),
-                  style: GoogleFonts.montserrat(),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: optionBController,
-                  decoration: InputDecoration(
-                    labelText: 'Option B',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  const SizedBox(height: 32),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildDialogButton(
+                          text: 'Cancel',
+                          color: Colors.white,
+                          textColor: Colors.grey[600]!,
+                          onPressed: () => Navigator.pop(dialogContext),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildDialogButton(
+                          text: isLoading ? '...' : 'Update',
+                          color: const Color(0xFF2DCFA1),
+                          textColor: Colors.white,
+                          onPressed: isLoading
+                              ? null
+                              : () async {
+                                  final q = questionController.text.trim();
+                                  final a = optionAController.text.trim();
+                                  final b = optionBController.text.trim();
+                                  final c = optionCController.text.trim();
+                                  final d = optionDController.text.trim();
+
+                                  if (q.isEmpty || a.isEmpty || b.isEmpty || c.isEmpty || d.isEmpty) return;
+
+                                  setDialogState(() => isLoading = true);
+                                  
+                                  final messenger = ScaffoldMessenger.of(context);
+                                  final navigator = Navigator.of(dialogContext);
+
+                                  try {
+                                    await FirestoreService().updateQuestion(
+                                      courseId: courseId,
+                                      moduleId: moduleId,
+                                      questionId: question['id'],
+                                      questionType: 'mcq',
+                                      question: q,
+                                      optionA: a,
+                                      optionB: b,
+                                      optionC: c,
+                                      optionD: d,
+                                      correctAnswer: selectedCorrect ?? 'A',
+                                    );
+                                    
+                                    if (!mounted) return;
+                                    
+                                    navigator.pop();
+                                    _showSuccessSnackBar(messenger, 'Question updated!');
+                                    setState(() {});
+                                  } catch (e) {
+                                    // error
+                                  } finally {
+                                    if (mounted) setDialogState(() => isLoading = false);
+                                  }
+                                },
+                        ),
+                      ),
+                    ],
                   ),
-                  style: GoogleFonts.montserrat(),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: optionCController,
-                  decoration: InputDecoration(
-                    labelText: 'Option C',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                  style: GoogleFonts.montserrat(),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: optionDController,
-                  decoration: InputDecoration(
-                    labelText: 'Option D',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                  style: GoogleFonts.montserrat(),
-                ),
-                const SizedBox(height: 16),
-                DropdownButton<String>(
-                  value: selectedCorrect,
-                  items: ['A', 'B', 'C', 'D']
-                      .map((e) => DropdownMenuItem(value: e, child: Text('Correct Answer: $e')))
-                      .toList(),
-                  onChanged: (val) => setDialogState(() => selectedCorrect = val),
-                  isExpanded: true,
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text('Cancel', style: GoogleFonts.montserrat()),
-            ),
-            ElevatedButton(
-              onPressed: isLoading
-                  ? null
-                  : () async {
-                      final q = questionController.text.trim();
-                      final a = optionAController.text.trim();
-                      final b = optionBController.text.trim();
-                      final c = optionCController.text.trim();
-                      final d = optionDController.text.trim();
-
-                      if (q.isEmpty || a.isEmpty || b.isEmpty || c.isEmpty || d.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('All fields required', style: GoogleFonts.montserrat())),
-                        );
-                        return;
-                      }
-
-                      setDialogState(() => isLoading = true);
-
-                      final navigator = Navigator.of(dialogContext);
-                      final messenger = ScaffoldMessenger.of(context);
-
-                      try {
-                        await FirestoreService().updateQuestion(
-                          courseId: courseId,
-                          moduleId: moduleId,
-                          questionId: question['id'],
-                          questionType: 'mcq',
-                          question: q,
-                          optionA: a,
-                          optionB: b,
-                          optionC: c,
-                          optionD: d,
-                          correctAnswer: selectedCorrect ?? 'A',
-                        );
-
-                        if (!mounted) return;
-
-                        navigator.pop(); 
-                        messenger.showSnackBar(
-                          SnackBar(
-                            content: Text('Question updated', style: GoogleFonts.montserrat()),
-                            backgroundColor: Colors.green,
-                          ),
-                        );
-                        setState(() {}); 
-                      } catch (e) {
-                        if (!mounted) return;
-                        messenger.showSnackBar(
-                          const SnackBar(content: Text('Failed to update'), backgroundColor: Colors.red),
-                        );
-                      } finally {
-                        setDialogState(() => isLoading = false);
-                      }
-                    },
-              child: Text('Update', style: GoogleFonts.montserrat()),
-            ),
-          ],
         ),
       ),
     );
@@ -172,21 +244,12 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
         onConfirm: () async {
           try {
             await FirestoreService().deleteQuestion(courseId, moduleId, questionId);
-            
             if (!mounted) return;
-
-            messenger.showSnackBar(
-              SnackBar(
-                content: Text('Question deleted', style: GoogleFonts.montserrat()), 
-                backgroundColor: Colors.green
-              )
-            );
+            _showSuccessSnackBar(messenger, 'Question deleted successfully');
             setState(() {});
           } catch (e) {
             if (!mounted) return;
-            messenger.showSnackBar(
-              const SnackBar(content: Text('Failed to delete'), backgroundColor: Colors.red)
-            );
+            messenger.showSnackBar(const SnackBar(content: Text('Failed to delete'), backgroundColor: Colors.red));
           }
         },
       ),
@@ -257,7 +320,7 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
       backgroundColor: bgColor,
       appBar: AppBar(
         backgroundColor: bgColor,
-        surfaceTintColor: Colors.transparent, // FIX 1: Removes top visual split
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         toolbarHeight: 90,
         automaticallyImplyLeading: false,
@@ -325,7 +388,7 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
                     if (modSnap.connectionState == ConnectionState.waiting) return Center(child: CircularProgressIndicator(color: textColor));
                     
                     final modules = modSnap.data ?? [];
-                    if (modules.isEmpty) return Center(child: Text("No modules in this course", style: TextStyle(color: textColor)));
+                    if (modules.isEmpty) return Center(child: Text("No modules found", style: TextStyle(color: textColor)));
 
                     _selectedModuleId ??= modules.first['id'];
 
@@ -410,7 +473,6 @@ class _ManageQuestionsScreenState extends State<ManageQuestionsScreen> {
           return Center(child: Text('No questions found.', style: GoogleFonts.montserrat(fontWeight: FontWeight.w600, color: textColor)));
         }
 
-        // FIX 2: ScrollConfiguration and BouncingScrollPhysics removes yellow glow
         return ScrollConfiguration(
           behavior: const ScrollBehavior().copyWith(overscroll: false),
           child: ListView.builder(
