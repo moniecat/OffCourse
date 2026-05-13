@@ -20,14 +20,11 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // Branding color (keep as-is)
   static const Color brandYellow = Color(0xFFFFC21C);
   
-  // Border width constants
-  static const double thickBorder = 2.5;
+  static const double thickBorder = 3.0; // Increased for neobrutalist look
   static const double elementBorder = 2.0;
 
-  // Theme-aware getters
   Color get _borderColor => Theme.of(context).colorScheme.onSurface;
   Color get _backgroundColor => Theme.of(context).scaffoldBackgroundColor;
   Color get _cardBackground => Theme.of(context).cardColor;
@@ -72,16 +69,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (doc.exists) {
         final data = doc.data() as Map<String, dynamic>;
         setState(() {
-          _nameController.text =
-              _toTitleCase(data['name'] ?? _user!.displayName ?? 'User');
+          _nameController.text = _toTitleCase(data['name'] ?? _user!.displayName ?? 'User');
           _bioController.text = data['bio'] ?? '';
           _profileImageUrl = data['profileImage'];
           _isLoading = false;
         });
       } else {
         setState(() {
-          _nameController.text =
-              _toTitleCase(_user!.displayName ?? 'User');
+          _nameController.text = _toTitleCase(_user!.displayName ?? 'User');
           _isLoading = false;
         });
       }
@@ -92,16 +87,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _pickAndUploadImage() async {
     if (_user == null) return;
-
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 90,
-    );
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 90);
     if (pickedFile == null) return;
-
     final imageBytes = await pickedFile.readAsBytes();
-
     if (!mounted) return;
 
     final croppedBytes = await showDialog<Uint8List?>(
@@ -111,7 +100,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
 
     if (croppedBytes == null) return;
-
     setState(() => _isSaving = true);
 
     try {
@@ -130,15 +118,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<String?> _uploadBytesToCloudinary(Uint8List bytes) async {
-    final url = Uri.parse(
-        "https://api.cloudinary.com/v1_1/$cloudName/image/upload");
+    final url = Uri.parse("https://api.cloudinary.com/v1_1/$cloudName/image/upload");
     final request = http.MultipartRequest("POST", url)
       ..fields['upload_preset'] = uploadPreset
-      ..files.add(http.MultipartFile.fromBytes(
-        'file',
-        bytes,
-        filename: 'profile_cropped.png',
-      ));
+      ..files.add(http.MultipartFile.fromBytes('file', bytes, filename: 'profile_cropped.png'));
 
     final response = await request.send();
     if (response.statusCode == 200) {
@@ -154,8 +137,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() => _isSaving = true);
     try {
       final formattedName = _toTitleCase(_nameController.text.trim());
-      await _fs.updateUserProfile(_user!.uid,
-          name: formattedName, bio: _bioController.text.trim());
+      await _fs.updateUserProfile(_user!.uid, name: formattedName, bio: _bioController.text.trim());
       await _user!.updateDisplayName(formattedName);
       await _user!.reload();
       _user = FirebaseAuth.instance.currentUser;
@@ -172,20 +154,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
+  // --- UPDATED BUTTON HELPER ---
+  Widget _buildSquareBackButton({VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: _cardBackground,
+          border: Border.all(color: _borderColor, width: thickBorder),
+          boxShadow: [
+            BoxShadow(
+              color: _borderColor,
+              offset: const Offset(4, 4), // Hard offset shadow
+            )
+          ],
+        ),
+        child: Icon(Icons.arrow_back, color: _borderColor, size: 28),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Watch theme changes
     context.watch<ThemeProvider>().isDarkMode;
-
     final Size size = MediaQuery.of(context).size;
-    final bool isKeyboardOpen =
-        MediaQuery.of(context).viewInsets.bottom > 0;
+    final bool isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
 
     if (_isLoading) {
       return Scaffold(
           backgroundColor: brandYellow,
-          body: Center(
-              child: CircularProgressIndicator(color: _borderColor)));
+          body: Center(child: CircularProgressIndicator(color: _borderColor)));
     }
 
     return Scaffold(
@@ -193,36 +193,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
       resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
-          // ── BACKGROUND DOT GRID ──
           Positioned.fill(
             bottom: size.height * 0.5,
             child: CustomPaint(painter: DotGridPainter(backgroundColor: _backgroundColor)),
           ),
 
-          // ── MAIN LAYOUT ──
           Column(
             children: [
               AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
-                height: isKeyboardOpen
-                    ? size.height * 0.15
-                    : size.height * 0.45,
+                height: isKeyboardOpen ? size.height * 0.15 : size.height * 0.45,
                 child: SafeArea(
                   bottom: false,
                   child: Column(
                     children: [
                       Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 10),
+                        padding: const EdgeInsets.fromLTRB(25, 20, 25, 10),
                         child: Align(
                           alignment: Alignment.centerLeft,
-                          child: _buildCircularButton(
-                            Icons.chevron_left,
+                          // UPDATED: Use the new square button
+                          child: _buildSquareBackButton(
                             onTap: () => Navigator.pushReplacement(
                                 context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        const HomeScreen())),
+                                MaterialPageRoute(builder: (context) => const HomeScreen())),
                           ),
                         ),
                       ),
@@ -236,42 +229,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: _cardBackground,
-                                border: Border.all(
-                                    color: _borderColor,
-                                    width: elementBorder),
-                                boxShadow: [
-                                  BoxShadow(
-                                      color: _borderColor,
-                                      offset: const Offset(0, 8))
-                                ]),
+                                border: Border.all(color: _borderColor, width: elementBorder),
+                                boxShadow: [BoxShadow(color: _borderColor, offset: const Offset(0, 8))]),
                             child: ClipOval(
                               child: Stack(
                                 alignment: Alignment.center,
                                 children: [
                                   _profileImageUrl != null
-                                      ? Image.network(_profileImageUrl!,
-                                          fit: BoxFit.cover, width: 170, height: 170)
+                                      ? Image.network(_profileImageUrl!, fit: BoxFit.cover, width: 170, height: 170)
                                       : Image.network(
                                           'https://api.dicebear.com/7.x/avataaars/png?seed=${Uri.encodeComponent(_nameController.text)}',
-                                          fit: BoxFit.contain,
-                                          width: 170,
-                                          height: 170),
-
-                                  // ── FULL CIRCLE DARK OVERLAY + CAMERA ──
+                                          fit: BoxFit.contain, width: 170, height: 170),
                                   if (_isEditing)
                                     Container(
-                                      width: 170,
-                                      height: 170,
+                                      width: 170, height: 170,
                                       color: _borderColor.withValues(alpha: 0.45),
-                                      child: const Icon(
-                                        Icons.camera_alt,
-                                        color: Colors.white,
-                                        size: 36,
-                                      ),
+                                      child: const Icon(Icons.camera_alt, color: Colors.white, size: 36),
                                     ),
-
-                                  if (_isSaving && _isEditing)
-                                    const CircularProgressIndicator(color: brandYellow),
+                                  if (_isSaving && _isEditing) const CircularProgressIndicator(color: brandYellow),
                                 ],
                               ),
                             ),
@@ -285,18 +260,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
 
-              // ── BOTTOM CONTENT CARD ──
               Expanded(
                 child: Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
                     color: _cardBackground,
-                    border: Border(
-                        top: BorderSide(
-                            color: _borderColor, width: thickBorder)),
-                    borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(35),
-                        topRight: Radius.circular(35)),
+                    border: Border(top: BorderSide(color: _borderColor, width: thickBorder)),
+                    borderRadius: const BorderRadius.only(topLeft: Radius.circular(35), topRight: Radius.circular(35)),
                   ),
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.fromLTRB(25, 45, 25, 20),
@@ -308,59 +278,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           readOnly: !_isEditing,
                           maxLines: 1,
                           textCapitalization: TextCapitalization.words,
-                          style: GoogleFonts.montserrat(
-                              fontSize: 28,
-                              fontWeight: FontWeight.w900,
-                              color: _textColor,
-                              letterSpacing: -0.5),
-                          decoration: const InputDecoration(
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: EdgeInsets.zero),
+                          style: GoogleFonts.montserrat(fontSize: 28, fontWeight: FontWeight.w900, color: _textColor, letterSpacing: -0.5),
+                          decoration: const InputDecoration(border: InputBorder.none, isDense: true, contentPadding: EdgeInsets.zero),
                         ),
                         const SizedBox(height: 4),
-                        Text(_user?.email ?? '',
-                            style: GoogleFonts.montserrat(
-                                fontSize: 14,
-                                color: _hintColor,
-                                fontWeight: FontWeight.bold)),
+                        Text(_user?.email ?? '', style: GoogleFonts.montserrat(fontSize: 14, color: _hintColor, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 35),
-                        Text("ABOUT ME",
-                            style: GoogleFonts.montserrat(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w900,
-                                color: _textColor,
-                                letterSpacing: 2.0)),
+                        Text("ABOUT ME", style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.w900, color: _textColor, letterSpacing: 2.0)),
                         const SizedBox(height: 12),
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color: _cardBackground,
-                            border: Border.all(
-                                color: _borderColor,
-                                width: elementBorder),
+                            border: Border.all(color: _borderColor, width: elementBorder),
                             borderRadius: BorderRadius.circular(15),
-                            boxShadow: [
-                              BoxShadow(
-                                  color: _borderColor,
-                                  offset: const Offset(0, 5))
-                            ],
+                            boxShadow: [BoxShadow(color: _borderColor, offset: const Offset(0, 5))],
                           ),
                           child: TextField(
                             controller: _bioController,
                             readOnly: !_isEditing,
                             maxLines: null,
-                            style: GoogleFonts.montserrat(
-                                fontSize: 15,
-                                color: _textColor,
-                                height: 1.5,
-                                fontWeight: FontWeight.w500),
-                            decoration: InputDecoration(
-                                border: InputBorder.none,
-                                hintText: 'Share your story...',
-                                hintStyle: TextStyle(
-                                    color: _hintColor)),
+                            style: GoogleFonts.montserrat(fontSize: 15, color: _textColor, height: 1.5, fontWeight: FontWeight.w500),
+                            decoration: InputDecoration(border: InputBorder.none, hintText: 'Share your story...', hintStyle: TextStyle(color: _hintColor)),
                           ),
                         ),
                         const SizedBox(height: 40),
@@ -372,7 +312,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
 
-          // ── EDIT/SAVE FLOATING BUTTON ──
           if (!isKeyboardOpen)
             Positioned(
               top: (size.height * 0.45) - 28,
@@ -380,34 +319,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: GestureDetector(
                 onTap: () async {
                   if (_isEditing) await _saveProfile();
-                  if (mounted) {
-                    setState(() => _isEditing = !_isEditing);
-                  }
+                  if (mounted) setState(() => _isEditing = !_isEditing);
                 },
                 child: Container(
-                  width: 56,
-                  height: 56,
+                  width: 56, height: 56,
                   decoration: BoxDecoration(
-                    color: _isEditing
-                        ? const Color(0xFF00FF94)
-                        : brandYellow,
+                    color: _isEditing ? const Color(0xFF00FF94) : brandYellow,
                     shape: BoxShape.circle,
-                    border: Border.all(
-                        color: _borderColor, width: thickBorder),
-                    boxShadow: [
-                      BoxShadow(
-                          color: _borderColor, offset: const Offset(0, 5))
-                    ],
+                    border: Border.all(color: _borderColor, width: thickBorder),
+                    boxShadow: [BoxShadow(color: _borderColor, offset: const Offset(0, 5))],
                   ),
                   child: _isSaving
-                      ? Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: CircularProgressIndicator(
-                              color: _borderColor, strokeWidth: 2.5))
-                      : Icon(
-                          _isEditing ? Icons.check : Icons.edit,
-                          color: _borderColor,
-                          size: 26),
+                      ? Padding(padding: const EdgeInsets.all(16), child: CircularProgressIndicator(color: _borderColor, strokeWidth: 2.5))
+                      : Icon(_isEditing ? Icons.check : Icons.edit, color: _borderColor, size: 26),
                 ),
               ),
             ),
@@ -415,35 +339,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-
-  Widget _buildCircularButton(IconData icon, {VoidCallback? onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-            color: _cardBackground,
-            shape: BoxShape.circle,
-            border: Border.all(color: _borderColor, width: elementBorder),
-            boxShadow: [BoxShadow(color: _borderColor, offset: const Offset(0, 4))]),
-        child: Icon(icon, color: _borderColor, size: 24),
-      ),
-    );
-  }
 }
 
 class DotGridPainter extends CustomPainter {
   final Color backgroundColor;
-  
   DotGridPainter({required this.backgroundColor});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = _borderColor.withValues(alpha: 0.1)
-      ..strokeWidth = 2.0;
-
+    final paint = Paint()..color = Colors.black.withValues(alpha: 0.1)..strokeWidth = 2.0;
     const double gap = 25.0;
     for (double x = 0; x < size.width; x += gap) {
       for (double y = 0; y < size.height; y += gap) {
@@ -451,8 +355,6 @@ class DotGridPainter extends CustomPainter {
       }
     }
   }
-
-  Color get _borderColor => Colors.black;
 
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => false;
