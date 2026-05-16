@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Added for UID
+import 'package:firebase_auth/firebase_auth.dart';
 import '../providers/theme_provider.dart';
-import '../services/leaderboard_service.dart'; // Import your service
+import '../services/leaderboard_service.dart';
 import 'home.dart';
 
 class ResultScreen extends StatefulWidget {
@@ -40,7 +40,7 @@ class _ResultScreenState extends State<ResultScreen> {
     _fetchRank();
   }
 
-  // Logic to find user rank in the current module
+  // Logic to find user rank and handle "Best Score Only" visibility
   Future<void> _fetchRank() async {
     if (widget.isCustom) {
       setState(() => _isLoadingRank = false);
@@ -48,19 +48,42 @@ class _ResultScreenState extends State<ResultScreen> {
     }
 
     try {
-      final entries = await LeaderboardService.getLeaderboard(widget.moduleId);
       final uid = FirebaseAuth.instance.currentUser?.uid;
-      
+      if (uid == null) {
+        setState(() => _isLoadingRank = false);
+        return;
+      }
+
+      // 1. Record the current score (Service handles if it's better)
+      await LeaderboardService.recordScore(
+        userId: uid,
+        moduleId: widget.moduleId,
+        courseId: widget.courseId,
+        score: widget.score,
+        elapsedSeconds: widget.elapsedSeconds,
+      );
+
+      // 2. Fetch your historical Best Score from the database
+      final bestScoreInDb = await LeaderboardService.getBestScore(uid, widget.moduleId);
+
+      // 3. Fetch the leaderboard list to calculate current position
+      final entries = await LeaderboardService.getLeaderboard(widget.moduleId);
       final index = entries.indexWhere((e) => e.userId == uid);
       
       if (mounted) {
         setState(() {
-          // If index is 0, rank is 1
-          _userRank = index != -1 ? index + 1 : null;
+          // LOGIC: Only show rank if this attempt is your best (or equal to it).
+          // If current score (e.g. 8) < best score (e.g. 10), rank is hidden.
+          if (widget.score >= bestScoreInDb && index != -1) {
+            _userRank = index + 1;
+          } else {
+            _userRank = null; 
+          }
           _isLoadingRank = false;
         });
       }
     } catch (e) {
+      debugPrint("Error fetching rank: $e");
       if (mounted) setState(() => _isLoadingRank = false);
     }
   }
@@ -86,6 +109,7 @@ class _ResultScreenState extends State<ResultScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Watch for theme changes
     context.watch<ThemeProvider>().isDarkMode;
 
     final percent =
@@ -212,29 +236,26 @@ class _ResultScreenState extends State<ResultScreen> {
                                 ),
                               ),
 
-                              // Time and Rank Section
-                              if (!widget.isCustom) ...[
-                                const SizedBox(height: 20),
-                                Wrap(
-                                  alignment: WrapAlignment.center,
-                                  spacing: 10,
-                                  runSpacing: 10,
-                                  children: [
-                                    // Time Badge
+                              const SizedBox(height: 20),
+                              Wrap(
+                                alignment: WrapAlignment.center,
+                                spacing: 10,
+                                runSpacing: 10,
+                                children: [
+                                  // Time Badge
+                                  _buildSmallBadge(
+                                    Icons.timer_outlined,
+                                    _formattedTime,
+                                  ),
+                                  // Rank Badge - Only shows if it matches or beats high score
+                                  if (!widget.isCustom && !_isLoadingRank && _userRank != null)
                                     _buildSmallBadge(
-                                      Icons.timer_outlined,
-                                      _formattedTime,
+                                      Icons.emoji_events_outlined,
+                                      "RANK #$_userRank",
+                                      color: themeYellow,
                                     ),
-                                    // Rank Badge
-                                    if (!_isLoadingRank && _userRank != null)
-                                      _buildSmallBadge(
-                                        Icons.emoji_events_outlined,
-                                        "RANK #$_userRank",
-                                        color: themeYellow,
-                                      ),
-                                  ],
-                                ),
-                              ],
+                                ],
+                              ),
 
                               const SizedBox(height: 20),
                               Text(
