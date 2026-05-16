@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Added for UID
 import '../providers/theme_provider.dart';
+import '../services/leaderboard_service.dart'; // Import your service
 import 'home.dart';
 
 class ResultScreen extends StatefulWidget {
@@ -29,6 +31,40 @@ class ResultScreen extends StatefulWidget {
 }
 
 class _ResultScreenState extends State<ResultScreen> {
+  int? _userRank;
+  bool _isLoadingRank = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchRank();
+  }
+
+  // Logic to find user rank in the current module
+  Future<void> _fetchRank() async {
+    if (widget.isCustom) {
+      setState(() => _isLoadingRank = false);
+      return;
+    }
+
+    try {
+      final entries = await LeaderboardService.getLeaderboard(widget.moduleId);
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      
+      final index = entries.indexWhere((e) => e.userId == uid);
+      
+      if (mounted) {
+        setState(() {
+          // If index is 0, rank is 1
+          _userRank = index != -1 ? index + 1 : null;
+          _isLoadingRank = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoadingRank = false);
+    }
+  }
+
   // Theme-aware color getters
   Color get _borderColor => Theme.of(context).colorScheme.onSurface;
   Color get _backgroundColor => Theme.of(context).scaffoldBackgroundColor;
@@ -37,7 +73,6 @@ class _ResultScreenState extends State<ResultScreen> {
   Color get _hintColor =>
       Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6);
 
-  // Accent colors
   final Color themeTeal = const Color(0xFF249780);
   final Color themeYellow = const Color(0xFFFBB017);
   final Color passGreen = const Color(0xFFC8E6C9);
@@ -72,7 +107,6 @@ class _ResultScreenState extends State<ResultScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Chunky Title
                   Text(
                     "QUIZ COMPLETE!",
                     style: GoogleFonts.montserrat(
@@ -82,10 +116,7 @@ class _ResultScreenState extends State<ResultScreen> {
                       color: _textColor,
                     ),
                   ),
-
                   const SizedBox(height: 40),
-
-                  // Main Result Card
                   Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
@@ -102,7 +133,6 @@ class _ResultScreenState extends State<ResultScreen> {
                     ),
                     child: Column(
                       children: [
-                        // Teal Header Block
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(vertical: 16),
@@ -113,8 +143,7 @@ class _ResultScreenState extends State<ResultScreen> {
                               topRight: Radius.circular(20),
                             ),
                             border: Border(
-                              bottom:
-                                  BorderSide(color: _borderColor, width: 3),
+                              bottom: BorderSide(color: _borderColor, width: 3),
                             ),
                           ),
                           child: Text(
@@ -127,8 +156,6 @@ class _ResultScreenState extends State<ResultScreen> {
                             ),
                           ),
                         ),
-
-                        // Practice Mode Banner
                         if (widget.isCustom)
                           Container(
                             width: double.infinity,
@@ -151,12 +178,10 @@ class _ResultScreenState extends State<ResultScreen> {
                               ],
                             ),
                           ),
-
                         Padding(
                           padding: const EdgeInsets.all(32),
                           child: Column(
                             children: [
-                              // Big Score Text
                               Text(
                                 "${widget.score} / ${widget.total}",
                                 style: GoogleFonts.montserrat(
@@ -165,10 +190,7 @@ class _ResultScreenState extends State<ResultScreen> {
                                   color: _textColor,
                                 ),
                               ),
-
                               const SizedBox(height: 10),
-
-                              // Percentage Bubble
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 20, vertical: 8),
@@ -190,39 +212,31 @@ class _ResultScreenState extends State<ResultScreen> {
                                 ),
                               ),
 
-                              // Time taken badge (Only show if NOT practice/custom)
+                              // Time and Rank Section
                               if (!widget.isCustom) ...[
                                 const SizedBox(height: 20),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16, vertical: 7),
-                                  decoration: BoxDecoration(
-                                    color: _backgroundColor,
-                                    borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(
-                                        color: _borderColor, width: 2),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(Icons.timer_outlined,
-                                          size: 16, color: _hintColor),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        _formattedTime,
-                                        style: GoogleFonts.montserrat(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w800,
-                                          color: _textColor,
-                                        ),
+                                Wrap(
+                                  alignment: WrapAlignment.center,
+                                  spacing: 10,
+                                  runSpacing: 10,
+                                  children: [
+                                    // Time Badge
+                                    _buildSmallBadge(
+                                      Icons.timer_outlined,
+                                      _formattedTime,
+                                    ),
+                                    // Rank Badge
+                                    if (!_isLoadingRank && _userRank != null)
+                                      _buildSmallBadge(
+                                        Icons.emoji_events_outlined,
+                                        "RANK #$_userRank",
+                                        color: themeYellow,
                                       ),
-                                    ],
-                                  ),
+                                  ],
                                 ),
                               ],
 
                               const SizedBox(height: 20),
-
                               Text(
                                 isPassed ? "Outstanding!" : "Don't give up!",
                                 style: GoogleFonts.montserrat(
@@ -231,9 +245,7 @@ class _ResultScreenState extends State<ResultScreen> {
                                   color: _textColor,
                                 ),
                               ),
-
                               const SizedBox(height: 10),
-
                               Text(
                                 isPassed
                                     ? "You've mastered this module."
@@ -251,10 +263,7 @@ class _ResultScreenState extends State<ResultScreen> {
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 40),
-
-                  // Back Button (Neo-brutalist Yellow Button)
                   GestureDetector(
                     onTap: () {
                       Navigator.of(context).pushAndRemoveUntil(
@@ -296,6 +305,33 @@ class _ResultScreenState extends State<ResultScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  // Helper widget for badges (Time and Rank)
+  Widget _buildSmallBadge(IconData icon, String label, {Color? color}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: color ?? _backgroundColor,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: _borderColor, width: 2),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: color != null ? Colors.black : _hintColor),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: GoogleFonts.montserrat(
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              color: color != null ? Colors.black : _textColor,
+            ),
+          ),
+        ],
       ),
     );
   }
