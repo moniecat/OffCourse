@@ -149,66 +149,91 @@ class _SettingPageState extends State<SettingPage> {
     } catch (_) {}
   }
 
-  // --- Account & Storage Dialogs (Staying on screen) ---
+  // --- Account & Storage Dialogs ---
 
   void _showChangePasswordDialog() {
     final currentCtrl = TextEditingController();
     final newCtrl = TextEditingController();
     final confirmCtrl = TextEditingController();
 
+    // Visibility states
+    bool obscureCurrent = true;
+    bool obscureNew = true;
+    bool obscureConfirm = true;
+
     showDialog(
       context: context,
-      builder: (dialogContext) => Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 20),
-        child: SingleChildScrollView(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(35), border: Border.all(color: Colors.black, width: 3)),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Change\nPassword", style: GoogleFonts.montserrat(fontSize: 34, fontWeight: FontWeight.w900, height: 1.1, color: Colors.black)),
-                const SizedBox(height: 35),
-                _buildDialogField("Current Password", Icons.lock_outline, currentCtrl),
-                const SizedBox(height: 15),
-                _buildDialogField("New Password", Icons.vpn_key_outlined, newCtrl),
-                const SizedBox(height: 15),
-                _buildDialogField("Confirm Password", Icons.check_circle_outline, confirmCtrl),
-                const SizedBox(height: 35),
-                Row(
-                  children: [
-                    Expanded(child: _buildDialogButton("Cancel", Colors.white, const Color(0xFF9E9E9E), () => Navigator.pop(dialogContext))),
-                    const SizedBox(width: 15),
-                    Expanded(child: _buildDialogButton("Save", themeTeal, Colors.white, () async {
-                      if (newCtrl.text != confirmCtrl.text) { 
-                        _showMessageDialog(title: "Error", message: "Passwords do not match.", titleColor: Colors.orange);
-                        return; 
-                      }
-                      
-                      final navigator = Navigator.of(context);
-                      Navigator.pop(dialogContext); // Close input pop-up
-                      _showLoadingDialog(); // Show loading pop-up
-                      
-                      try {
-                        final user = FirebaseAuth.instance.currentUser;
-                        final cred = EmailAuthProvider.credential(email: user!.email!, password: currentCtrl.text);
-                        await user.reauthenticateWithCredential(cred);
-                        await AuthService().changePassword(newCtrl.text);
+      builder: (dialogContext) => StatefulBuilder( // Use StatefulBuilder for visibility toggle
+        builder: (context, setDialogState) => Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20),
+          child: SingleChildScrollView(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(35), border: Border.all(color: Colors.black, width: 3)),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Change\nPassword", style: GoogleFonts.montserrat(fontSize: 34, fontWeight: FontWeight.w900, height: 1.1, color: Colors.black)),
+                  const SizedBox(height: 35),
+                  _buildDialogField(
+                    hint: "Current Password", 
+                    icon: Icons.lock_outline, 
+                    controller: currentCtrl,
+                    isObscure: obscureCurrent,
+                    onToggle: () => setDialogState(() => obscureCurrent = !obscureCurrent),
+                  ),
+                  const SizedBox(height: 15),
+                  _buildDialogField(
+                    hint: "New Password", 
+                    icon: Icons.vpn_key_outlined, 
+                    controller: newCtrl,
+                    isObscure: obscureNew,
+                    onToggle: () => setDialogState(() => obscureNew = !obscureNew),
+                  ),
+                  const SizedBox(height: 15),
+                  _buildDialogField(
+                    hint: "Confirm Password", 
+                    icon: Icons.check_circle_outline, 
+                    controller: confirmCtrl,
+                    isObscure: obscureConfirm,
+                    onToggle: () => setDialogState(() => obscureConfirm = !obscureConfirm),
+                  ),
+                  const SizedBox(height: 35),
+                  Row(
+                    children: [
+                      Expanded(child: _buildDialogButton("Cancel", Colors.white, const Color(0xFF9E9E9E), () => Navigator.pop(dialogContext))),
+                      const SizedBox(width: 15),
+                      Expanded(child: _buildDialogButton("Save", themeTeal, Colors.white, () async {
+                        if (newCtrl.text != confirmCtrl.text) { 
+                          _showMessageDialog(title: "Error", message: "Passwords do not match.", titleColor: Colors.orange);
+                          return; 
+                        }
                         
-                        if (!mounted) return;
-                        navigator.pop(); // Close loading pop-up (STAY ON SCREEN)
-                        _showMessageDialog(title: "Success", message: "Password updated successfully!", titleColor: themeTeal);
-                      } catch (e) { 
-                        if (!mounted) return;
-                        navigator.pop(); // Close loading pop-up (STAY ON SCREEN)
-                        _showMessageDialog(title: "Error", message: "Incorrect current password.", titleColor: Colors.red);
-                      }
-                    })),
-                  ],
-                )
-              ],
+                        final navigator = Navigator.of(context);
+                        Navigator.pop(dialogContext);
+                        _showLoadingDialog();
+                        
+                        try {
+                          final user = FirebaseAuth.instance.currentUser;
+                          final cred = EmailAuthProvider.credential(email: user!.email!, password: currentCtrl.text);
+                          await user.reauthenticateWithCredential(cred);
+                          await AuthService().changePassword(newCtrl.text);
+                          
+                          if (!mounted) return;
+                          navigator.pop();
+                          _showMessageDialog(title: "Success", message: "Password updated successfully!", titleColor: themeTeal);
+                        } catch (e) { 
+                          if (!mounted) return;
+                          navigator.pop();
+                          _showMessageDialog(title: "Error", message: "Incorrect current password.", titleColor: Colors.red);
+                        }
+                      })),
+                    ],
+                  )
+                ],
+              ),
             ),
           ),
         ),
@@ -218,52 +243,62 @@ class _SettingPageState extends State<SettingPage> {
 
   void _showDeleteAccountDialog() {
     final passwordCtrl = TextEditingController();
+    bool obscurePass = true;
+
     showDialog(
       context: context,
-      builder: (dialogContext) => Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 20),
-        child: SingleChildScrollView(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(35), border: Border.all(color: Colors.black, width: 3)),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Delete\nAccount", style: GoogleFonts.montserrat(fontSize: 34, fontWeight: FontWeight.w900, height: 1.1, color: Colors.red)),
-                const SizedBox(height: 15),
-                Text("This action is permanent.", style: GoogleFonts.montserrat(fontWeight: FontWeight.w700, fontSize: 14, color: Colors.black54)),
-                const SizedBox(height: 25),
-                _buildDialogField("Enter Password", Icons.lock_outline, passwordCtrl),
-                const SizedBox(height: 35),
-                Row(
-                  children: [
-                    Expanded(child: _buildDialogButton("Cancel", Colors.white, const Color(0xFF9E9E9E), () => Navigator.pop(dialogContext))),
-                    const SizedBox(width: 15),
-                    Expanded(child: _buildDialogButton("Delete", Colors.red, Colors.white, () async {
-                      final navigator = Navigator.of(context);
-                      Navigator.pop(dialogContext); // Close input pop-up
-                      _showLoadingDialog(); // Show loading pop-up
-                      
-                      try {
-                        final user = FirebaseAuth.instance.currentUser;
-                        final cred = EmailAuthProvider.credential(email: user!.email!, password: passwordCtrl.text);
-                        await user.reauthenticateWithCredential(cred);
-                        await AuthService().deleteAccount();
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20),
+          child: SingleChildScrollView(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(35), border: Border.all(color: Colors.black, width: 3)),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Delete\nAccount", style: GoogleFonts.montserrat(fontSize: 34, fontWeight: FontWeight.w900, height: 1.1, color: Colors.red)),
+                  const SizedBox(height: 15),
+                  Text("This action is permanent.", style: GoogleFonts.montserrat(fontWeight: FontWeight.w700, fontSize: 14, color: Colors.black54)),
+                  const SizedBox(height: 25),
+                  _buildDialogField(
+                    hint: "Enter Password", 
+                    icon: Icons.lock_outline, 
+                    controller: passwordCtrl,
+                    isObscure: obscurePass,
+                    onToggle: () => setDialogState(() => obscurePass = !obscurePass),
+                  ),
+                  const SizedBox(height: 35),
+                  Row(
+                    children: [
+                      Expanded(child: _buildDialogButton("Cancel", Colors.white, const Color(0xFF9E9E9E), () => Navigator.pop(dialogContext))),
+                      const SizedBox(width: 15),
+                      Expanded(child: _buildDialogButton("Delete", Colors.red, Colors.white, () async {
+                        final navigator = Navigator.of(context);
+                        Navigator.pop(dialogContext);
+                        _showLoadingDialog();
                         
-                        if (!mounted) return;
-                        navigator.pop(); // Close loading pop-up (STAY ON SCREEN)
-                        _showMessageDialog(title: "Success", message: "Your account has been deleted.", titleColor: Colors.red);
-                      } catch (e) { 
-                        if (!mounted) return;
-                        navigator.pop(); // Close loading pop-up (STAY ON SCREEN)
-                        _showMessageDialog(title: "Error", message: "Auth failed. Wrong password.", titleColor: Colors.red);
-                      }
-                    })),
-                  ],
-                )
-              ],
+                        try {
+                          final user = FirebaseAuth.instance.currentUser;
+                          final cred = EmailAuthProvider.credential(email: user!.email!, password: passwordCtrl.text);
+                          await user.reauthenticateWithCredential(cred);
+                          await AuthService().deleteAccount();
+                          
+                          if (!mounted) return;
+                          navigator.pop();
+                          _showMessageDialog(title: "Success", message: "Your account has been deleted.", titleColor: Colors.red);
+                        } catch (e) { 
+                          if (!mounted) return;
+                          navigator.pop();
+                          _showMessageDialog(title: "Error", message: "Auth failed. Wrong password.", titleColor: Colors.red);
+                        }
+                      })),
+                    ],
+                  )
+                ],
+              ),
             ),
           ),
         ),
@@ -304,13 +339,26 @@ class _SettingPageState extends State<SettingPage> {
     );
   }
 
-  Widget _buildDialogField(String hint, IconData icon, TextEditingController controller) {
+  Widget _buildDialogField({
+    required String hint, 
+    required IconData icon, 
+    required TextEditingController controller,
+    required bool isObscure,
+    required VoidCallback onToggle,
+  }) {
     return TextField(
       controller: controller,
-      obscureText: true,
+      obscureText: isObscure,
       style: GoogleFonts.montserrat(fontWeight: FontWeight.w800, color: Colors.black),
       decoration: InputDecoration(
         prefixIcon: Icon(icon, color: const Color(0xFF9E9E9E), size: 22),
+        suffixIcon: IconButton(
+          icon: Icon(
+            isObscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+            color: const Color(0xFF9E9E9E),
+          ),
+          onPressed: onToggle,
+        ),
         hintText: hint,
         hintStyle: GoogleFonts.montserrat(fontWeight: FontWeight.w700, color: const Color(0xFF9E9E9E)),
         contentPadding: const EdgeInsets.symmetric(vertical: 18),
