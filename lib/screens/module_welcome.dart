@@ -65,13 +65,17 @@ class _ModuleOneScreenState extends State<ModuleOneScreen> {
       // Fetch User Attempt Count
       int attempts = 0;
       if (uid != null) {
-        final attemptSnap = await FirebaseFirestore.instance
-            .collection('results')
-            .where('userId', isEqualTo: uid)
-            .where('moduleId', isEqualTo: widget.moduleId)
-            .get();
-        attempts = attemptSnap.docs.length;
-      }
+  final snap = await FirebaseFirestore.instance
+      .collection('bestScores')        // ← was 'results' (doesn't exist)
+      .where('userId', isEqualTo: uid)
+      .where('moduleId', isEqualTo: widget.moduleId)
+      .limit(1)
+      .get();
+
+  if (snap.docs.isNotEmpty) {
+    attempts = snap.docs.first.data()['attemptCount'] as int? ?? 0;
+  }
+}
 
       if (mounted) {
         setState(() {

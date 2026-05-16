@@ -8,53 +8,59 @@ class ResultService {
   /// Saves (or updates) the best score for a user + module.
   /// Updates if: better score, OR same score but faster time.
   static Future<void> saveResult({
-    required String courseId,
-    required String moduleId,
-    required int score,
-    required int total,
-    int elapsedSeconds = 0,
-  }) async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
+  required String courseId,
+  required String moduleId,
+  required int score,
+  required int total,
+  int elapsedSeconds = 0,
+}) async {
+  final uid = FirebaseAuth.instance.currentUser?.uid;
+  if (uid == null) return;
 
-    final existing = await _db
-        .collection('bestScores')
-        .where('userId', isEqualTo: uid)
-        .where('moduleId', isEqualTo: moduleId)
-        .limit(1)
-        .get();
+  final existing = await _db
+      .collection('bestScores')
+      .where('userId', isEqualTo: uid)
+      .where('moduleId', isEqualTo: moduleId)
+      .limit(1)
+      .get();
 
-    final now = DateTime.now();
+  final now = DateTime.now();
 
-    if (existing.docs.isEmpty) {
-      await _db.collection('bestScores').add({
-        'userId':         uid,
-        'courseId':       courseId,
-        'moduleId':       moduleId,
-        'score':          score,
-        'total':          total,
-        'elapsedSeconds': elapsedSeconds,
-        'updatedAt':      Timestamp.fromDate(now),
-      });
-      return;
-    }
+  if (existing.docs.isEmpty) {
+    await _db.collection('bestScores').add({
+      'userId':         uid,
+      'courseId':       courseId,
+      'moduleId':       moduleId,
+      'score':          score,
+      'total':          total,
+      'elapsedSeconds': elapsedSeconds,
+      'attemptCount':   1,              // ← add this
+      'updatedAt':      Timestamp.fromDate(now),
+    });
+    return;
+  }
 
-    final doc = existing.docs.first;
-    final data = doc.data();
-    final existingScore = data['score'] as int? ?? 0;
-    final existingTime  = data['elapsedSeconds'] as int? ?? 0;
+  final doc = existing.docs.first;
+  final data = doc.data();
+  final existingScore = data['score'] as int? ?? 0;
+  final existingTime  = data['elapsedSeconds'] as int? ?? 0;
 
-    final betterScore     = score > existingScore;
-    final sameScoreFaster = score == existingScore && elapsedSeconds < existingTime;
+  final betterScore     = score > existingScore;
+  final sameScoreFaster = score == existingScore && elapsedSeconds < existingTime;
 
-    if (betterScore || sameScoreFaster) {
-      await doc.reference.update({
-        'score':          score,
-        'total':          total,
-        'elapsedSeconds': elapsedSeconds,
-        'updatedAt':      Timestamp.fromDate(now),
-      });
-    }
+  // Always increment attempts, only update score if better
+  final updateData = <String, dynamic>{
+    'attemptCount': FieldValue.increment(1),   // ← always increment
+    'updatedAt':    Timestamp.fromDate(now),
+  };
+
+  if (betterScore || sameScoreFaster) {
+    updateData['score']          = score;
+    updateData['total']          = total;
+    updateData['elapsedSeconds'] = elapsedSeconds;
+  }
+
+  await doc.reference.update(updateData);
   }
 
   /// Returns the best score record for a user + module, or null if none exists.
