@@ -43,7 +43,235 @@ class _SettingPageState extends State<SettingPage> {
     } catch (_) {}
   }
 
-  // --- Header Helpers ---
+  // --- Centered Pop-up Helpers ---
+
+  void _showLoadingDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 50),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(35),
+            border: Border.all(color: Colors.black, width: 3),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(color: themeTeal, strokeWidth: 6),
+              const SizedBox(height: 25),
+              Text(
+                "Processing...",
+                textAlign: TextAlign.center,
+                style: GoogleFonts.montserrat(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.black),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showMessageDialog({required String title, required String message, Color? titleColor}) {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (context) {
+        Future.delayed(const Duration(seconds: 2), () {
+          if (context.mounted && Navigator.canPop(context)) Navigator.pop(context);
+        });
+
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(35),
+              border: Border.all(color: Colors.black, width: 3),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 34, 
+                    fontWeight: FontWeight.w900, 
+                    height: 1.1, 
+                    color: titleColor ?? Colors.black
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 18, 
+                    fontWeight: FontWeight.w700, 
+                    color: Colors.black87
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // --- Actions ---
+
+  Future<void> _sendEmail({required String subject, required String body}) async {
+    final user = FirebaseAuth.instance.currentUser;
+    final String fullBody = "$body\n\n---\nUser ID: ${user?.uid ?? 'Not Logged In'}\nEmail: ${user?.email ?? 'N/A'}";
+    final Uri emailLaunchUri = Uri(
+      scheme: 'mailto',
+      path: '22104852@usc.edu.ph',
+      query: 'subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(fullBody)}',
+    );
+    try {
+      final canLaunch = await canLaunchUrl(emailLaunchUri);
+      if (!mounted) return;
+      if (canLaunch) {
+        await launchUrl(emailLaunchUri);
+      }
+    } catch (_) {}
+  }
+
+  // --- Account & Storage Dialogs (Staying on screen) ---
+
+  void _showChangePasswordDialog() {
+    final currentCtrl = TextEditingController();
+    final newCtrl = TextEditingController();
+    final confirmCtrl = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20),
+        child: SingleChildScrollView(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(35), border: Border.all(color: Colors.black, width: 3)),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Change\nPassword", style: GoogleFonts.montserrat(fontSize: 34, fontWeight: FontWeight.w900, height: 1.1, color: Colors.black)),
+                const SizedBox(height: 35),
+                _buildDialogField("Current Password", Icons.lock_outline, currentCtrl),
+                const SizedBox(height: 15),
+                _buildDialogField("New Password", Icons.vpn_key_outlined, newCtrl),
+                const SizedBox(height: 15),
+                _buildDialogField("Confirm Password", Icons.check_circle_outline, confirmCtrl),
+                const SizedBox(height: 35),
+                Row(
+                  children: [
+                    Expanded(child: _buildDialogButton("Cancel", Colors.white, const Color(0xFF9E9E9E), () => Navigator.pop(dialogContext))),
+                    const SizedBox(width: 15),
+                    Expanded(child: _buildDialogButton("Save", themeTeal, Colors.white, () async {
+                      if (newCtrl.text != confirmCtrl.text) { 
+                        _showMessageDialog(title: "Error", message: "Passwords do not match.", titleColor: Colors.orange);
+                        return; 
+                      }
+                      
+                      final navigator = Navigator.of(context);
+                      Navigator.pop(dialogContext); // Close input pop-up
+                      _showLoadingDialog(); // Show loading pop-up
+                      
+                      try {
+                        final user = FirebaseAuth.instance.currentUser;
+                        final cred = EmailAuthProvider.credential(email: user!.email!, password: currentCtrl.text);
+                        await user.reauthenticateWithCredential(cred);
+                        await AuthService().changePassword(newCtrl.text);
+                        
+                        if (!mounted) return;
+                        navigator.pop(); // Close loading pop-up (STAY ON SCREEN)
+                        _showMessageDialog(title: "Success", message: "Password updated successfully!", titleColor: themeTeal);
+                      } catch (e) { 
+                        if (!mounted) return;
+                        navigator.pop(); // Close loading pop-up (STAY ON SCREEN)
+                        _showMessageDialog(title: "Error", message: "Incorrect current password.", titleColor: Colors.red);
+                      }
+                    })),
+                  ],
+                )
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showDeleteAccountDialog() {
+    final passwordCtrl = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20),
+        child: SingleChildScrollView(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(35), border: Border.all(color: Colors.black, width: 3)),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Delete\nAccount", style: GoogleFonts.montserrat(fontSize: 34, fontWeight: FontWeight.w900, height: 1.1, color: Colors.red)),
+                const SizedBox(height: 15),
+                Text("This action is permanent.", style: GoogleFonts.montserrat(fontWeight: FontWeight.w700, fontSize: 14, color: Colors.black54)),
+                const SizedBox(height: 25),
+                _buildDialogField("Enter Password", Icons.lock_outline, passwordCtrl),
+                const SizedBox(height: 35),
+                Row(
+                  children: [
+                    Expanded(child: _buildDialogButton("Cancel", Colors.white, const Color(0xFF9E9E9E), () => Navigator.pop(dialogContext))),
+                    const SizedBox(width: 15),
+                    Expanded(child: _buildDialogButton("Delete", Colors.red, Colors.white, () async {
+                      final navigator = Navigator.of(context);
+                      Navigator.pop(dialogContext); // Close input pop-up
+                      _showLoadingDialog(); // Show loading pop-up
+                      
+                      try {
+                        final user = FirebaseAuth.instance.currentUser;
+                        final cred = EmailAuthProvider.credential(email: user!.email!, password: passwordCtrl.text);
+                        await user.reauthenticateWithCredential(cred);
+                        await AuthService().deleteAccount();
+                        
+                        if (!mounted) return;
+                        navigator.pop(); // Close loading pop-up (STAY ON SCREEN)
+                        _showMessageDialog(title: "Success", message: "Your account has been deleted.", titleColor: Colors.red);
+                      } catch (e) { 
+                        if (!mounted) return;
+                        navigator.pop(); // Close loading pop-up (STAY ON SCREEN)
+                        _showMessageDialog(title: "Error", message: "Auth failed. Wrong password.", titleColor: Colors.red);
+                      }
+                    })),
+                  ],
+                )
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- UI Builders ---
 
   void _openDrawer(BuildContext context) {
     Navigator.of(context).push(PageRouteBuilder(
@@ -72,125 +300,6 @@ class _SettingPageState extends State<SettingPage> {
           boxShadow: [BoxShadow(color: Theme.of(context).colorScheme.onSurface, offset: const Offset(3, 3))],
         ),
         child: Icon(Icons.menu, color: Theme.of(context).colorScheme.onSurface, size: 30),
-      ),
-    );
-  }
-
-  // --- Actions ---
-
-  Future<void> _sendEmail({required String subject, required String body}) async {
-    final user = FirebaseAuth.instance.currentUser;
-    final String fullBody = "$body\n\n---\nUser ID: ${user?.uid ?? 'Not Logged In'}\nEmail: ${user?.email ?? 'N/A'}";
-    final Uri emailLaunchUri = Uri(
-      scheme: 'mailto',
-      path: '22104852@usc.edu.ph',
-      query: 'subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(fullBody)}',
-    );
-    try {
-      if (await canLaunchUrl(emailLaunchUri)) {
-        await launchUrl(emailLaunchUri);
-      } else {
-        _showSnack('Could not open email app.');
-      }
-    } catch (e) { _showSnack('Error: $e'); }
-  }
-
-  void _showSnack(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-  }
-
-  // --- Dialogs ---
-
-  void _showChangePasswordDialog() {
-    final currentCtrl = TextEditingController();
-    final newCtrl = TextEditingController();
-    final confirmCtrl = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(35),
-            border: Border.all(color: Colors.black, width: 3),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text("Change\nPassword",
-                  style: GoogleFonts.montserrat(fontSize: 34, fontWeight: FontWeight.w900, height: 1.1, color: Colors.black)),
-              const SizedBox(height: 35),
-              _buildDialogField("Current Password", Icons.lock_outline, currentCtrl),
-              const SizedBox(height: 15),
-              _buildDialogField("New Password", Icons.vpn_key_outlined, newCtrl),
-              const SizedBox(height: 15),
-              _buildDialogField("Confirm Password", Icons.check_circle_outline, confirmCtrl),
-              const SizedBox(height: 35),
-              Row(
-                children: [
-                  Expanded(child: _buildDialogButton("Cancel", Colors.white, const Color(0xFF9E9E9E), () => Navigator.pop(context))),
-                  const SizedBox(width: 15),
-                  Expanded(child: _buildDialogButton("Save", themeTeal, Colors.white, () async {
-                    if (newCtrl.text != confirmCtrl.text) { _showSnack('Passwords do not match'); return; }
-                    Navigator.pop(context);
-                    try {
-                      final user = FirebaseAuth.instance.currentUser;
-                      final cred = EmailAuthProvider.credential(email: user!.email!, password: currentCtrl.text);
-                      await user.reauthenticateWithCredential(cred);
-                      await AuthService().changePassword(newCtrl.text);
-                      _showSnack('Password changed successfully!');
-                    } catch (e) { _showSnack('Error: Incorrect password.'); }
-                  })),
-                ],
-              )
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showDeleteAccountDialog() {
-    final passwordCtrl = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(35), border: Border.all(color: Colors.black, width: 3)),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text("Delete\nAccount", style: GoogleFonts.montserrat(fontSize: 34, fontWeight: FontWeight.w900, height: 1.1, color: Colors.red)),
-              const SizedBox(height: 15),
-              Text("This action is permanent.", style: GoogleFonts.montserrat(fontWeight: FontWeight.w700, fontSize: 14, color: Colors.black54)),
-              const SizedBox(height: 25),
-              _buildDialogField("Enter Password", Icons.lock_outline, passwordCtrl),
-              const SizedBox(height: 35),
-              Row(
-                children: [
-                  Expanded(child: _buildDialogButton("Cancel", Colors.white, const Color(0xFF9E9E9E), () => Navigator.pop(context))),
-                  const SizedBox(width: 15),
-                  Expanded(child: _buildDialogButton("Delete", Colors.red, Colors.white, () async {
-                    Navigator.pop(context);
-                    try {
-                      final user = FirebaseAuth.instance.currentUser;
-                      final cred = EmailAuthProvider.credential(email: user!.email!, password: passwordCtrl.text);
-                      await user.reauthenticateWithCredential(cred);
-                      await AuthService().deleteAccount();
-                    } catch (e) { _showSnack('Auth failed.'); }
-                  })),
-                ],
-              )
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -227,72 +336,56 @@ class _SettingPageState extends State<SettingPage> {
     );
   }
 
-  // --- Build Method ---
-
   @override
   Widget build(BuildContext context) {
-    // FIX: Removed underscores from local variable names to comply with Dart linting
     final backgroundColor = Theme.of(context).scaffoldBackgroundColor;
     final textColor = Theme.of(context).colorScheme.onSurface;
 
     return Scaffold(
       backgroundColor: backgroundColor,
+      resizeToAvoidBottomInset: false, 
       appBar: AppBar(
         backgroundColor: backgroundColor,
-        surfaceTintColor: Colors.transparent, 
         elevation: 0,
         toolbarHeight: 80,
         automaticallyImplyLeading: false,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 25, top: 10),
-            child: _buildMenuButton(),
-          ),
-        ],
+        actions: [Padding(padding: const EdgeInsets.only(right: 25, top: 10), child: _buildMenuButton())],
       ),
       body: Column(
         children: [
           Expanded(
-            child: ScrollConfiguration(
-              behavior: const ScrollBehavior().copyWith(overscroll: false),
-              child: ListView(
-                physics: const ClampingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                children: [
-                  Text(
-                    'Settings',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 48,
-                      fontWeight: FontWeight.w900,
-                      height: 1.0,
-                      letterSpacing: -1.5,
-                      color: textColor,
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  
-                  _SettingSection(title: 'Preferences', children: [
-                    Consumer<ThemeProvider>(builder: (context, themeProvider, child) {
-                      return _ToggleTile(label: 'Dark Mode', value: themeProvider.isDarkMode, activeColor: themeYellow, onChanged: (v) => themeProvider.setTheme(v));
-                    }),
-                    const Divider(height: 1, thickness: 1),
-                    _ActionTile(label: 'Language', icon: Icons.language, trailingText: 'English', onTap: () => _showSnack('Only English is supported.')),
-                  ]),
-                  const SizedBox(height: 25),
-                  _SettingSection(title: 'Support', children: [
-                    _ActionTile(label: 'Report a Bug', icon: Icons.bug_report_outlined, onTap: () => _sendEmail(subject: '[BUG REPORT]', body: 'Describe bug:')),
-                    const Divider(height: 1, thickness: 1),
-                    _ActionTile(label: 'Feature Request', icon: Icons.lightbulb_outline, onTap: () => _sendEmail(subject: '[FEATURE REQUEST]', body: 'Describe feature:')),
-                  ]),
-                  const SizedBox(height: 25),
-                  _SettingSection(title: 'Account & Storage', children: [
-                    _ActionTile(label: 'Change Password', icon: Icons.lock_outline, onTap: _showChangePasswordDialog),
-                    const Divider(height: 1, thickness: 1),
-                    _ActionTile(label: 'Delete Account', icon: Icons.delete_outline, color: Colors.red, onTap: _showDeleteAccountDialog),
-                  ]),
-                  const SizedBox(height: 100), 
-                ],
-              ),
+            child: ListView(
+              physics: const ClampingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              children: [
+                Text('Settings', style: GoogleFonts.montserrat(fontSize: 48, fontWeight: FontWeight.w900, color: textColor)),
+                const SizedBox(height: 30),
+                _SettingSection(title: 'Preferences', children: [
+                  Consumer<ThemeProvider>(builder: (context, themeProvider, child) {
+                    return _ToggleTile(
+                      label: 'Dark Mode', 
+                      value: themeProvider.isDarkMode, 
+                      activeColor: themeYellow, 
+                      onChanged: (v) => themeProvider.setTheme(v),
+                    );
+                  }),
+                  const Divider(height: 1, thickness: 1),
+                  _ActionTile(label: 'Language', icon: Icons.language, trailingText: 'English', onTap: () {}),
+                ]),
+                const SizedBox(height: 25),
+                _SettingSection(title: 'Support', children: [
+                  _ActionTile(label: 'Report a Bug', icon: Icons.bug_report_outlined, onTap: () => _sendEmail(subject: '[BUG REPORT]', body: 'Describe bug:')),
+                  const Divider(height: 1, thickness: 1),
+                  _ActionTile(label: 'Feature Request', icon: Icons.lightbulb_outline, onTap: () => _sendEmail(subject: '[FEATURE REQUEST]', body: 'Describe feature:')),
+                ]),
+                const SizedBox(height: 25),
+                _SettingSection(title: 'Account & Storage', children: [
+                  _ActionTile(label: 'Change Password', icon: Icons.lock_outline, onTap: _showChangePasswordDialog),
+                  const Divider(height: 1, thickness: 1),
+                  _ActionTile(label: 'Delete Account', icon: Icons.delete_outline, color: Colors.red, onTap: _showDeleteAccountDialog),
+                ]),
+                const SizedBox(height: 100), 
+              ],
             ),
           ),
         ],
