@@ -1,7 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart'; // ADD THIS IMPORT
 import '../models/question_model.dart';
-import 'firestore_service.dart';
 
 class QuestionService {
+  // Define 'db' as a static variable so it's accessible to static methods
+  static final FirebaseFirestore db = FirebaseFirestore.instance;
+
   /// Fetches questions from Firestore filtered by moduleId and courseId.
   static Future<List<QuestionModel>> loadForModule(
     String moduleName,

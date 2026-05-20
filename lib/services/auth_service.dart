@@ -1,15 +1,13 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'firestore_service.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirestoreService _firestore = FirestoreService();
 
-  /// Stream of auth state changes — use this to reactively update UI
   Stream<User?> get authStateChanges => _auth.authStateChanges();
-
-  /// Current signed-in user (null if not logged in)
   User? get currentUser => _auth.currentUser;
 
-  // Sign up with email & password
   Future<User?> signUp(String email, String password) async {
     final credential = await _auth.createUserWithEmailAndPassword(
       email: email,
@@ -18,7 +16,6 @@ class AuthService {
     return credential.user;
   }
 
-  // Sign in with email & password
   Future<User?> signIn(String email, String password) async {
     final credential = await _auth.signInWithEmailAndPassword(
       email: email,
@@ -27,22 +24,25 @@ class AuthService {
     return credential.user;
   }
 
-  // Sign out
   Future<void> signOut() async {
     await _auth.signOut();
   }
 
-  // Change password (requires recent login)
   Future<void> changePassword(String newPassword) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Not signed in');
     await user.updatePassword(newPassword);
   }
 
-  // Delete account (requires recent login)
+  /// Deletes Firestore data first, then the Auth account
   Future<void> deleteAccount() async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Not signed in');
+
+    // 1. Delete Firestore document so they disappear from Leaderboards
+    await _firestore.deleteUserRecord(user.uid);
+
+    // 2. Delete the actual Auth account
     await user.delete();
   }
 }

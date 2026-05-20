@@ -1,33 +1,40 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/course.dart';
 
-final db = FirebaseFirestore.instance;
-
 class FirestoreService {
-  // --- USERS ---
+  final FirebaseFirestore db = FirebaseFirestore.instance;
 
+  // ===========================================================================
+  // USERS
+  // ===========================================================================
+
+  /// Create or update a user document
   Future<void> addUser(String id, String name, String email, {String role = 'student'}) async {
     await db.collection('users').doc(id).set(
       {
         'name': name,
         'email': email,
         'role': role,
-        'joinedAt': Timestamp.now(),
+        'joinedAt': FieldValue.serverTimestamp(),
       },
       SetOptions(merge: true),
     );
   }
 
+  /// Get a single user document
   Future<DocumentSnapshot> getUser(String id) async {
     return await db.collection('users').doc(id).get();
   }
 
+  /// Get just the role of a user
   Future<String?> getUserRole(String id) async {
     final doc = await getUser(id);
     if (!doc.exists) return null;
-    return (doc.data() as Map<String, dynamic>?)?['role'] as String?;
+    final data = doc.data() as Map<String, dynamic>?;
+    return data?['role'] as String?;
   }
 
+  /// Update user profile details
   Future<void> updateUserProfile(
     String uid, {
     String? name,
@@ -41,44 +48,42 @@ class FirestoreService {
     if (lrn != null) data['lrn'] = lrn;
     if (profileImage != null) data['profileImage'] = profileImage;
     if (data.isEmpty) return;
+    
     await db.collection('users').doc(uid).set(data, SetOptions(merge: true));
   }
 
-  // --- COURSES ---
+  /// CRITICAL: Deletes the user document from Firestore.
+  /// Prevents "ghost users" from appearing on leaderboards after account deletion.
+  Future<void> deleteUserRecord(String uid) async {
+    await db.collection('users').doc(uid).delete();
+  }
+
+  // ===========================================================================
+  // COURSES
+  // ===========================================================================
 
   Future<void> addCourse(String title, String description, int order) async {
     await db.collection('courses').add({
       'title': title,
       'description': description,
       'order': order,
-      'createdAt': Timestamp.now(),
+      'createdAt': FieldValue.serverTimestamp(),
     });
   }
 
   Future<List<Course>> getCourses() async {
-    final snapshot = await db
-        .collection('courses')
-        .orderBy('order')
-        .get();
-
-    return snapshot.docs
-        .map((doc) => Course.fromMap(doc.id, doc.data()))
-        .toList();
+    final snapshot = await db.collection('courses').orderBy('order').get();
+    return snapshot.docs.map((doc) => Course.fromMap(doc.id, doc.data())).toList();
   }
 
   Stream<List<Course>> watchCourses() {
-    return db
-        .collection('courses')
-        .orderBy('order')
-        .snapshots()
-        .map((snap) => snap.docs
-            .map((doc) => Course.fromMap(doc.id, doc.data()))
-            .toList());
+    return db.collection('courses').orderBy('order').snapshots().map((snap) =>
+        snap.docs.map((doc) => Course.fromMap(doc.id, doc.data())).toList());
   }
 
   Future<Course?> getCourse(String courseId) async {
     final doc = await db.collection('courses').doc(courseId).get();
-    if (doc.exists) {
+    if (doc.exists && doc.data() != null) {
       return Course.fromMap(doc.id, doc.data()!);
     }
     return null;
@@ -89,23 +94,20 @@ class FirestoreService {
       'title': title,
       'description': description.isEmpty ? null : description,
       'order': order,
-      'updatedAt': Timestamp.now(),
+      'updatedAt': FieldValue.serverTimestamp(),
     });
   }
 
-  // --- MODULES ---
+  // ===========================================================================
+  // MODULES
+  // ===========================================================================
 
-  Future<void> addModule(
-    String courseId,
-    String title,
-    String description,
-    int order,
-  ) async {
+  Future<void> addModule(String courseId, String title, String description, int order) async {
     await db.collection('courses').doc(courseId).collection('modules').add({
       'title': title,
       'description': description,
       'order': order,
-      'createdAt': Timestamp.now(),
+      'createdAt': FieldValue.serverTimestamp(),
     });
   }
 
@@ -116,10 +118,7 @@ class FirestoreService {
         .collection('modules')
         .orderBy('order')
         .get();
-
-    return snapshot.docs
-        .map((doc) => {'id': doc.id, ...doc.data()})
-        .toList();
+    return snapshot.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
   }
 
   Stream<List<Map<String, dynamic>>> watchModules(String courseId) {
@@ -129,26 +128,21 @@ class FirestoreService {
         .collection('modules')
         .orderBy('order')
         .snapshots()
-        .map((snap) => snap.docs
-            .map((doc) => {'id': doc.id, ...doc.data()})
-            .toList());
+        .map((snap) => snap.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList());
   }
 
   Future<void> updateModule(String courseId, String moduleId, String title, String description, int order) async {
-    await db
-        .collection('courses')
-        .doc(courseId)
-        .collection('modules')
-        .doc(moduleId)
-        .update({
-          'title': title,
-          'description': description.isEmpty ? null : description,
-          'order': order,
-          'updatedAt': Timestamp.now(),
-        });
+    await db.collection('courses').doc(courseId).collection('modules').doc(moduleId).update({
+      'title': title,
+      'description': description.isEmpty ? null : description,
+      'order': order,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 
-  // --- QUESTIONS ---
+  // ===========================================================================
+  // QUESTIONS
+  // ===========================================================================
 
   Future<void> addQuestion({
     required String courseId,
@@ -177,7 +171,7 @@ class FirestoreService {
       'optionC': optionC,
       'optionD': optionD,
       'correctAnswer': correctAnswer,
-      'createdAt': Timestamp.now(),
+      'createdAt': FieldValue.serverTimestamp(),
     });
   }
 
@@ -201,16 +195,20 @@ class FirestoreService {
         .collection('questions')
         .doc(questionId)
         .update({
-          'questionType': questionType,
-          'question': question,
-          'optionA': optionA,
-          'optionB': optionB,
-          'optionC': optionC,
-          'optionD': optionD,
-          'correctAnswer': correctAnswer,
-          'updatedAt': Timestamp.now(),
-        });
+      'questionType': questionType,
+      'question': question,
+      'optionA': optionA,
+      'optionB': optionB,
+      'optionC': optionC,
+      'optionD': optionD,
+      'correctAnswer': correctAnswer,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
+
+  // ===========================================================================
+  // STATS
+  // ===========================================================================
 
   /// Stream that emits real‑time stats: number of courses, modules, and questions.
   Stream<Map<String, int>> watchStats() async* {
@@ -219,41 +217,20 @@ class FirestoreService {
       int moduleCount = 0;
       int questionCount = 0;
 
-      final courseFutures = coursesSnapshot.docs.map((courseDoc) async {
-        final courseId = courseDoc.id;
-        int courseModuleCount = 0;
-        int courseQuestionCount = 0;
+      for (var courseDoc in coursesSnapshot.docs) {
+        final modulesSnapshot = await db.collection('courses').doc(courseDoc.id).collection('modules').get();
+        moduleCount += modulesSnapshot.docs.length;
 
-        final modulesSnapshot = await db
-            .collection('courses')
-            .doc(courseId)
-            .collection('modules')
-            .get();
-        courseModuleCount = modulesSnapshot.docs.length;
-
-        final moduleFutures = modulesSnapshot.docs.map((moduleDoc) async {
+        for (var moduleDoc in modulesSnapshot.docs) {
           final questionsSnapshot = await db
               .collection('courses')
-              .doc(courseId)
+              .doc(courseDoc.id)
               .collection('modules')
               .doc(moduleDoc.id)
               .collection('questions')
               .get();
-          return questionsSnapshot.docs.length;
-        });
-
-        final questionCounts = await Future.wait(moduleFutures);
-        
-        // FIXED: Renamed parameters to avoid collision with Firestore types 'sum' and 'count'
-        courseQuestionCount = questionCounts.fold<int>(0, (acc, value) => acc + value);
-
-        return {'modules': courseModuleCount, 'questions': courseQuestionCount};
-      });
-
-      final results = await Future.wait(courseFutures);
-      for (final result in results) {
-        moduleCount += result['modules']!;
-        questionCount += result['questions']!;
+          questionCount += questionsSnapshot.docs.length;
+        }
       }
 
       yield {
@@ -264,19 +241,15 @@ class FirestoreService {
     }
   }
 
-  // --- DELETE METHODS ---
+  // ===========================================================================
+  // DELETE METHODS (Recursive)
+  // ===========================================================================
 
   Future<void> deleteCourse(String courseId) async {
-    final modulesSnapshot = await db
-        .collection('courses')
-        .doc(courseId)
-        .collection('modules')
-        .get();
-
+    final modulesSnapshot = await db.collection('courses').doc(courseId).collection('modules').get();
     for (var moduleDoc in modulesSnapshot.docs) {
       await deleteModule(courseId, moduleDoc.id);
     }
-
     await db.collection('courses').doc(courseId).delete();
   }
 
@@ -288,17 +261,10 @@ class FirestoreService {
         .doc(moduleId)
         .collection('questions')
         .get();
-
     for (var questionDoc in questionsSnapshot.docs) {
       await deleteQuestion(courseId, moduleId, questionDoc.id);
     }
-
-    await db
-        .collection('courses')
-        .doc(courseId)
-        .collection('modules')
-        .doc(moduleId)
-        .delete();
+    await db.collection('courses').doc(courseId).collection('modules').doc(moduleId).delete();
   }
 
   Future<void> deleteQuestion(String courseId, String moduleId, String questionId) async {
@@ -312,7 +278,9 @@ class FirestoreService {
         .delete();
   }
 
-  // --- SCHEDULES ---
+  // ===========================================================================
+  // SCHEDULES & TASKS
+  // ===========================================================================
 
   Future<void> addSchedule(String userId, String courseId, DateTime date) async {
     await db.collection('schedules').add({
@@ -324,20 +292,12 @@ class FirestoreService {
   }
 
   Future<QuerySnapshot> getUserSchedules(String userId) async {
-    return await db
-        .collection('schedules')
-        .where('userId', isEqualTo: userId)
-        .get();
+    return await db.collection('schedules').where('userId', isEqualTo: userId).get();
   }
 
   Future<void> updateScheduleStatus(String scheduleId, String status) async {
-    await db
-        .collection('schedules')
-        .doc(scheduleId)
-        .update({'status': status});
+    await db.collection('schedules').doc(scheduleId).update({'status': status});
   }
-
-  // --- TASKS ---
 
   Future<void> addTask(String scheduleId, String title) async {
     await db.collection('tasks').add({
@@ -348,16 +308,10 @@ class FirestoreService {
   }
 
   Future<QuerySnapshot> getTasks(String scheduleId) async {
-    return await db
-        .collection('tasks')
-        .where('scheduleId', isEqualTo: scheduleId)
-        .get();
+    return await db.collection('tasks').where('scheduleId', isEqualTo: scheduleId).get();
   }
 
   Future<void> updateTaskCompletion(String taskId, bool completed) async {
-    await db
-        .collection('tasks')
-        .doc(taskId)
-        .update({'completed': completed});
+    await db.collection('tasks').doc(taskId).update({'completed': completed});
   }
 }
